@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Precificação - Impressão 3D</title>
+    <title>Calculadora de Precificação - Impressão 3D e Gestão</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,7 +18,7 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
         }
         h1 {
@@ -26,6 +26,25 @@
             color: #333;
             font-size: 24px;
             margin-bottom: 20px;
+        }
+        .section-title {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #444;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            font-weight: bold;
+        }
+        .grid-2-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .grid-3-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -35,14 +54,21 @@
             margin-bottom: 5px;
             color: #555;
             font-weight: bold;
+            font-size: 14px;
         }
-        input[type="number"] {
+        input[type="number"], 
+        input[type="text"], 
+        select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 14px;
+        }
+        .time-input {
+            font-family: monospace;
+            text-align: center;
         }
         .results {
             margin-top: 25px;
@@ -52,7 +78,7 @@
         }
         .results p {
             margin: 10px 0;
-            font-size: 16px;
+            font-size: 15px;
             color: #333;
             display: flex;
             justify-content: space-between;
@@ -67,150 +93,550 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
             margin-top: 15px;
             transition: background-color 0.3s;
         }
         button:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
             background-color: #218838;
         }
-        .section-title {
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 18px;
-            color: #444;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
+        .btn-danger {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 12px;
+            width: auto;
+            margin-top: 0;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        /* History Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .flex-row > div {
+            flex: 1;
+        }
+        .flex-row > button {
+            flex: 0 0 auto;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        
+        .small-input {
+            width: 120px !important;
+        }
+        .hint-text {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+            display: block;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Calculadora de Precificação 3D</h1>
-    <p style="text-align: center; color: #777; font-size: 14px;">Bambu Lab A1 com AMS</p>
+    <h1>Sistema de Precificação e Gestão 3D</h1>
 
-    <div class="section-title">Material</div>
+    <!-- 1. Detalhes da Peça e Material -->
+    <div class="section-title">1. Detalhes da Peça e Material</div>
     <div class="form-group">
-        <label for="pesoPeca">Peso da peça (gramas):</label>
-        <input type="number" id="pesoPeca" placeholder="Ex: 30" value="30" step="0.1" oninput="calcular()">
+        <label for="nomeProduto">Nome do Produto/Projeto:</label>
+        <input type="text" id="nomeProduto" placeholder="Ex: Vaso Geométrico" oninput="calcular()">
     </div>
-    <div class="form-group">
-        <label for="precoKg">Preço do filamento (R$/kg):</label>
-        <input type="number" id="precoKg" placeholder="Ex: 90" value="90" step="0.01" oninput="calcular()">
+    
+    <!-- NOVO BLOCO: COMPRIMENTO DO FILAMENTO CONFORME IMAGEM -->
+    <div class="grid-2-cols" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+        <div class="form-group">
+            <label for="comprimentoFilamento" style="color: #444;">Comprimento do filamento usado:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="comprimentoFilamento" value="17,67" class="time-input small-input" oninput="formatarValor(this); calcular()" placeholder="00,00">
+                <span style="font-weight: bold; color: #555;">m</span>
+            </div>
+             <span class="hint-text">(Exatamente como aparece no Bambu Studio)</span>
+        </div>
+        <div class="form-group">
+            <label for="pesoPeca" style="color: #444;">Peso total da peça (g):</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="pesoPeca" value="53,55" class="time-input small-input" oninput="formatarValor(this); calcular()" placeholder="00,00">
+                <span style="font-weight: bold; color: #555;">g</span>
+            </div>
+            <span class="hint-text">(Exatamente como aparece no Bambu Studio)</span>
+        </div>
     </div>
-
-    <div class="section-title">Energia Elétrica</div>
-    <div class="form-group">
-        <label for="potenciaImpressora">Potência da impressora (Watts):</label>
-        <input type="number" id="potenciaImpressora" placeholder="Ex: 100 (Média para Bambu A1)" value="100" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="tempoImpressao">Tempo de impressão (horas):</label>
-        <input type="number" id="tempoImpressao" placeholder="Ex: 2.5" value="2.5" step="0.1" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="tarifaEnergia">Tarifa de energia (R$/kWh):</label>
-        <input type="number" id="tarifaEnergia" placeholder="Ex: 0.88" value="0.88" step="0.01" oninput="calcular()">
-    </div>
-
-    <div class="section-title">Máquina (Depreciação)</div>
-    <div class="form-group">
-        <label for="valorImpressora">Valor da impressora (R$):</label>
-        <input type="number" id="valorImpressora" placeholder="Ex: 3500" value="3500" step="100" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="vidaUtil">Vida útil estimada (horas):</label>
-        <input type="number" id="vidaUtil" placeholder="Ex: 10000" value="10000" step="1000" oninput="calcular()">
-    </div>
-
-    <div class="section-title">Trabalho e Extras</div>
-    <div class="form-group">
-        <label for="tempoTrabalho">Tempo de trabalho manual (horas):</label>
-        <input type="number" id="tempoTrabalho" placeholder="Ex: 0.5" value="0.5" step="0.1" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="valorHoraTrabalho">Valor da sua hora (R$/h):</label>
-        <input type="number" id="valorHoraTrabalho" placeholder="Ex: 20" value="20" step="1" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="custosExtras">Custos extras (embalagem, etc.) (R$):</label>
-        <input type="number" id="custosExtras" placeholder="Ex: 5" value="5" step="0.5" oninput="calcular()">
+    
+    <div class="grid-2-cols">
+        <div class="form-group">
+            <label for="tamanhoPeca">Tamanho da peça (mm):</label>
+            <input type="text" id="tamanhoPeca" placeholder="Ex: 100x100x150" oninput="calcular()">
+        </div>
+        <div class="form-group">
+            <label for="precoKg">Preço do filamento (R$/kg):</label>
+            <input type="text" id="precoKg" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
+        </div>
     </div>
 
-    <div class="section-title">Margens e Taxas</div>
-    <div class="form-group">
-        <label for="margemFalhas">Margem para falhas (%):</label>
-        <input type="number" id="margemFalhas" placeholder="Ex: 10" value="10" step="1" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="margemLucro">Margem de lucro desejada (% sobre o custo):</label>
-        <input type="number" id="margemLucro" placeholder="Ex: 100" value="100" step="10" oninput="calcular()">
-    </div>
-    <div class="form-group">
-        <label for="taxaPlataforma">Taxa da plataforma (Shopee/ML) (%):</label>
-        <input type="number" id="taxaPlataforma" placeholder="Ex: 20" value="0" step="1" oninput="calcular()">
+    <!-- 2. Máquina e Energia -->
+    <div class="section-title">2. Máquina e Energia (Bambu Lab A1 com AMS)</div>
+    <div class="grid-2-cols">
+        <div class="form-group">
+            <label for="potenciaImpressora">Potência (Watts):</label>
+            <input type="text" id="potenciaImpressora" placeholder="nºW" oninput="formatarNumero(this); calcular()">
+        </div>
+        <div class="form-group">
+            <label for="tarifaEnergia">Tarifa Energia - Brasília (R$/kWh):</label>
+            <input type="text" id="tarifaEnergia" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
+        </div>
+        <div class="form-group">
+            <label for="tempoImpressao">Tempo de impressão (HH:MM:SS):</label>
+            <input type="text" id="tempoImpressao" value="00:00:00" class="time-input" maxlength="8" oninput="formatTimeInput(this); calcular()" placeholder="00:00:00">
+        </div>
+        <div class="form-group">
+            <label for="valorImpressora">Valor da Máquina (R$):</label>
+            <input type="text" id="valorImpressora" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
+        </div>
+        <div class="form-group">
+            <label for="vidaUtil">Vida útil estimada (horas):</label>
+            <input type="number" id="vidaUtil" value="10000" oninput="calcular()">
+        </div>
     </div>
 
-    <button onclick="calcular()">Calcular Preço</button>
+    <!-- 3. Mão de Obra e Falhas -->
+    <div class="section-title">3. Mão de Obra e Margem de Falha</div>
+    <div class="grid-2-cols">
+        <div class="form-group">
+            <label for="tempoTrabalho">Tempo trabalho manual (HH:MM:SS):</label>
+            <input type="text" id="tempoTrabalho" value="00:00:00" class="time-input" maxlength="8" oninput="formatTimeInput(this); calcular()" placeholder="00:00:00">
+        </div>
+        <div class="form-group">
+            <label for="valorHoraTrabalho">Valor da sua hora (R$/h):</label>
+            <input type="text" id="valorHoraTrabalho" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
+        </div>
+        <div class="form-group">
+            <label for="margemFalhas">Margem para falhas (%):</label>
+            <input type="number" id="margemFalhas" value="10" step="1" oninput="calcular()">
+        </div>
+        <div class="form-group">
+            <label for="margemLucro">Lucro desejado (% sobre custo):</label>
+            <input type="number" id="margemLucro" value="100" step="10" oninput="calcular()">
+        </div>
+    </div>
 
-    <div class="results" id="resultados" style="display:none;">
-        <p><span>Custo do Material:</span> <span id="resMaterial">R$ 0,00</span></p>
+    <!-- 4. Embalagem Dinâmica -->
+    <div class="section-title">4. Custos de Embalagem</div>
+    <div class="flex-row">
+        <div class="form-group">
+            <label for="selectEmbalagem">Selecione o item:</label>
+            <select id="selectEmbalagem" onchange="adicionarEmbalagemSelecionada()"></select>
+        </div>
+        <button type="button" onclick="abrirModalEmbalagem()" style="background-color: #6c757d;">+ Novo Item</button>
+    </div>
+    <div id="listaEmbalagensAtuais" style="margin-bottom: 15px;"></div>
+    <div class="form-group">
+        <label>Total Embalagem:</label>
+        <div style="padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-weight: bold;" id="displayTotalEmbalagem">R$ 0,00</div>
+    </div>
+
+    <!-- 5. Venda e Envio -->
+    <div class="section-title">5. Logística e Plataforma de Venda</div>
+    <div class="grid-2-cols">
+        <div class="form-group">
+            <label for="plataformaVenda">Plataforma / Marketplace:</label>
+            <select id="plataformaVenda" onchange="calcular()">
+                <option value="0">Venda Direta (Sem Taxa) - 0%</option>
+                <option value="20">Mercado Livre (Clássico/Premium) - ~20%</option>
+                <option value="20">Shopee - ~20%</option>
+                <option value="15">AliExpress - ~15%</option>
+                <option value="5">Pagamento Cartão/Maquininha - 5%</option>
+                <option value="custom">Outro (Inserir manual)</option>
+            </select>
+        </div>
+        <div class="form-group" id="divTaxaCustom" style="display:none;">
+            <label for="taxaCustomizada">Taxa Personalizada (%):</label>
+            <input type="number" id="taxaCustomizada" value="0" oninput="calcular()">
+        </div>
+    </div>
+    
+    <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+        <h4 style="margin-top:0; color: #856404; font-size: 15px;">Calculadora Simbólica de Frete (SEDEX)</h4>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Origem Fixa: CEP 72300-533 (Brasília)</p>
+        <div class="grid-2-cols">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cepDestino" style="color: #856404;">CEP Destino:</label>
+                <input type="text" id="cepDestino" placeholder="00000-000" maxlength="9" oninput="formatarCEP(this)">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="pesoCaixa" style="color: #856404;">Peso total c/ caixa (kg):</label>
+                <input type="number" id="pesoCaixa" value="0.5" step="0.1">
+            </div>
+        </div>
+        <button type="button" onclick="simularFrete()" style="background-color: #ffc107; color: #212529; margin-top: 10px; padding: 8px;">Simular Frete Base (Correios)</button>
+        <p id="resultadoFrete" style="font-weight: bold; margin-top: 10px; display: none; color: #856404;"></p>
+    </div>
+
+    <!-- Resultados -->
+    <div class="results" id="resultados">
+        <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Resumo de Custos</h3>
+        <p><span>Custo do Material (Baseado no Peso):</span> <span id="resMaterial">R$ 0,00</span></p>
         <p><span>Custo de Energia:</span> <span id="resEnergia">R$ 0,00</span></p>
-        <p><span>Custo da Máquina (Depreciação):</span> <span id="resMaquina">R$ 0,00</span></p>
+        <p><span>Depreciação Máquina:</span> <span id="resMaquina">R$ 0,00</span></p>
         <p><span>Mão de Obra:</span> <span id="resTrabalho">R$ 0,00</span></p>
-        <p><span>Custos Extras:</span> <span id="resExtras">R$ 0,00</span></p>
+        <p><span>Embalagens:</span> <span id="resExtras">R$ 0,00</span></p>
         <p><span>Custo Subtotal:</span> <span id="resSubtotal">R$ 0,00</span></p>
         <p><span>Margem para Falhas:</span> <span id="resFalhas">R$ 0,00</span></p>
-        <p style="border-bottom: 1px solid #ccc; padding-bottom: 10px;"><span>Custo Total de Produção:</span> <span id="resCustoTotal">R$ 0,00</span></p>
-        <p><span>Lucro Desejado:</span> <span id="resLucro">R$ 0,00</span></p>
-        <p><span>Preço de Venda (Sem taxas):</span> <span id="resPrecoSemTaxa">R$ 0,00</span></p>
+        <p style="border-bottom: 1px solid #ccc; padding-bottom: 10px;"><span><strong>Custo Total de Produção (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
+        
+        <h3 style="color: #28a745; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Formação de Preço</h3>
+        <p><span>Lucro Líquido Desejado:</span> <span id="resLucro">R$ 0,00</span></p>
+        <p><span>Preço Ideal (Sem taxas):</span> <span id="resPrecoSemTaxa">R$ 0,00</span></p>
         <p><span>Taxa da Plataforma:</span> <span id="resTaxa">R$ 0,00</span></p>
-        <p class="total"><span>Preço Final Sugerido:</span> <span id="resPrecoFinal">R$ 0,00</span></p>
+        <p class="total"><span>PREÇO DE VENDA SUGERIDO:</span> <span id="resPrecoFinal">R$ 0,00</span></p>
+    </div>
+
+    <button onclick="salvarNoHistorico()" class="btn-success">Salvar Produto no Histórico</button>
+
+    <!-- Histórico -->
+    <div class="section-title" style="margin-top: 40px;">Histórico de Produtos Gerados</div>
+    <div class="history-container">
+        <table id="tabelaHistorico">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Plataforma</th>
+                    <th>Custo Prod.</th>
+                    <th>Preço Venda</th>
+                    <th>Lucro Líquido</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="corpoHistorico">
+                <!-- Registros via JS -->
+            </tbody>
+        </table>
+    </div>
+    <button onclick="limparHistorico()" class="btn-danger" style="margin-top: 15px;">Limpar Histórico</button>
+
+</div>
+
+<!-- Modal Nova Embalagem -->
+<div class="modal-overlay" id="modalEmbalagem">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">Adicionar Item à Biblioteca</h3>
+        <div class="form-group">
+            <label>Nome do Item (ex: Caixa Papelão P, Plástico Bolha 1m):</label>
+            <input type="text" id="novoItemNome">
+        </div>
+        <div class="form-group">
+            <label>Custo Unitário (R$):</label>
+            <input type="text" id="novoItemValor" class="time-input" oninput="formatarMoeda(this)" placeholder="00,00">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="salvarNovaEmbalagem()" class="btn-success">Salvar</button>
+            <button onclick="fecharModalEmbalagem()" style="background-color: #6c757d;">Cancelar</button>
+        </div>
     </div>
 </div>
 
 <script>
+    // --- ESTADOS GLOBAIS ---
+    let bibliotecaEmbalagens = JSON.parse(localStorage.getItem('lib_embalagens')) || [
+        { id: 1, nome: "Caixa Papelão P (16x11x6)", valor: 1.50 },
+        { id: 2, nome: "Plástico Bolha (1 metro)", valor: 0.80 },
+        { id: 3, nome: "Fita Adesiva (Fração)", valor: 0.20 },
+        { id: 4, nome: "Adesivo/Mimo Padrão", valor: 0.50 }
+    ];
+    
+    let embalagensAtuaisDaPeca = [];
+    let historicoProdutos = JSON.parse(localStorage.getItem('hist_produtos')) || [];
+
+    // --- FORMATAÇÕES DE INPUT (MÁSCARAS) ---
+    function formatTimeInput(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v.length > 6) v = v.slice(0, 6);
+        if (v.length >= 5) {
+            input.value = v.slice(0,2) + ':' + v.slice(2,4) + ':' + v.slice(4,6);
+        } else if (v.length >= 3) {
+            input.value = v.slice(0,2) + ':' + v.slice(2,4);
+        } else {
+            input.value = v;
+        }
+    }
+
+    function formatarMoeda(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v === '') { input.value = ''; return; }
+        v = (parseInt(v) / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        input.value = v;
+    }
+
+    function formatarValor(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v === '') { input.value = ''; return; }
+        v = (parseInt(v) / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        input.value = v;
+    }
+    
+    function formatarNumero(input) {
+        input.value = input.value.replace(/\D/g, '');
+    }
+
+    function formatarCEP(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v.length > 8) v = v.slice(0, 8);
+        if (v.length > 5) {
+            v = v.slice(0,5) + '-' + v.slice(5);
+        }
+        input.value = v;
+    }
+
+    function converterStringParaFloat(str) {
+        if (!str) return 0;
+        str = str.replace(/\./g, '').replace(',', '.');
+        return parseFloat(str) || 0;
+    }
+
+    function converterHHMMSSToHoras(timeStr) {
+        if (!timeStr) return 0;
+        const partes = timeStr.split(':');
+        let horas = 0;
+        if (partes.length === 3) {
+            horas = parseInt(partes[0] || 0) + (parseInt(partes[1] || 0) / 60) + (parseInt(partes[2] || 0) / 3600);
+        } else if (partes.length === 2) {
+            horas = parseInt(partes[0] || 0) + (parseInt(partes[1] || 0) / 60);
+        }
+        return isNaN(horas) ? 0 : horas;
+    }
+
+    // --- LÓGICA DE EMBALAGENS ---
+    function renderizarSelectEmbalagem() {
+        const select = document.getElementById('selectEmbalagem');
+        select.innerHTML = '<option value="">-- Escolha um item --</option>';
+        bibliotecaEmbalagens.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.nome} - R$ ${item.valor.toFixed(2).replace('.',',')}</option>`;
+        });
+    }
+
+    function adicionarEmbalagemSelecionada() {
+        const select = document.getElementById('selectEmbalagem');
+        const id = select.value;
+        if (!id) return;
+        
+        const item = bibliotecaEmbalagens.find(i => i.id == id);
+        if (item) {
+            embalagensAtuaisDaPeca.push({...item, instanceId: Date.now()});
+            renderizarListaEmbalagens();
+            calcular();
+        }
+        select.value = ""; 
+    }
+
+    function removerEmbalagem(instanceId) {
+        embalagensAtuaisDaPeca = embalagensAtuaisDaPeca.filter(i => i.instanceId !== instanceId);
+        renderizarListaEmbalagens();
+        calcular();
+    }
+
+    function renderizarListaEmbalagens() {
+        const container = document.getElementById('listaEmbalagensAtuais');
+        container.innerHTML = '';
+        let total = 0;
+        
+        embalagensAtuaisDaPeca.forEach(item => {
+            total += item.valor;
+            container.innerHTML += `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                    <span style="font-size: 13px;">${item.nome}</span>
+                    <div>
+                        <span style="font-weight: bold; margin-right: 10px; font-size: 13px;">R$ ${item.valor.toFixed(2).replace('.',',')}</span>
+                        <button onclick="removerEmbalagem(${item.instanceId})" class="btn-danger" style="padding: 2px 6px;">X</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('displayTotalEmbalagem').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function abrirModalEmbalagem() {
+        document.getElementById('modalEmbalagem').style.display = 'flex';
+    }
+    
+    function fecharModalEmbalagem() {
+        document.getElementById('modalEmbalagem').style.display = 'none';
+        document.getElementById('novoItemNome').value = '';
+        document.getElementById('novoItemValor').value = '';
+    }
+
+    function salvarNovaEmbalagem() {
+        const nome = document.getElementById('novoItemNome').value.trim();
+        const valor = converterStringParaFloat(document.getElementById('novoItemValor').value);
+        
+        if (!nome || valor <= 0) {
+            alert("Preencha o nome e um valor maior que zero.");
+            return;
+        }
+        
+        const novoItem = {
+            id: Date.now(),
+            nome: nome,
+            valor: valor
+        };
+        
+        bibliotecaEmbalagens.push(novoItem);
+        localStorage.setItem('lib_embalagens', JSON.stringify(bibliotecaEmbalagens));
+        renderizarSelectEmbalagem();
+        fecharModalEmbalagem();
+    }
+
+    // --- FRETE ---
+    function simularFrete() {
+        const cep = document.getElementById('cepDestino').value;
+        const peso = document.getElementById('pesoCaixa').value;
+        const resultEl = document.getElementById('resultadoFrete');
+        
+        if(cep.length < 9) {
+            alert("Digite um CEP válido");
+            return;
+        }
+        
+        // Simulação básica baseada em zonas geográficas fictícias para exemplo
+        const cepBase = parseInt(cep.replace('-', '').substring(0,2));
+        let valorBase = 25.00; // DF/GO
+        
+        if (cepBase >= 0 && cepBase <= 19) valorBase = 35.00; // SP
+        else if (cepBase >= 20 && cepBase <= 28) valorBase = 42.00; // RJ/ES
+        else if (cepBase >= 30 && cepBase <= 39) valorBase = 38.00; // MG
+        else if (cepBase >= 40 && cepBase <= 69) valorBase = 65.00; // N/NE
+        else if (cepBase >= 80 && cepBase <= 99) valorBase = 45.00; // SUL
+        
+        // Acréscimo por peso
+        const acrescimoPeso = (peso > 1) ? (peso - 1) * 12 : 0;
+        
+        const freteFinal = valorBase + acrescimoPeso;
+        
+        resultEl.innerText = `Estimativa SEDEX: ${freteFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (Prazo: ~3 a 7 dias úteis)`;
+        resultEl.style.display = 'block';
+    }
+
+    // --- CÁLCULO PRINCIPAL ---
+    
+    // Configura evento para exibir/ocultar taxa customizada
+    document.getElementById('plataformaVenda').addEventListener('change', function() {
+        if(this.value === 'custom') {
+            document.getElementById('divTaxaCustom').style.display = 'block';
+        } else {
+            document.getElementById('divTaxaCustom').style.display = 'none';
+        }
+    });
+
+    let ultimoCalculo = null;
+
     function calcular() {
-        // Obter valores dos inputs
-        const peso = parseFloat(document.getElementById('pesoPeca').value) || 0;
-        const precoKg = parseFloat(document.getElementById('precoKg').value) || 0;
+        // Obter valores formatados
+        const peso = converterStringParaFloat(document.getElementById('pesoPeca').value);
+        // const comprimento = converterStringParaFloat(document.getElementById('comprimentoFilamento').value); // Mantido apenas para visualização/informação
+        const precoKg = converterStringParaFloat(document.getElementById('precoKg').value);
         
         const potenciaW = parseFloat(document.getElementById('potenciaImpressora').value) || 0;
-        const tempoImpressao = parseFloat(document.getElementById('tempoImpressao').value) || 0;
-        const tarifaEnergia = parseFloat(document.getElementById('tarifaEnergia').value) || 0;
+        const horasImpressao = converterHHMMSSToHoras(document.getElementById('tempoImpressao').value);
+        const tarifaEnergia = converterStringParaFloat(document.getElementById('tarifaEnergia').value);
         
-        const valorImp = parseFloat(document.getElementById('valorImpressora').value) || 0;
-        const vidaUtil = parseFloat(document.getElementById('vidaUtil').value) || 1; // Evitar divisão por zero
+        const valorImp = converterStringParaFloat(document.getElementById('valorImpressora').value);
+        const vidaUtil = parseFloat(document.getElementById('vidaUtil').value) || 1; 
         
-        const tempoTrabalho = parseFloat(document.getElementById('tempoTrabalho').value) || 0;
-        const valorHora = parseFloat(document.getElementById('valorHoraTrabalho').value) || 0;
-        const custosExtras = parseFloat(document.getElementById('custosExtras').value) || 0;
+        const horasTrabalho = converterHHMMSSToHoras(document.getElementById('tempoTrabalho').value);
+        const valorHora = converterStringParaFloat(document.getElementById('valorHoraTrabalho').value);
+        
+        // Soma Embalagens
+        const custosExtras = embalagensAtuaisDaPeca.reduce((acc, item) => acc + item.valor, 0);
         
         const percFalhas = parseFloat(document.getElementById('margemFalhas').value) || 0;
         const percLucro = parseFloat(document.getElementById('margemLucro').value) || 0;
-        const percTaxa = parseFloat(document.getElementById('taxaPlataforma').value) || 0;
+        
+        // Define Taxa
+        let percTaxa = 0;
+        const platSelect = document.getElementById('plataformaVenda').value;
+        if (platSelect === 'custom') {
+            percTaxa = parseFloat(document.getElementById('taxaCustomizada').value) || 0;
+        } else {
+            percTaxa = parseFloat(platSelect) || 0;
+        }
 
         // Cálculos
-        const custoMaterial = (peso / 1000) * precoKg;
-        const custoEnergia = (potenciaW / 1000) * tempoImpressao * tarifaEnergia;
-        const custoMaquina = (valorImp / vidaUtil) * tempoImpressao;
-        const custoTrabalho = tempoTrabalho * valorHora;
+        // Utiliza o Peso (g) da interface do Bambu Studio para calcular o custo do material
+        const custoMaterial = (peso / 1000) * precoKg; 
+        
+        const custoEnergia = (potenciaW / 1000) * horasImpressao * tarifaEnergia;
+        const custoMaquina = (valorImp / vidaUtil) * horasImpressao;
+        const custoTrabalho = horasTrabalho * valorHora;
         
         const subtotal = custoMaterial + custoEnergia + custoMaquina + custoTrabalho + custosExtras;
         
         const custoFalhas = subtotal * (percFalhas / 100);
-        const custoTotal = subtotal + custoFalhas;
+        const custoTotal = subtotal + custoFalhas; // Custo de Produção Base
         
         const lucro = custoTotal * (percLucro / 100);
         const precoSemTaxa = custoTotal + lucro;
         
-        // Cálculo do preço com taxa (Preço Final - Taxa% = Preço Sem Taxa)
+        // Cálculo do preço com taxa da plataforma (Markup-down formula)
         // Preço Final = Preço Sem Taxa / (1 - Taxa%)
         let precoFinal = precoSemTaxa;
         let valorTaxa = 0;
@@ -233,15 +659,86 @@
         document.getElementById('resCustoTotal').innerText = formatBRL(custoTotal);
         document.getElementById('resLucro').innerText = formatBRL(lucro);
         document.getElementById('resPrecoSemTaxa').innerText = formatBRL(precoSemTaxa);
-        document.getElementById('resTaxa').innerText = formatBRL(valorTaxa);
+        document.getElementById('resTaxa').innerText = formatBRL(valorTaxa) + ` (${percTaxa}%)`;
         document.getElementById('resPrecoFinal').innerText = formatBRL(precoFinal);
-
-        // Mostrar a div de resultados
-        document.getElementById('resultados').style.display = 'block';
+        
+        // Salva objeto do último cálculo para o histórico
+        ultimoCalculo = {
+            nome: document.getElementById('nomeProduto').value || 'Produto sem nome',
+            plataforma: platSelect === 'custom' ? `Personalizada (${percTaxa}%)` : document.getElementById('plataformaVenda').options[document.getElementById('plataformaVenda').selectedIndex].text,
+            custoProducao: custoTotal,
+            precoVenda: precoFinal,
+            lucroLiquido: lucro,
+            data: new Date().toLocaleDateString('pt-BR')
+        };
     }
     
-    // Executa uma vez ao carregar para mostrar valores iniciais
-    window.onload = calcular;
+    // --- HISTÓRICO ---
+    function renderizarHistorico() {
+        const tbody = document.getElementById('corpoHistorico');
+        tbody.innerHTML = '';
+        
+        if (historicoProdutos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #777;">Nenhum produto salvo no histórico.</td></tr>';
+            return;
+        }
+        
+        // Renderiza do mais novo pro mais antigo
+        [...historicoProdutos].reverse().forEach((prod, index) => {
+            const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            // O index na array invertida precisa ser mapeado pro index real para exclusão
+            const realIndex = historicoProdutos.length - 1 - index;
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${prod.data}</td>
+                    <td><strong>${prod.nome}</strong></td>
+                    <td style="font-size: 11px;">${prod.plataforma}</td>
+                    <td style="color: #dc3545;">${formatBRL(prod.custoProducao)}</td>
+                    <td style="color: #007bff; font-weight:bold;">${formatBRL(prod.precoVenda)}</td>
+                    <td style="color: #28a745; font-weight:bold;">${formatBRL(prod.lucroLiquido)}</td>
+                    <td><button onclick="excluirDoHistorico(${realIndex})" class="btn-danger">Excluir</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function salvarNoHistorico() {
+        if (!ultimoCalculo) {
+            alert("Realize um cálculo primeiro preenchendo os dados da peça.");
+            return;
+        }
+        
+        historicoProdutos.push(ultimoCalculo);
+        localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
+        renderizarHistorico();
+        alert("Produto salvo no histórico com sucesso!");
+    }
+
+    function excluirDoHistorico(index) {
+        if(confirm("Tem certeza que deseja excluir este registro?")) {
+            historicoProdutos.splice(index, 1);
+            localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
+            renderizarHistorico();
+        }
+    }
+    
+    function limparHistorico() {
+        if(confirm("ATENÇÃO: Deseja apagar todo o histórico de produtos? Esta ação não pode ser desfeita.")) {
+            historicoProdutos = [];
+            localStorage.setItem('hist_produtos', JSON.stringify([]));
+            renderizarHistorico();
+        }
+    }
+
+    // --- INICIALIZAÇÃO ---
+    window.onload = function() {
+        renderizarSelectEmbalagem();
+        renderizarListaEmbalagens();
+        renderizarHistorico();
+        calcular();
+    };
 </script>
 
 </body>
