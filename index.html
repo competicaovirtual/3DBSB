@@ -18,7 +18,7 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 1250px; /* Alargado levemente para acomodar as novas colunas */
+            max-width: 1250px;
             width: 100%;
         }
         h1 {
@@ -107,9 +107,6 @@
             box-sizing: border-box;
             font-size: 14px;
             text-transform: uppercase;
-        }
-        #linkImagem {
-            text-transform: none;
         }
         input::placeholder, textarea::placeholder {
             text-transform: uppercase;
@@ -302,38 +299,6 @@
             cursor: pointer;
             accent-color: #28a745;
         }
-        .img-template {
-            width: 35px; 
-            height: 35px; 
-            object-fit: cover; 
-            border-radius: 4px; 
-            border: 1px solid #ccc;
-            transition: transform 0.2s;
-        }
-        .img-template:hover {
-            transform: scale(1.5);
-        }
-        .img-placeholder {
-            width: 35px; 
-            height: 35px; 
-            background: #eee; 
-            border-radius: 4px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 8px; 
-            color: #999; 
-            border: 1px solid #ccc;
-        }
-        a.link-produto {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        a.link-produto:hover {
-            text-decoration: underline;
-            color: #0056b3;
-        }
     </style>
 </head>
 <body>
@@ -343,15 +308,9 @@
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
-    <div class="grid-2-cols">
-        <div class="form-group">
-            <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
-            <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
-        </div>
-        <div class="form-group">
-            <label for="linkImagem">LINK DA IMAGEM / PÁGINA DO PRODUTO (URL):</label>
-            <input type="text" id="linkImagem" placeholder="HTTPS://..." oninput="calcular()">
-        </div>
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
+        <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
     </div>
     
     <div class="grid-2-cols" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
@@ -532,7 +491,6 @@
         <table id="tabelaHistorico">
             <thead>
                 <tr>
-                    <th>IMG</th>
                     <th>PRODUTO</th>
                     <th>DATA</th>
                     <th>QTD</th>
@@ -594,7 +552,6 @@
             <table id="tabelaVendidos" style="margin-top: 10px;">
                 <thead>
                     <tr>
-                        <th>IMG</th>
                         <th>DATA</th>
                         <th>PRODUTO</th>
                         <th>QTD</th>
@@ -616,8 +573,7 @@
                 <thead>
                     <tr style="background-color: #fff9e6;">
                         <th style="width: 15%;">POS</th>
-                        <th style="width: 15%;">IMG</th>
-                        <th style="width: 40%;">PRODUTO</th>
+                        <th style="width: 55%;">PRODUTO</th>
                         <th style="width: 15%;">QTD</th>
                         <th style="width: 15%;">LUCRO</th>
                     </tr>
@@ -741,7 +697,7 @@
     let itemPendenteSedexId = null;
 
     document.addEventListener('input', function(e) {
-        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.id !== 'linkImagem') {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
             e.target.value = e.target.value.toUpperCase();
         }
     });
@@ -900,12 +856,10 @@
         
         const tempoImpStr = document.getElementById('tempoImpressao').value || '00:00:00';
         const nomeProd = (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase();
-        let urlImagem = document.getElementById('linkImagem').value.trim();
 
         ultimoCalculo = {
             id: Date.now().toString(),
             nome: nomeProd,
-            linkImagem: urlImagem,
             tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
             tempoImpressaoStr: tempoImpStr,
             custoProducao: custoTotal,
@@ -916,21 +870,6 @@
             taxaOutro: 0,
             data: new Date().toLocaleDateString('pt-BR')
         };
-    }
-
-    function formatarURL(url) {
-        if (!url) return '';
-        url = url.trim();
-        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        return url;
-    }
-
-    function renderizarImagem(url) {
-        if(url) {
-            const urlFormatada = formatarURL(url);
-            return `<a href="${urlFormatada}" target="_blank" title="Acessar página do produto"><img src="${urlFormatada}" class="img-template" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=3D';"></a>`;
-        }
-        return `<div class="img-placeholder">SEM IMG</div>`;
     }
     
     function atualizarFiltrosEstoqueSelects() {
@@ -980,18 +919,12 @@
         if(filtroFil !== 'TODOS') produtosFiltrados = produtosFiltrados.filter(p => p.tipoFilamento === filtroFil);
 
         if (produtosFiltrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="16" style="text-align: center; color: #777;">NENHUM PRODUTO SALVO OU ENCONTRADO.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="15" style="text-align: center; color: #777;">NENHUM PRODUTO SALVO OU ENCONTRADO.</td></tr>';
             return;
         }
 
         produtosFiltrados.forEach((prod) => {
             const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const templateImg = renderizarImagem(prod.linkImagem);
-            
-            const urlFormatada = formatarURL(prod.linkImagem);
-            const nomeProdutoHTML = urlFormatada 
-                ? `<a href="${urlFormatada}" target="_blank" class="link-produto" title="Acessar modelo">${prod.nome}</a>` 
-                : `<strong>${prod.nome}</strong>`;
             
             const pBase = prod.precoBase;
             const pML = pBase / 0.8; // 20% taxa
@@ -1002,8 +935,7 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td>${templateImg}</td>
-                    <td style="font-size: 11px; text-align:left;">${nomeProdutoHTML}</td>
+                    <td style="font-size: 11px; text-align:left;"><strong>${prod.nome}</strong></td>
                     <td style="font-size: 10px;">${prod.data}</td>
                     <td><input type="number" min="1" value="${prod.quantidade}" style="width: 45px; padding: 2px; font-size:11px; text-align: center;" onchange="atualizarQuantidadeHistorico('${prod.id}', this.value)"></td>
                     <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
@@ -1094,7 +1026,6 @@
         document.getElementById('containerVendaTaxaCustom').style.display = "none";
         document.getElementById('vendaModalTaxaCustom').value = prod.taxaOutro > 0 ? prod.taxaOutro : "";
 
-        // Inicializa com o preço da venda direta
         let valStr = prod.precoBase.toFixed(2).replace('.', ',');
         valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
         document.getElementById('inputPrecoPraticado').value = valStr;
@@ -1127,14 +1058,12 @@
 
         const taxaDecimal = taxaPct / 100;
         
-        // Proteção contra divisões erradas (taxa não pode ser 100% ou maior)
         const precoIdealPlataforma = (taxaDecimal < 1) ? prod.precoBase / (1 - taxaDecimal) : prod.precoBase;
         
         document.getElementById('displayPrecoSugeridoModal').innerText = precoIdealPlataforma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         const precoPraticado = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
 
-        // Análise de Variação frente à Tabela Ideal
         const diff = precoPraticado - precoIdealPlataforma;
         let altTexto = "MANTIDO";
         if (diff < 0) {
@@ -1145,7 +1074,6 @@
             altTexto = `ACRÉSCIMO +${acrPct}% (+${diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
         }
 
-        // Retenção e Lucro Real
         const valorRetido = precoPraticado * taxaDecimal;
         const valorLiquidoRecebido = precoPraticado - valorRetido;
         const novoLucroUn = valorLiquidoRecebido - prod.custoProducao;
@@ -1175,7 +1103,6 @@
 
         const precoPraticadoUn = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
         
-        // Calcula o lucro unitário real que foi para o bolso
         let taxaPct = (taxaVal === 'custom') ? (parseFloat(document.getElementById('vendaModalTaxaCustom').value) || 0) : parseFloat(taxaVal);
         const valorLiquido = precoPraticadoUn * (1 - (taxaPct/100));
         const lucroUnReal = valorLiquido - prod.custoProducao;
@@ -1183,7 +1110,6 @@
         const itemVendido = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             nome: prod.nome,
-            linkImagem: prod.linkImagem,
             tipoFilamento: prod.tipoFilamento,
             plataforma: finalPlat,
             quantidade: qtd,
@@ -1240,22 +1166,17 @@
         const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         if (filtrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #777;">NENHUMA VENDA REGISTRADA PARA ESTES FILTROS.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777;">NENHUMA VENDA REGISTRADA PARA ESTES FILTROS.</td></tr>';
         } else {
             [...filtrados].reverse().forEach((item) => {
                 totalLucro += item.lucroTotal;
                 totalCusto += item.custoTotal;
                 totalItens += item.quantidade;
-                
-                const templateImg = renderizarImagem(item.linkImagem);
-                const urlFormatada = formatarURL(item.linkImagem);
-                const nomeProdutoHTML = urlFormatada ? `<a href="${urlFormatada}" target="_blank" class="link-produto" title="Acessar link do modelo">${item.nome}</a>` : `<strong>${item.nome}</strong>`;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${templateImg}</td>
                         <td style="font-family: monospace; font-size: 10px; color: #666;">${item.dataVenda}</td>
-                        <td style="font-size: 11px; text-align:left;">${nomeProdutoHTML}</td>
+                        <td style="font-size: 11px; text-align:left;"><strong>${item.nome}</strong></td>
                         <td style="text-align: center; font-weight: bold;">${item.quantidade}</td>
                         <td style="font-size:10px; font-weight:bold; color:#004085;">${item.plataforma}</td>
                         <td style="color: #007bff; font-weight: bold;">${formatBRL(item.vendaTotal)}</td>
@@ -1279,13 +1200,13 @@
         tbodyRanking.innerHTML = '';
 
         if (dados.length === 0) {
-            tbodyRanking.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">SEM DADOS</td></tr>';
+            tbodyRanking.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #777;">SEM DADOS</td></tr>';
             return;
         }
 
         const rankingMap = {};
         dados.forEach(item => {
-            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, linkImagem: item.linkImagem, qtd: 0, lucro: 0 }; }
+            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, qtd: 0, lucro: 0 }; }
             rankingMap[item.nome].qtd += item.quantidade;
             rankingMap[item.nome].lucro += item.lucroTotal;
         });
@@ -1304,15 +1225,10 @@
             else if (idx === 1) medal = '🥈 2º';
             else if (idx === 2) medal = '🥉 3º';
 
-            const templateImg = renderizarImagem(rank.linkImagem);
-            const urlFormatada = formatarURL(rank.linkImagem);
-            const nomeProdutoHTML = urlFormatada ? `<a href="${urlFormatada}" target="_blank" class="link-produto" title="Acessar modelo">${rank.nome}</a>` : `<strong>${rank.nome}</strong>`;
-
             tbodyRanking.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="font-weight: bold; color: #555;">${medal}</td>
-                    <td>${templateImg}</td>
-                    <td style="font-size: 11px; text-align:left;">${nomeProdutoHTML}</td>
+                    <td style="font-size: 11px; text-align:left;"><strong>${rank.nome}</strong></td>
                     <td style="text-align: center; font-weight: bold; color: #333;">${rank.qtd}</td>
                     <td style="color: #28a745; font-weight: bold; text-align: right;">${formatBRL(rank.lucro)}</td>
                 </tr>
