@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Precificação - Impressão 3D e Gestão</title>
+    <title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,7 +18,7 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 800px;
+            max-width: 950px;
             width: 100%;
         }
         h1 {
@@ -26,6 +26,7 @@
             color: #333;
             font-size: 24px;
             margin-bottom: 20px;
+            text-transform: uppercase;
         }
         .section-title {
             margin-top: 25px;
@@ -35,12 +36,31 @@
             border-bottom: 2px solid #007bff;
             padding-bottom: 5px;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .grid-2-cols {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
+        .grid-3-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .metric-card.green { background-color: #e6f4ea; border: 1px solid #c3e6cb; color: #155724; }
+        .metric-card.red { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .metric-card.blue { background-color: #e8f4f8; border: 1px solid #b8daff; color: #004085; }
+        .metric-card h4 { margin: 0 0 5px 0; font-size: 12px; text-transform: uppercase; }
+        .metric-card p { margin: 0; font-size: 22px; font-weight: bold; }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -50,16 +70,22 @@
             color: #555;
             font-weight: bold;
             font-size: 14px;
+            text-transform: uppercase;
         }
         input[type="number"], 
         input[type="text"], 
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
             font-size: 14px;
+            text-transform: uppercase;
+        }
+        input::placeholder, textarea::placeholder {
+            text-transform: uppercase;
         }
         .time-input {
             font-family: monospace;
@@ -97,6 +123,7 @@
             cursor: pointer;
             margin-top: 15px;
             transition: background-color 0.3s;
+            text-transform: uppercase;
         }
         button:hover {
             background-color: #0056b3;
@@ -139,19 +166,20 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
-            font-size: 13px;
+            font-size: 12px;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            text-transform: uppercase;
         }
         th {
             background-color: #f2f2f2;
             color: #333;
         }
         .history-container {
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
         }
         
@@ -204,125 +232,141 @@
             font-weight: bold;
             font-size: 14px;
         }
+        .badge-filamento {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .checkbox-vendido {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Sistema de Precificação e Gestão 3D</h1>
+    <h1>SISTEMA DE PRECIFICAÇÃO E GESTÃO 3D</h1>
 
-    <div class="section-title">1. Detalhes da Peça e Material</div>
+    <!-- 1. Detalhes da Peça e Material -->
+    <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
     <div class="form-group">
-        <label for="nomeProduto">Nome do Produto/Projeto:</label>
-        <input type="text" id="nomeProduto" placeholder="Ex: Vaso Geométrico" oninput="calcular()">
+        <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
+        <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
     </div>
     
     <div class="grid-2-cols" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
         <div class="form-group">
-            <label for="comprimentoFilamento" style="color: #444;">Comprimento do filamento (Bambu Studio):</label>
+            <label for="comprimentoFilamento" style="color: #444;">COMPRIMENTO DO FILAMENTO (BAMBU STUDIO):</label>
             <div class="input-group" style="width: 150px;">
                 <input type="text" id="comprimentoFilamento" value="17,67" class="time-input" oninput="formatarValor(this); calcular()" placeholder="00,00">
-                <span class="input-group-addon">m</span>
+                <span class="input-group-addon">M</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="pesoPeca" style="color: #444;">Peso total da peça (Bambu Studio):</label>
+            <label for="pesoPeca" style="color: #444;">PESO TOTAL DA PEÇA (BAMBU STUDIO):</label>
             <div class="input-group" style="width: 150px;">
                 <input type="text" id="pesoPeca" value="53,55" class="time-input" oninput="formatarValor(this); calcular()" placeholder="00,00">
-                <span class="input-group-addon">g</span>
+                <span class="input-group-addon">G</span>
             </div>
         </div>
     </div>
     
     <div class="grid-2-cols" style="gap: 15px;">
         <div class="form-group">
-            <label for="precoKg">Preço do filamento (Kg):</label>
+            <label for="precoKg">PREÇO DO FILAMENTO (KG):</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
                 <input type="text" id="precoKg" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
             </div>
         </div>
         <div class="form-group">
-            <label for="tipoFilamento">Tipo de Filamento:</label>
+            <label for="tipoFilamento">TIPO DE FILAMENTO:</label>
             <select id="tipoFilamento" class="time-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" onchange="calcular()">
                 <option value="PLA">PLA</option>
                 <option value="PETG">PETG</option>
                 <option value="ABS">ABS</option>
                 <option value="TPU">TPU</option>
                 <option value="ASA">ASA</option>
-                <option value="Nylon">Nylon</option>
+                <option value="NYLON">NYLON</option>
                 <option value="HIPS">HIPS</option>
                 <option value="PVA">PVA</option>
-                <option value="Outros">Outros</option>
+                <option value="OUTROS">OUTROS</option>
             </select>
         </div>
     </div>
 
-    <div class="section-title">2. Máquina e Energia (Bambu Lab A1 com AMS)</div>
+    <!-- 2. Máquina e Energia -->
+    <div class="section-title">2. MÁQUINA E ENERGIA (BAMBU LAB A1 COM AMS)</div>
     <div class="grid-2-cols">
         <div class="form-group">
-            <label for="potenciaImpressora">Potência:</label>
+            <label for="potenciaImpressora">POTÊNCIA:</label>
             <div class="input-group">
                 <input type="text" id="potenciaImpressora" value="100" placeholder="0" oninput="formatarNumero(this); calcular()">
                 <span class="input-group-addon">W</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="tarifaEnergia">Tarifa Energia (Brasília - CEB/Neoenergia):</label>
+            <label for="tarifaEnergia">TARIFA ENERGIA (BRASÍLIA - CEB/NEOENERGIA):</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="tarifaEnergia" value="0,88" class="time-input" readonly style="background-color: #eee; cursor: not-allowed;" title="Valor aproximado atualizado para região de Brasília">
-                <span class="input-group-addon">kWh</span>
+                <input type="text" id="tarifaEnergia" value="0,88" class="time-input" readonly style="background-color: #eee; cursor: not-allowed;" title="VALOR APROXIMADO ATUALIZADO PARA REGIÃO DE BRASÍLIA">
+                <span class="input-group-addon">KWH</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="tempoImpressao">Tempo de impressão:</label>
+            <label for="tempoImpressao">TEMPO DE IMPRESSÃO:</label>
             <div class="input-group">
                 <input type="text" id="tempoImpressao" value="00:00:00" class="time-input" maxlength="8" oninput="formatTimeInput(this); calcular()" placeholder="00:00:00">
-                <span class="input-group-addon">h</span>
+                <span class="input-group-addon">H</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="valorImpressora">Valor da Máquina:</label>
+            <label for="valorImpressora">VALOR DA MÁQUINA:</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
                 <input type="text" id="valorImpressora" value="4.335,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
             </div>
         </div>
         <div class="form-group">
-            <label for="vidaUtil">Vida útil estimada:</label>
+            <label for="vidaUtil">VIDA ÚTIL ESTIMADA:</label>
             <div class="input-group">
                 <input type="text" id="vidaUtil" value="10000" oninput="formatarNumero(this); calcular()">
-                <span class="input-group-addon">h</span>
+                <span class="input-group-addon">H</span>
             </div>
         </div>
     </div>
 
-    <div class="section-title">3. Mão de Obra e Margem de Falha</div>
+    <!-- 3. Mão de Obra e Margem de Falha -->
+    <div class="section-title">3. MÃO DE OBRA E MARGEM DE FALHA</div>
     <div class="grid-2-cols">
         <div class="form-group">
-            <label for="tempoTrabalho">Tempo trabalho manual:</label>
+            <label for="tempoTrabalho">TEMPO TRABALHO MANUAL:</label>
             <div class="input-group">
                 <input type="text" id="tempoTrabalho" value="00:00:00" class="time-input" maxlength="8" oninput="formatTimeInput(this); calcular()" placeholder="00:00:00">
-                <span class="input-group-addon">h</span>
+                <span class="input-group-addon">H</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="valorHoraTrabalho">Valor da sua hora:</label>
+            <label for="valorHoraTrabalho">VALOR DA SUA HORA:</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
                 <input type="text" id="valorHoraTrabalho" value="00,00" class="time-input" oninput="formatarMoeda(this); calcular()" placeholder="00,00">
             </div>
         </div>
         <div class="form-group">
-            <label for="margemFalhas">Margem para falhas:</label>
+            <label for="margemFalhas">MARGEM PARA FALHAS:</label>
             <div class="input-group">
                 <input type="text" id="margemFalhas" value="10" oninput="formatarNumero(this); calcular()">
                 <span class="input-group-addon">%</span>
             </div>
         </div>
         <div class="form-group">
-            <label for="margemLucro">Lucro desejado (sobre custo):</label>
+            <label for="margemLucro">LUCRO DESEJADO (SOBRE CUSTO):</label>
             <div class="input-group">
                 <input type="text" id="margemLucro" value="100" oninput="formatarNumero(this); calcular()">
                 <span class="input-group-addon">%</span>
@@ -330,35 +374,37 @@
         </div>
     </div>
 
-    <div class="section-title">4. Custos de Embalagem</div>
+    <!-- 4. Embalagem Dinâmica -->
+    <div class="section-title">4. CUSTOS DE EMBALAGEM</div>
     <div class="flex-row">
         <div class="form-group">
-            <label for="selectEmbalagem">Selecione o item (Biblioteca):</label>
+            <label for="selectEmbalagem">SELECIONE O ITEM (BIBLIOTECA):</label>
             <select id="selectEmbalagem" onchange="adicionarEmbalagemSelecionada()"></select>
         </div>
-        <button type="button" onclick="abrirModalEmbalagem()" style="background-color: #6c757d;">+ Adicionar à Biblioteca</button>
+        <button type="button" onclick="abrirModalEmbalagem()" style="background-color: #6c757d;">+ ADICIONAR À BIBLIOTECA</button>
     </div>
     <div id="listaEmbalagensAtuais" style="margin-bottom: 15px;"></div>
     <div class="form-group">
-        <label>Total Embalagem p/ esta peça:</label>
+        <label>TOTAL EMBALAGEM P/ ESTA PEÇA:</label>
         <div style="padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-weight: bold;" id="displayTotalEmbalagem">R$ 0,00</div>
     </div>
 
-    <div class="section-title">5. Logística e Plataforma de Venda</div>
+    <!-- 5. Logística e Plataforma de Venda -->
+    <div class="section-title">5. LOGÍSTICA E PLATAFORMA DE VENDA</div>
     <div class="grid-2-cols">
         <div class="form-group">
-            <label for="plataformaVenda">Plataforma / Marketplace:</label>
+            <label for="plataformaVenda">PLATAFORMA / MARKETPLACE:</label>
             <select id="plataformaVenda" onchange="calcular()">
-                <option value="0">Venda Direta (Sem Taxa) - 0%</option>
-                <option value="20">Mercado Livre (Clássico/Premium) - ~20%</option>
-                <option value="20">Shopee - ~20%</option>
-                <option value="15">AliExpress - ~15%</option>
-                <option value="5">Pagamento Cartão/Maquininha - 5%</option>
-                <option value="custom">Outro (Inserir manual)</option>
+                <option value="0">VENDA DIRETA (SEM TAXA) - 0%</option>
+                <option value="20">MERCADO LIVRE (CLÁSSICO/PREMIUM) - ~20%</option>
+                <option value="20">SHOPEE - ~20%</option>
+                <option value="15">ALIEXPRESS - ~15%</option>
+                <option value="5">PAGAMENTO CARTÃO/MAQUININHA - 5%</option>
+                <option value="custom">OUTRO (INSERIR MANUAL)</option>
             </select>
         </div>
         <div class="form-group" id="divTaxaCustom" style="display:none;">
-            <label for="taxaCustomizada">Taxa Personalizada:</label>
+            <label for="taxaCustomizada">TAXA PERSONALIZADA:</label>
             <div class="input-group">
                 <input type="text" id="taxaCustomizada" value="0" oninput="formatarNumero(this); calcular()">
                 <span class="input-group-addon">%</span>
@@ -366,67 +412,132 @@
         </div>
     </div>
 
+    <!-- Calculadora SEDEX -->
+    <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+        <h4 style="margin-top:0; color: #856404; font-size: 15px; text-transform: uppercase;">CALCULADORA SIMBÓLICA DE FRETE (SEDEX)</h4>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px; text-transform: uppercase;">ORIGEM FIXA: CEP 72300-533 (BRASÍLIA)</p>
+        <div class="grid-2-cols">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cepDestino" style="color: #856404;">CEP DESTINO:</label>
+                <input type="text" id="cepDestino" placeholder="00000-000" maxlength="9" oninput="formatarCEP(this)">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="pesoCaixa" style="color: #856404;">PESO TOTAL C/ CAIXA:</label>
+                <div class="input-group">
+                    <input type="text" id="pesoCaixa" value="0,5" oninput="formatarValor(this)">
+                    <span class="input-group-addon">KG</span>
+                </div>
+            </div>
+        </div>
+        <button type="button" onclick="simularFrete()" style="background-color: #ffc107; color: #212529; margin-top: 10px; padding: 8px;">SIMULAR FRETE BASE (CORREIOS)</button>
+        <p id="resultadoFrete" style="font-weight: bold; margin-top: 10px; display: none; color: #856404; text-transform: uppercase;"></p>
+    </div>
+
+    <!-- Resultados -->
     <div class="results" id="resultados">
-        <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Resumo de Custos</h3>
-        <p><span>Custo do Material (Baseado no Peso):</span> <span id="resMaterial">R$ 0,00</span></p>
-        <p><span>Custo de Energia:</span> <span id="resEnergia">R$ 0,00</span></p>
-        <p><span>Depreciação Máquina:</span> <span id="resMaquina">R$ 0,00</span></p>
-        <p><span>Mão de Obra:</span> <span id="resTrabalho">R$ 0,00</span></p>
-        <p><span>Embalagens:</span> <span id="resExtras">R$ 0,00</span></p>
-        <p><span>Custo Subtotal:</span> <span id="resSubtotal">R$ 0,00</span></p>
-        <p><span>Margem para Falhas:</span> <span id="resFalhas">R$ 0,00</span></p>
-        <p style="border-bottom: 1px solid #ccc; padding-bottom: 10px;"><span><strong>Custo Total de Produção (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
+        <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 5px; text-transform: uppercase;">RESUMO DE CUSTOS</h3>
+        <p><span>CUSTO DO MATERIAL (BASEADO NO PESO):</span> <span id="resMaterial">R$ 0,00</span></p>
+        <p><span>CUSTO DE ENERGIA:</span> <span id="resEnergia">R$ 0,00</span></p>
+        <p><span>DEPRECIAÇÃO MÁQUINA:</span> <span id="resMaquina">R$ 0,00</span></p>
+        <p><span>MÃO DE OBRA:</span> <span id="resTrabalho">R$ 0,00</span></p>
+        <p><span>EMBALAGENS:</span> <span id="resExtras">R$ 0,00</span></p>
+        <p><span>CUSTO SUBTOTAL:</span> <span id="resSubtotal">R$ 0,00</span></p>
+        <p><span>MARGEM PARA FALHAS:</span> <span id="resFalhas">R$ 0,00</span></p>
+        <p style="border-bottom: 1px solid #ccc; padding-bottom: 10px;"><span><strong>CUSTO TOTAL DE PRODUÇÃO (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
         
-        <h3 style="color: #28a745; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Formação de Preço</h3>
-        <p><span>Lucro Líquido Desejado:</span> <span id="resLucro">R$ 0,00</span></p>
-        <p><span>Preço Ideal (Sem taxas):</span> <span id="resPrecoSemTaxa">R$ 0,00</span></p>
-        <p><span>Taxa da Plataforma:</span> <span id="resTaxa">R$ 0,00</span></p>
+        <h3 style="color: #28a745; border-bottom: 1px solid #ccc; padding-bottom: 5px; text-transform: uppercase;">FORMAÇÃO DE PREÇO</h3>
+        <p><span>LUCRO LÍQUIDO DESEJADO:</span> <span id="resLucro">R$ 0,00</span></p>
+        <p><span>PREÇO IDEAL (SEM TAXAS):</span> <span id="resPrecoSemTaxa">R$ 0,00</span></p>
+        <p><span>TAXA DA PLATAFORMA:</span> <span id="resTaxa">R$ 0,00</span></p>
         <p class="total"><span>PREÇO DE VENDA SUGERIDO:</span> <span id="resPrecoFinal">R$ 0,00</span></p>
     </div>
 
-    <button onclick="salvarNoHistorico()" class="btn-success">Salvar Produto no Histórico</button>
+    <button onclick="salvarNoHistorico()" class="btn-success">SALVAR PRODUTO NO HISTÓRICO</button>
 
-    <div class="section-title" style="margin-top: 40px;">Histórico de Produtos Gerados</div>
+    <!-- Histórico de Produtos Gerados (Pendentes) -->
+    <div class="section-title" style="margin-top: 40px;">HISTÓRICO DE PRODUTOS GERADOS (EM ESTOQUE / A VENDER)</div>
     <div class="history-container">
         <table id="tabelaHistorico">
             <thead>
                 <tr>
-                    <th>Data</th>
-                    <th>Produto</th>
-                    <th>Filamento</th>
-                    <th>Tempo Impressão</th>
-                    <th>Plataforma</th>
-                    <th>Custo Prod.</th>
-                    <th>Preço Venda</th>
-                    <th>Lucro Líquido</th>
-                    <th>Ação</th>
+                    <th>DATA</th>
+                    <th>PRODUTO</th>
+                    <th>QTD</th>
+                    <th>FILAMENTO</th>
+                    <th>TEMPO IMP.</th>
+                    <th>PLATAFORMA</th>
+                    <th>CUSTO UN.</th>
+                    <th>VENDA UN.</th>
+                    <th>LUCRO UN.</th>
+                    <th>VENDIDO?</th>
+                    <th>AÇÃO</th>
                 </tr>
             </thead>
             <tbody id="corpoHistorico">
             </tbody>
         </table>
     </div>
-    <button onclick="limparHistorico()" class="btn-danger" style="margin-top: 15px;">Limpar Histórico</button>
+    <button onclick="limparHistorico()" class="btn-danger" style="margin-top: 15px;">LIMPAR HISTÓRICO GERADOS</button>
+
+    <!-- DASHBOARD DE PRODUTOS VENDIDOS E BANCO DE DADOS -->
+    <div class="section-title" style="margin-top: 50px; border-bottom-color: #28a745;">DASHBOARD & BANCO DE DADOS DE PRODUTOS VENDIDOS</div>
+    
+    <div class="grid-3-cards">
+        <div class="metric-card green">
+            <h4>LUCRO TOTAL OBTIDO</h4>
+            <p id="dashLucroTotal">R$ 0,00</p>
+        </div>
+        <div class="metric-card red">
+            <h4>CUSTO TOTAL DE PRODUÇÃO</h4>
+            <p id="dashCustoTotal">R$ 0,00</p>
+        </div>
+        <div class="metric-card blue">
+            <h4>ITENS VENDIDOS</h4>
+            <p id="dashQtdItens">0 UNID.</p>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <table id="tabelaVendidos">
+            <thead>
+                <tr>
+                    <th>DATA VENDA</th>
+                    <th>PRODUTO</th>
+                    <th>QTD</th>
+                    <th>FILAMENTO</th>
+                    <th>PLATAFORMA</th>
+                    <th>CUSTO TOTAL</th>
+                    <th>VENDA TOTAL</th>
+                    <th>LUCRO TOTAL</th>
+                    <th>AÇÃO</th>
+                </tr>
+            </thead>
+            <tbody id="corpoVendidos">
+            </tbody>
+        </table>
+    </div>
+    <button onclick="limparVendidos()" class="btn-danger" style="margin-top: 15px;">LIMPAR BANCO DE VENDAS</button>
 
 </div>
 
+<!-- Modal Nova Embalagem -->
 <div class="modal-overlay" id="modalEmbalagem">
     <div class="modal-content">
-        <h3 style="margin-top:0;">Adicionar Item à Biblioteca</h3>
+        <h3 style="margin-top:0; text-transform: uppercase;">ADICIONAR ITEM À BIBLIOTECA</h3>
         <div class="form-group">
-            <label>Nome do Item:</label>
-            <input type="text" id="novoItemNome">
+            <label>NOME DO ITEM:</label>
+            <input type="text" id="novoItemNome" oninput="this.value = this.value.toUpperCase();">
         </div>
         <div class="form-group">
-            <label>Custo Unitário:</label>
+            <label>CUSTO UNITÁRIO:</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
                 <input type="text" id="novoItemValor" class="time-input" oninput="formatarMoeda(this)" placeholder="00,00">
             </div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button onclick="salvarNovaEmbalagem()" class="btn-success">Salvar na Biblioteca</button>
-            <button onclick="fecharModalEmbalagem()" style="background-color: #6c757d;">Cancelar</button>
+            <button onclick="salvarNovaEmbalagem()" class="btn-success">SALVAR NA BIBLIOTECA</button>
+            <button onclick="fecharModalEmbalagem()" style="background-color: #6c757d;">CANCELAR</button>
         </div>
     </div>
 </div>
@@ -435,6 +546,14 @@
     let bibliotecaEmbalagens = JSON.parse(localStorage.getItem('lib_embalagens')) || [];
     let embalagensAtuaisDaPeca = [];
     let historicoProdutos = JSON.parse(localStorage.getItem('hist_produtos')) || [];
+    let produtosVendidos = JSON.parse(localStorage.getItem('db_produtos_vendidos')) || [];
+
+    // Conversão automática para CAIXA ALTA em todos os inputs
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
+            e.target.value = e.target.value.toUpperCase();
+        }
+    });
 
     function formatTimeInput(input) {
         let v = input.value.replace(/\D/g, '');
@@ -469,6 +588,41 @@
         input.value = input.value.replace(/\D/g, '');
     }
 
+    function formatarCEP(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v.length > 8) v = v.slice(0, 8);
+        if (v.length > 5) {
+            v = v.slice(0,5) + '-' + v.slice(5);
+        }
+        input.value = v;
+    }
+
+    function simularFrete() {
+        const cep = document.getElementById('cepDestino').value;
+        const peso = converterStringParaFloat(document.getElementById('pesoCaixa').value);
+        const resultEl = document.getElementById('resultadoFrete');
+        
+        if(cep.length < 9) {
+            alert("DIGITE UM CEP VÁLIDO");
+            return;
+        }
+        
+        const cepBase = parseInt(cep.replace('-', '').substring(0,2));
+        let valorBase = 25.00; // DF/GO
+        
+        if (cepBase >= 0 && cepBase <= 19) valorBase = 35.00; // SP
+        else if (cepBase >= 20 && cepBase <= 28) valorBase = 42.00; // RJ/ES
+        else if (cepBase >= 30 && cepBase <= 39) valorBase = 38.00; // MG
+        else if (cepBase >= 40 && cepBase <= 69) valorBase = 65.00; // N/NE
+        else if (cepBase >= 80 && cepBase <= 99) valorBase = 45.00; // SUL
+        
+        const acrescimoPeso = (peso > 1) ? (peso - 1) * 12 : 0;
+        const freteFinal = valorBase + acrescimoPeso;
+        
+        resultEl.innerText = `ESTIMATIVA SEDEX: ${freteFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (PRAZO: ~3 A 7 DIAS ÚTEIS)`;
+        resultEl.style.display = 'block';
+    }
+
     function converterStringParaFloat(str) {
         if (!str) return 0;
         str = str.replace(/\./g, '').replace(',', '.');
@@ -489,9 +643,9 @@
 
     function renderizarSelectEmbalagem() {
         const select = document.getElementById('selectEmbalagem');
-        select.innerHTML = '<option value="">-- Escolha um item --</option>';
+        select.innerHTML = '<option value="">-- ESCOLHA UM ITEM --</option>';
         bibliotecaEmbalagens.forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.nome} - R$ ${item.valor.toFixed(2).replace('.',',')}</option>`;
+            select.innerHTML += `<option value="${item.id}">${item.nome.toUpperCase()} - R$ ${item.valor.toFixed(2).replace('.',',')}</option>`;
         });
     }
 
@@ -522,7 +676,7 @@
             total += item.valor;
             container.innerHTML += `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                    <span style="font-size: 13px;">${item.nome}</span>
+                    <span style="font-size: 13px; text-transform: uppercase;">${item.nome.toUpperCase()}</span>
                     <div>
                         <span style="font-weight: bold; margin-right: 10px; font-size: 13px;">R$ ${item.valor.toFixed(2).replace('.',',')}</span>
                         <button onclick="removerEmbalagemDaPeca(${item.instanceId})" class="btn-danger" style="padding: 2px 6px;">X</button>
@@ -542,10 +696,10 @@
     }
 
     function salvarNovaEmbalagem() {
-        const nome = document.getElementById('novoItemNome').value.trim();
+        const nome = document.getElementById('novoItemNome').value.trim().toUpperCase();
         const valor = converterStringParaFloat(document.getElementById('novoItemValor').value);
         if (!nome || valor <= 0) {
-            alert("Preencha o nome e um valor maior que zero.");
+            alert("PREENCHA O NOME E UM VALOR MAIOR QUE ZERO.");
             return;
         }
         bibliotecaEmbalagens.push({ id: Date.now(), nome: nome, valor: valor });
@@ -619,15 +773,18 @@
         document.getElementById('resPrecoFinal').innerText = formatBRL(precoFinal);
         
         const tempoImpStr = document.getElementById('tempoImpressao').value || '00:00:00';
+        const nomeProd = (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase();
         ultimoCalculo = {
-            nome: document.getElementById('nomeProduto').value || 'Produto sem nome',
-            tipoFilamento: document.getElementById('tipoFilamento').value,
+            id: Date.now(),
+            nome: nomeProd,
+            tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
             tempoImpressaoStr: tempoImpStr,
             horasImpressao: horasImpressao.toFixed(2),
-            plataforma: platSelect === 'custom' ? `Personalizada (${percTaxa}%)` : document.getElementById('plataformaVenda').options[document.getElementById('plataformaVenda').selectedIndex].text,
+            plataforma: platSelect === 'custom' ? `PERSONALIZADA (${percTaxa}%)` : document.getElementById('plataformaVenda').options[document.getElementById('plataformaVenda').selectedIndex].text.toUpperCase(),
             custoProducao: custoTotal,
             precoVenda: precoFinal,
             lucroLiquido: lucro,
+            quantidade: 1,
             data: new Date().toLocaleDateString('pt-BR')
         };
     }
@@ -636,62 +793,173 @@
         const tbody = document.getElementById('corpoHistorico');
         tbody.innerHTML = '';
         if (historicoProdutos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #777;">Nenhum produto salvo no histórico.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #777;">NENHUM PRODUTO SALVO NO HISTÓRICO GERADOS.</td></tr>';
             return;
         }
         [...historicoProdutos].reverse().forEach((prod, index) => {
             const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             const realIndex = historicoProdutos.length - 1 - index;
-            const tipoFilt = prod.tipoFilamento || 'PLA';
+            const tipoFilt = (prod.tipoFilamento || 'PLA').toUpperCase();
             const tempoImp = prod.tempoImpressaoStr || '00:00:00';
-            const horasImp = prod.horasImpressao ? `${prod.horasImpressao}h` : '-';
+            const horasImp = prod.horasImpressao ? `${prod.horasImpressao}H` : '-';
+            const qtd = prod.quantidade || 1;
             
             tbody.innerHTML += `
                 <tr>
                     <td>${prod.data}</td>
-                    <td><strong>${prod.nome}</strong></td>
-                    <td><span style="background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px;">${tipoFilt}</span></td>
-                    <td style="font-family: monospace;">${tempoImp} <span style="color: #666; font-size: 11px;">(${horasImp})</span></td>
-                    <td style="font-size: 11px;">${prod.plataforma}</td>
+                    <td><strong>${prod.nome.toUpperCase()}</strong></td>
+                    <td>
+                        <input type="number" min="1" value="${qtd}" style="width: 50px; padding: 3px; text-align: center;" onchange="atualizarQuantidadeHistorico(${realIndex}, this.value)">
+                    </td>
+                    <td><span class="badge-filamento">${tipoFilt}</span></td>
+                    <td style="font-family: monospace;">${tempoImp} <span style="color: #666; font-size: 10px;">(${horasImp})</span></td>
+                    <td style="font-size: 11px;">${prod.plataforma.toUpperCase()}</td>
                     <td style="color: #dc3545;">${formatBRL(prod.custoProducao)}</td>
                     <td style="color: #007bff; font-weight:bold;">${formatBRL(prod.precoVenda)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(prod.lucroLiquido)}</td>
-                    <td><button onclick="excluirDoHistorico(${realIndex})" class="btn-danger">Excluir</button></td>
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="checkbox-vendido" title="MARCAR COMO VENDIDO" onchange="marcarComoVendido(${realIndex}, this)">
+                    </td>
+                    <td><button onclick="excluirDoHistorico(${realIndex})" class="btn-danger">EXCLUIR</button></td>
                 </tr>
             `;
         });
     }
 
-    function salvarNoHistorico() {
-        if (!ultimoCalculo) {
-            alert("Realize um cálculo primeiro preenchendo os dados da peça.");
-            return;
-        }
-        historicoProdutos.push(ultimoCalculo);
+    function atualizarQuantidadeHistorico(index, novaQtd) {
+        let qtd = parseInt(novaQtd) || 1;
+        if (qtd < 1) qtd = 1;
+        historicoProdutos[index].quantidade = qtd;
         localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
         renderizarHistorico();
-        alert("Produto salvo no histórico com sucesso!");
+    }
+
+    function marcarComoVendido(index, checkbox) {
+        if (!checkbox.checked) return;
+
+        const prod = historicoProdutos[index];
+        const qtd = prod.quantidade || 1;
+        const custoTotal = prod.custoProducao * qtd;
+        const vendaTotal = prod.precoVenda * qtd;
+        const lucroTotal = prod.lucroLiquido * qtd;
+        const agora = new Date();
+        const dataVendaStr = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        const itemVendido = {
+            id: prod.id || Date.now(),
+            nome: prod.nome,
+            tipoFilamento: prod.tipoFilamento,
+            plataforma: prod.plataforma,
+            quantidade: qtd,
+            custoUnitario: prod.custoProducao,
+            precoVendaUnitario: prod.precoVenda,
+            lucroUnitario: prod.lucroLiquido,
+            custoTotal: custoTotal,
+            vendaTotal: vendaTotal,
+            lucroTotal: lucroTotal,
+            dataVenda: dataVendaStr
+        };
+
+        produtosVendidos.push(itemVendido);
+        localStorage.setItem('db_produtos_vendidos', JSON.stringify(produtosVendidos));
+
+        // Remove do Histórico de Gerados
+        historicoProdutos.splice(index, 1);
+        localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
+
+        renderizarHistorico();
+        renderizarDashboardVendidos();
+        alert(`PRODUTO "${prod.nome}" MARCADO COMO VENDIDO COM SUCESSO!`);
+    }
+
+    function renderizarDashboardVendidos() {
+        const tbody = document.getElementById('corpoVendidos');
+        tbody.innerHTML = '';
+
+        let totalLucro = 0;
+        let totalCusto = 0;
+        let totalItens = 0;
+
+        if (produtosVendidos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #777;">NENHUMA VENDA REGISTRADA NO BANCO DE DADOS.</td></tr>';
+        } else {
+            const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            [...produtosVendidos].reverse().forEach((item, index) => {
+                const realIndex = produtosVendidos.length - 1 - index;
+                totalLucro += item.lucroTotal;
+                totalCusto += item.custoTotal;
+                totalItens += item.quantidade;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-family: monospace; font-size: 11px;">${item.dataVenda}</td>
+                        <td><strong>${item.nome.toUpperCase()}</strong></td>
+                        <td style="text-align: center; font-weight: bold;">${item.quantidade}</td>
+                        <td><span class="badge-filamento">${item.tipoFilamento}</span></td>
+                        <td style="font-size: 11px;">${item.plataforma}</td>
+                        <td style="color: #dc3545; font-weight: bold;">${formatBRL(item.custoTotal)}</td>
+                        <td style="color: #007bff; font-weight: bold;">${formatBRL(item.vendaTotal)}</td>
+                        <td style="color: #28a745; font-weight: bold;">${formatBRL(item.lucroTotal)}</td>
+                        <td><button onclick="excluirDoVendidos(${realIndex})" class="btn-danger">EXCLUIR</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('dashLucroTotal').innerText = formatBRL(totalLucro);
+        document.getElementById('dashCustoTotal').innerText = formatBRL(totalCusto);
+        document.getElementById('dashQtdItens').innerText = `${totalItens} UNID.`;
+    }
+
+    function salvarNoHistorico() {
+        if (!ultimoCalculo) {
+            alert("REALIZE UM CÁLCULO PRIMEIRA PREENCHENDO OS DADOS DA PEÇA.");
+            return;
+        }
+        historicoProdutos.push({...ultimoCalculo, id: Date.now()});
+        localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
+        renderizarHistorico();
+        alert("PRODUTO SALVO NO HISTÓRICO COM SUCESSO!");
     }
 
     function excluirDoHistorico(index) {
-        if(confirm("Tem certeza que deseja excluir este registro?")) {
+        if(confirm("TEM CERTEZA QUE DESEJA EXCLUIR ESTE REGISTRO?")) {
             historicoProdutos.splice(index, 1);
             localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
             renderizarHistorico();
         }
     }
+
+    function excluirDoVendidos(index) {
+        if(confirm("TEM CERTEZA QUE DESEJA EXCLUIR ESTE REGISTRO DE VENDA?")) {
+            produtosVendidos.splice(index, 1);
+            localStorage.setItem('db_produtos_vendidos', JSON.stringify(produtosVendidos));
+            renderizarDashboardVendidos();
+        }
+    }
     
     function limparHistorico() {
-        if(confirm("ATENÇÃO: Deseja apagar todo o histórico de produtos?")) {
+        if(confirm("ATENÇÃO: DESEJA APAGAR TODO O HISTÓRICO DE PRODUTOS GERADOS? ESTA AÇÃO NÃO PODE SER DESFEITA.")) {
             historicoProdutos = [];
             localStorage.setItem('hist_produtos', JSON.stringify([]));
             renderizarHistorico();
         }
     }
 
+    function limparVendidos() {
+        if(confirm("ATENÇÃO: DESEJA APAGAR TODO O BANCO DE DADOS DE PRODUTOS VENDIDOS? ESTA AÇÃO NÃO PODE SER DESFEITA.")) {
+            produtosVendidos = [];
+            localStorage.setItem('db_produtos_vendidos', JSON.stringify([]));
+            renderizarDashboardVendidos();
+        }
+    }
+
     window.onload = function() {
         renderizarSelectEmbalagem();
         renderizarHistorico();
+        renderizarDashboardVendidos();
         calcular();
     };
 </script>
