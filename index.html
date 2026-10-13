@@ -441,6 +441,27 @@
         </div>
     </div>
 
+    <!-- Calculadora SEDEX -->
+    <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+        <h4 style="margin-top:0; color: #856404; font-size: 15px; text-transform: uppercase;">CALCULADORA SIMBÓLICA DE FRETE (SEDEX)</h4>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px; text-transform: uppercase;">ORIGEM FIXA: CEP 72300-533 (BRASÍLIA)</p>
+        <div class="grid-2-cols">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cepDestino" style="color: #856404;">CEP DESTINO:</label>
+                <input type="text" id="cepDestino" placeholder="00000-000" maxlength="9" oninput="formatarCEP(this)">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="pesoCaixa" style="color: #856404;">PESO TOTAL C/ CAIXA:</label>
+                <div class="input-group">
+                    <input type="text" id="pesoCaixa" value="0,5" oninput="formatarValor(this)">
+                    <span class="input-group-addon">KG</span>
+                </div>
+            </div>
+        </div>
+        <button type="button" onclick="simularFrete()" style="background-color: #ffc107; color: #212529; margin-top: 10px; padding: 8px;">SIMULAR FRETE BASE (CORREIOS)</button>
+        <p id="resultadoFrete" style="font-weight: bold; margin-top: 10px; display: none; color: #856404; text-transform: uppercase;"></p>
+    </div>
+
     <!-- Resultados -->
     <div class="results" id="resultados">
         <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 5px; text-transform: uppercase;">RESUMO DE CUSTOS</h3>
@@ -632,6 +653,42 @@
     
     function formatarNumero(input) {
         input.value = input.value.replace(/\D/g, '');
+    }
+
+    function formatarCEP(input) {
+        let v = input.value.replace(/\D/g, '');
+        if (v.length > 8) v = v.slice(0, 8);
+        if (v.length > 5) {
+            v = v.slice(0,5) + '-' + v.slice(5);
+        }
+        input.value = v;
+    }
+
+    // --- LÓGICA DA CALCULADORA SEDEX MANTIDA INTACTA ---
+    function simularFrete() {
+        const cep = document.getElementById('cepDestino').value;
+        const peso = converterStringParaFloat(document.getElementById('pesoCaixa').value);
+        const resultEl = document.getElementById('resultadoFrete');
+        
+        if(cep.length < 9) {
+            alert("DIGITE UM CEP VÁLIDO");
+            return;
+        }
+        
+        const cepBase = parseInt(cep.replace('-', '').substring(0,2));
+        let valorBase = 25.00; // DF/GO
+        
+        if (cepBase >= 0 && cepBase <= 19) valorBase = 35.00; // SP
+        else if (cepBase >= 20 && cepBase <= 28) valorBase = 42.00; // RJ/ES
+        else if (cepBase >= 30 && cepBase <= 39) valorBase = 38.00; // MG
+        else if (cepBase >= 40 && cepBase <= 69) valorBase = 65.00; // N/NE
+        else if (cepBase >= 80 && cepBase <= 99) valorBase = 45.00; // SUL
+        
+        const acrescimoPeso = (peso > 1) ? (peso - 1) * 12 : 0;
+        const freteFinal = valorBase + acrescimoPeso;
+        
+        resultEl.innerText = `ESTIMATIVA SEDEX: ${freteFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (PRAZO: ~3 A 7 DIAS ÚTEIS)`;
+        resultEl.style.display = 'block';
     }
 
     function converterStringParaFloat(str) {
@@ -862,9 +919,6 @@
         renderizarDashboardVendidos();
     }
 
-    // ==========================================
-    // SISTEMA DE FILTROS E RANKING (NOVO)
-    // ==========================================
     function atualizarOpcoesFiltro() {
         const selectProduto = document.getElementById('filtroNomeProduto');
         const selectFilamento = document.getElementById('filtroFilamentoVenda');
@@ -928,12 +982,12 @@
             });
         }
 
-        // Atualiza Dashboard Superior com base APENAS no que está filtrado
+        // Atualiza Dashboard Superior
         document.getElementById('dashLucroTotal').innerText = formatBRL(totalLucro);
         document.getElementById('dashCustoTotal').innerText = formatBRL(totalCusto);
         document.getElementById('dashQtdItens').innerText = `${totalItens} UNID.`;
 
-        // Processa o Ranking baseado nos itens filtrados
+        // Atualiza Ranking
         renderizarRanking(filtrados);
     }
 
@@ -946,7 +1000,6 @@
             return;
         }
 
-        // Agrupa por Nome do Produto
         const rankingMap = {};
         dados.forEach(item => {
             if (!rankingMap[item.nome]) {
@@ -956,7 +1009,6 @@
             rankingMap[item.nome].lucro += item.lucroTotal;
         });
 
-        // Converte em array e ordena (Maior Qtd -> Maior Lucro)
         const rankingArr = Object.values(rankingMap);
         rankingArr.sort((a, b) => {
             if (b.qtd !== a.qtd) return b.qtd - a.qtd;
