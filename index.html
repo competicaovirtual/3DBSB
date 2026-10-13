@@ -109,7 +109,7 @@
             text-transform: uppercase;
         }
         #linkImagem {
-            text-transform: none; /* Mantém URL original */
+            text-transform: none;
         }
         input::placeholder, textarea::placeholder {
             text-transform: uppercase;
@@ -186,7 +186,7 @@
             padding: 20px;
             border-radius: 10px;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
         }
         
         table {
@@ -535,8 +535,28 @@
     <!-- Histórico de Produtos Gerados (Pendentes) -->
     <div class="section-title" style="margin-top: 40px;">
         ESTOQUE DE PRODUTOS GERADOS
-        <input type="text" id="pesquisaHistorico" placeholder="🔍 PESQUISAR NO ESTOQUE..." style="width: 250px; padding: 6px 10px; font-weight: normal; font-size: 12px; margin-bottom: 0;" onkeyup="renderizarHistorico()">
     </div>
+    
+    <!-- Filtros de Estoque -->
+    <div class="filter-container" style="margin-bottom: 15px;">
+        <div class="form-group" style="margin-bottom: 0; flex: 2;">
+            <label for="pesquisaHistorico" style="color: #444; font-size: 12px;">PESQUISAR NO ESTOQUE:</label>
+            <input type="text" id="pesquisaHistorico" placeholder="🔍 DIGITE O NOME..." style="font-weight: normal; font-size: 13px;" onkeyup="renderizarHistorico()">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="filtroEstoqueProduto" style="color: #444; font-size: 12px;">PRODUTO:</label>
+            <select id="filtroEstoqueProduto" onchange="renderizarHistorico()" style="font-size: 13px; padding: 10px;">
+                <option value="TODOS">TODOS</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="filtroEstoqueFilamento" style="color: #444; font-size: 12px;">FILAMENTO:</label>
+            <select id="filtroEstoqueFilamento" onchange="renderizarHistorico()" style="font-size: 13px; padding: 10px;">
+                <option value="TODOS">TODOS</option>
+            </select>
+        </div>
+    </div>
+
     <div class="history-container">
         <table id="tabelaHistorico">
             <thead>
@@ -664,13 +684,47 @@
     </div>
 </div>
 
+<!-- Modal Confirmação de Venda com Ajuste de Preço -->
+<div class="modal-overlay" id="modalVendaAjuste">
+    <div class="modal-content">
+        <h3 style="margin-top:0; text-transform: uppercase; color: #28a745;">REGISTRAR VENDA DO PRODUTO</h3>
+        <p id="infoVendaProdutoModal" style="font-size: 13px; color: #666; margin-bottom: 15px; font-weight: bold;"></p>
+        
+        <div class="form-group">
+            <label>PREÇO SUGERIDO (CADASTRO):</label>
+            <div id="displayPrecoSugeridoModal" style="padding: 10px; background: #e9ecef; border-radius: 5px; font-weight: bold; color: #333;">R$ 0,00</div>
+        </div>
+
+        <div class="form-group">
+            <label for="inputPrecoPraticado">PREÇO PRATICADO NA VENDA (UNITÁRIO):</label>
+            <div class="input-group">
+                <span class="input-group-addon-prefix">R$</span>
+                <input type="text" id="inputPrecoPraticado" class="time-input" oninput="formatarMoeda(this); recalcularAnaliseVendaModal()" placeholder="00,00">
+            </div>
+        </div>
+
+        <div id="analiseAlteracaoPreco" style="background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 12px;">
+            <p style="margin: 4px 0;"><span>ALTERAÇÃO:</span> <strong id="modalInfoAlt">-</strong></p>
+            <p style="margin: 4px 0;"><span>NOVO LUCRO UN.:</span> <strong id="modalInfoLucroUn" style="color: #28a745;">R$ 0,00</strong></p>
+            <p style="margin: 4px 0;"><span>MARGEM LUCRO (SOBRE CUSTO):</span> <strong id="modalInfoLucroCusto">-</strong></p>
+            <p style="margin: 4px 0;"><span>MARGEM LUCRO (SOBRE VENDA):</span> <strong id="modalInfoLucroVenda">-</strong></p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="confirmarVendaComAjuste()" class="btn-success">CONFIRMAR VENDA</button>
+            <button onclick="fecharModalVendaAjuste()" style="background-color: #6c757d;">CANCELAR</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let bibliotecaEmbalagens = JSON.parse(localStorage.getItem('lib_embalagens')) || [];
     let embalagensAtuaisDaPeca = [];
     let historicoProdutos = JSON.parse(localStorage.getItem('hist_produtos')) || [];
     let produtosVendidos = JSON.parse(localStorage.getItem('db_produtos_vendidos')) || [];
 
-    // Conversão automática para CAIXA ALTA (Exceto campo de Link de Imagem)
+    let itemPendenteVendaId = null;
+
     document.addEventListener('input', function(e) {
         if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.id !== 'linkImagem') {
             e.target.value = e.target.value.toUpperCase();
@@ -719,7 +773,6 @@
         input.value = v;
     }
 
-    // --- LÓGICA DA CALCULADORA SEDEX MANTIDA INTACTA ---
     function simularFrete() {
         const cep = document.getElementById('cepDestino').value;
         const peso = converterStringParaFloat(document.getElementById('pesoCaixa').value);
@@ -731,13 +784,13 @@
         }
         
         const cepBase = parseInt(cep.replace('-', '').substring(0,2));
-        let valorBase = 25.00; // DF/GO
+        let valorBase = 25.00;
         
-        if (cepBase >= 0 && cepBase <= 19) valorBase = 35.00; // SP
-        else if (cepBase >= 20 && cepBase <= 28) valorBase = 42.00; // RJ/ES
-        else if (cepBase >= 30 && cepBase <= 39) valorBase = 38.00; // MG
-        else if (cepBase >= 40 && cepBase <= 69) valorBase = 65.00; // N/NE
-        else if (cepBase >= 80 && cepBase <= 99) valorBase = 45.00; // SUL
+        if (cepBase >= 0 && cepBase <= 19) valorBase = 35.00;
+        else if (cepBase >= 20 && cepBase <= 28) valorBase = 42.00;
+        else if (cepBase >= 30 && cepBase <= 39) valorBase = 38.00;
+        else if (cepBase >= 40 && cepBase <= 69) valorBase = 65.00;
+        else if (cepBase >= 80 && cepBase <= 99) valorBase = 45.00;
         
         const acrescimoPeso = (peso > 1) ? (peso - 1) * 12 : 0;
         const freteFinal = valorBase + acrescimoPeso;
@@ -748,6 +801,7 @@
 
     function converterStringParaFloat(str) {
         if (!str) return 0;
+        if (typeof str === 'number') return str;
         str = str.replace(/\./g, '').replace(',', '.');
         return parseFloat(str) || 0;
     }
@@ -919,15 +973,48 @@
         return `<div class="img-placeholder">SEM IMG</div>`;
     }
     
+    function atualizarFiltrosEstoqueSelects() {
+        const selectProd = document.getElementById('filtroEstoqueProduto');
+        const selectFil = document.getElementById('filtroEstoqueFilamento');
+        
+        const prodAtual = selectProd.value;
+        const filAtual = selectFil.value;
+
+        const produtosUnicos = [...new Set(historicoProdutos.map(p => p.nome))].sort();
+        const filamentosUnicos = [...new Set(historicoProdutos.map(p => p.tipoFilamento))].sort();
+
+        selectProd.innerHTML = '<option value="TODOS">TODOS</option>';
+        produtosUnicos.forEach(p => { selectProd.innerHTML += `<option value="${p}">${p}</option>`; });
+
+        selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
+        filamentosUnicos.forEach(f => { selectFil.innerHTML += `<option value="${f}">${f}</option>`; });
+
+        if(produtosUnicos.includes(prodAtual)) selectProd.value = prodAtual;
+        if(filamentosUnicos.includes(filAtual)) selectFil.value = filAtual;
+    }
+
     function renderizarHistorico() {
+        atualizarFiltrosEstoqueSelects();
         const tbody = document.getElementById('corpoHistorico');
         tbody.innerHTML = '';
         
         const termoBusca = (document.getElementById('pesquisaHistorico') ? document.getElementById('pesquisaHistorico').value.toUpperCase() : '');
-        let produtosFiltrados = historicoProdutos;
+        const filtroProd = document.getElementById('filtroEstoqueProduto').value;
+        const filtroFil = document.getElementById('filtroEstoqueFilamento').value;
+
+        let produtosFiltrados = [...historicoProdutos];
+
+        // Ordenação alfabética rigorosa por nome do produto
+        produtosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
         
         if(termoBusca) {
-            produtosFiltrados = historicoProdutos.filter(p => p.nome.includes(termoBusca));
+            produtosFiltrados = produtosFiltrados.filter(p => p.nome.includes(termoBusca));
+        }
+        if(filtroProd !== 'TODOS') {
+            produtosFiltrados = produtosFiltrados.filter(p => p.nome === filtroProd);
+        }
+        if(filtroFil !== 'TODOS') {
+            produtosFiltrados = produtosFiltrados.filter(p => p.tipoFilamento === filtroFil);
         }
 
         if (produtosFiltrados.length === 0) {
@@ -935,7 +1022,7 @@
             return;
         }
 
-        [...produtosFiltrados].reverse().forEach((prod) => {
+        produtosFiltrados.forEach((prod) => {
             const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             const templateImg = renderizarImagem(prod.linkImagem);
             
@@ -958,7 +1045,7 @@
                     <td style="color: #007bff; font-weight:bold;">${formatBRL(prod.precoVenda)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(prod.lucroLiquido)}</td>
                     <td style="text-align: center;">
-                        <input type="checkbox" class="checkbox-vendido" title="MARCAR COMO VENDIDO" onchange="marcarComoVendido('${prod.id}', this)">
+                        <input type="checkbox" class="checkbox-vendido" title="MARCAR COMO VENDIDO" onchange="iniciarProcessoVenda('${prod.id}', this)">
                     </td>
                     <td><button onclick="excluirDoHistorico('${prod.id}')" class="btn-danger">EXCLUIR</button></td>
                 </tr>
@@ -977,15 +1064,69 @@
         }
     }
 
-    function marcarComoVendido(id, checkbox) {
+    // --- POP-UP DE VENDA E AJUSTE DE PREÇO ---
+    function iniciarProcessoVenda(id, checkbox) {
         if (!checkbox.checked) return;
+        itemPendenteVendaId = id;
+        const prod = historicoProdutos.find(p => p.id === id);
+        if(!prod) return;
 
-        const index = historicoProdutos.findIndex(p => p.id === id);
+        document.getElementById('infoVendaProdutoModal').innerText = `${prod.nome} (${prod.tipoFilamento}) - QTD: ${prod.quantidade}`;
+        document.getElementById('displayPrecoSugeridoModal').innerText = prod.precoVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        
+        // Formata o preço padrão sugerido no input
+        let valStr = prod.precoVenda.toFixed(2).replace('.', ',');
+        valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        document.getElementById('inputPrecoPraticado').value = valStr;
+
+        recalcularAnaliseVendaModal();
+        document.getElementById('modalVendaAjuste').style.display = 'flex';
+        checkbox.checked = false; // Reseta o checkbox visualmente até confirmar
+    }
+
+    function fecharModalVendaAjuste() {
+        document.getElementById('modalVendaAjuste').style.display = 'none';
+        itemPendenteVendaId = null;
+    }
+
+    function recalcularAnaliseVendaModal() {
+        const prod = historicoProdutos.find(p => p.id === itemPendenteVendaId);
+        if(!prod) return;
+
+        const precoSugerido = prod.precoVenda;
+        const custoUn = prod.custoProducao;
+        const precoPraticado = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
+
+        const diff = precoPraticado - precoSugerido;
+        let altTexto = "PREÇO MANTIDO IGUAL AO SUGERIDO";
+        if (diff < 0) {
+            const descPct = Math.abs((diff / precoSugerido) * 100).toFixed(1);
+            altTexto = `DESCONTO DE ${descPct}% (${diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+        } else if (diff > 0) {
+            const acrPct = ((diff / precoSugerido) * 100).toFixed(1);
+            altTexto = `ACRÉSCIMO DE +${acrPct}% (+${diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+        }
+
+        const novoLucroUn = precoPraticado - custoUn;
+        const margemSobreCusto = custoUn > 0 ? ((novoLucroUn / custoUn) * 100).toFixed(1) + '%' : '0%';
+        const margemSobreVenda = precoPraticado > 0 ? ((novoLucroUn / precoPraticado) * 100).toFixed(1) + '%' : '0%';
+
+        document.getElementById('modalInfoAlt').innerText = altTexto;
+        document.getElementById('modalInfoLucroUn').innerText = novoLucroUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('modalInfoLucroCusto').innerText = margemSobreCusto;
+        document.getElementById('modalInfoLucroVenda').innerText = margemSobreVenda;
+    }
+
+    function confirmarVendaComAjuste() {
+        if (!itemPendenteVendaId) return;
+        const index = historicoProdutos.findIndex(p => p.id === itemPendenteVendaId);
         if(index === -1) return;
 
         const prod = historicoProdutos[index];
         const qtd = prod.quantidade || 1;
-        
+        const precoPraticadoUn = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
+        const novoLucroUn = precoPraticadoUn - prod.custoProducao;
+
         const itemVendido = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             nome: prod.nome,
@@ -994,8 +1135,8 @@
             plataforma: prod.plataforma,
             quantidade: qtd,
             custoTotal: prod.custoProducao * qtd,
-            vendaTotal: prod.precoVenda * qtd,
-            lucroTotal: prod.lucroLiquido * qtd,
+            vendaTotal: precoPraticadoUn * qtd,
+            lucroTotal: novoLucroUn * qtd,
             dataVenda: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -1005,6 +1146,7 @@
         historicoProdutos.splice(index, 1);
         localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
 
+        fecharModalVendaAjuste();
         atualizarOpcoesFiltro();
         renderizarHistorico();
         renderizarDashboardVendidos();
@@ -1144,6 +1286,8 @@
             return;
         }
         historicoProdutos.push({...ultimoCalculo, id: Date.now().toString()});
+        // Ordena em ordem alfabética automaticamente ao salvar
+        historicoProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
         renderizarHistorico();
         alert("PRODUTO SALVO NO ESTOQUE COM SUCESSO!");
@@ -1176,6 +1320,8 @@
     }
 
     window.onload = function() {
+        // Garante ordenação alfabética inicial nos dados existentes
+        historicoProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarSelectEmbalagem();
         renderizarHistorico();
         atualizarOpcoesFiltro();
