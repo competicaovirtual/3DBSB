@@ -303,7 +303,14 @@
             accent-color: #28a745;
         }
         
-        .produto-link:hover {
+        /* Classe específica para forçar a cor e o hover nos links dos produtos */
+        a.produto-link {
+            color: #007bff !important;
+            text-decoration: none !important;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        a.produto-link:hover {
             text-decoration: underline !important;
             color: #0056b3 !important;
         }
@@ -322,7 +329,7 @@
             <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
-            <label for="linkProduto">LINK DO PRODUTO/REFERÊNCIA:</label>
+            <label for="linkProduto">LINK DO PRODUTO/REFERÊNCIA (URL):</label>
             <input type="text" id="linkProduto" placeholder="COLE A URL AQUI (OPCIONAL)" oninput="calcular()">
         </div>
     </div>
@@ -947,12 +954,13 @@
             const taxaO = prod.taxaOutro || 0;
             const pOutro = taxaO > 0 && taxaO < 100 ? pBase / (1 - (taxaO/100)) : pBase;
 
-            // Transforma o NOME em um link limpo
-            let urlProduto = prod.linkProduto || '';
-            if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            // Busca a URL usando a variável nova (linkProduto) ou a antiga legada (linkImagem)
+            let urlProduto = prod.linkProduto || prod.linkImagem || '';
+            if (urlProduto && !/^https?:\/\//i.test(urlProduto)) { urlProduto = 'https://' + urlProduto; }
             
+            // Força a classe CSS e a formatação para o hiperlink do produto
             const nomeExibicao = urlProduto 
-                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${prod.nome}</strong></a>` 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" title="Acessar link cadastrado">${prod.nome}</a>` 
                 : `<strong>${prod.nome}</strong>`;
 
             tbody.innerHTML += `
@@ -1137,7 +1145,7 @@
         const itemVendido = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             nome: prod.nome,
-            linkProduto: prod.linkProduto || '',
+            linkProduto: prod.linkProduto || prod.linkImagem || '', // Garante pegar o link do histórico antigo também
             tipoFilamento: prod.tipoFilamento,
             plataforma: finalPlat,
             quantidade: qtd,
@@ -1201,11 +1209,11 @@
                 totalCusto += (item.custoTotal || 0);
                 totalItens += (item.quantidade || 0);
 
-                let urlProduto = item.linkProduto || '';
-                if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+                let urlProduto = item.linkProduto || item.linkImagem || '';
+                if (urlProduto && !/^https?:\/\//i.test(urlProduto)) { urlProduto = 'https://' + urlProduto; }
                 
                 const nomeExibicao = urlProduto 
-                    ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${item.nome}</strong></a>` 
+                    ? `<a href="${urlProduto}" target="_blank" class="produto-link" title="Acessar link cadastrado">${item.nome}</a>` 
                     : `<strong>${item.nome}</strong>`;
 
                 tbody.innerHTML += `
@@ -1242,7 +1250,7 @@
         const rankingMap = {};
         dados.forEach(item => {
             if(!item.nome) return;
-            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, link: item.linkProduto, qtd: 0, lucro: 0 }; }
+            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, link: item.linkProduto || item.linkImagem, qtd: 0, lucro: 0 }; }
             rankingMap[item.nome].qtd += (item.quantidade || 0);
             rankingMap[item.nome].lucro += (item.lucroTotal || 0);
         });
@@ -1262,10 +1270,10 @@
             else if (idx === 2) medal = '🥉 3º';
             
             let urlProduto = rank.link || '';
-            if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            if (urlProduto && !/^https?:\/\//i.test(urlProduto)) { urlProduto = 'https://' + urlProduto; }
             
             const nomeExibicao = urlProduto 
-                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${rank.nome}</strong></a>` 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" title="Acessar link cadastrado">${rank.nome}</a>` 
                 : `<strong>${rank.nome}</strong>`;
 
             tbodyRanking.innerHTML += `
