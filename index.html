@@ -303,7 +303,6 @@
             accent-color: #28a745;
         }
         
-        /* Classe específica para forçar a cor e o hover nos links dos produtos */
         a.produto-link {
             color: #007bff !important;
             text-decoration: none !important;
@@ -638,7 +637,7 @@
         
         <div class="form-group">
             <label>PLATAFORMA / MARKETPLACE DA VENDA:</label>
-            <select id="vendaModalPlataforma" onchange="recalcularAnaliseVendaModal()">
+            <select id="vendaModalPlataforma" onchange="aplicarMudancaPlataformaVenda()">
                 <option value="0|VENDA DIRETA">VENDA DIRETA (0%)</option>
                 <option value="20|MERCADO LIVRE">MERCADO LIVRE (20%)</option>
                 <option value="20|SHOPEE">SHOPEE (20%)</option>
@@ -646,7 +645,7 @@
                 <option value="custom|OUTRO">OUTRO (PERSONALIZADO)</option>
             </select>
             <div class="input-group" id="containerVendaTaxaCustom" style="display:none; margin-top:10px;">
-                <input type="text" id="vendaModalTaxaCustom" placeholder="INFORME A TAXA DA PLATAFORMA" oninput="formatarNumero(this); recalcularAnaliseVendaModal()">
+                <input type="text" id="vendaModalTaxaCustom" placeholder="INFORME A TAXA DA PLATAFORMA" oninput="formatarNumero(this); aplicarMudancaPlataformaVenda()">
                 <span class="input-group-addon">%</span>
             </div>
         </div>
@@ -656,11 +655,20 @@
             <div id="displayPrecoSugeridoModal" style="padding: 10px; background: #e9ecef; border-radius: 5px; font-weight: bold; color: #004085;">R$ 0,00</div>
         </div>
 
+        <!-- NOVO CAMPO DE DESCONTO -->
+        <div class="form-group">
+            <label for="inputVendaDesconto">APLICAR DESCONTO (%):</label>
+            <div class="input-group">
+                <input type="text" id="inputVendaDesconto" class="time-input" placeholder="00,00" oninput="formatarValor(this); aplicarMudancaDescontoVenda()">
+                <span class="input-group-addon">%</span>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="inputPrecoPraticado">PREÇO EXATO RECEBIDO DO CLIENTE (UNITÁRIO):</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="inputPrecoPraticado" class="time-input" oninput="formatarMoeda(this); recalcularAnaliseVendaModal()" placeholder="00,00">
+                <input type="text" id="inputPrecoPraticado" class="time-input" oninput="formatarMoeda(this); aplicarMudancaPrecoExatoVenda()" placeholder="00,00">
             </div>
         </div>
 
@@ -710,6 +718,7 @@
 
     let itemPendenteVendaId = null;
     let itemPendenteSedexId = null;
+    let precoSugeridoModalAtual = 0; // Nova variável para sincronizar valores no pop-up
 
     document.addEventListener('input', function(e) {
         if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
@@ -954,11 +963,9 @@
             const taxaO = prod.taxaOutro || 0;
             const pOutro = taxaO > 0 && taxaO < 100 ? pBase / (1 - (taxaO/100)) : pBase;
 
-            // Busca a URL usando a variável nova (linkProduto) ou a antiga legada (linkImagem)
             let urlProduto = prod.linkProduto || prod.linkImagem || '';
             if (urlProduto && !/^https?:\/\//i.test(urlProduto)) { urlProduto = 'https://' + urlProduto; }
             
-            // Força a classe CSS e a formatação para o hiperlink do produto
             const nomeExibicao = urlProduto 
                 ? `<a href="${urlProduto}" target="_blank" class="produto-link" title="Acessar link cadastrado">${prod.nome}</a>` 
                 : `<strong>${prod.nome}</strong>`;
@@ -1053,16 +1060,15 @@
 
         document.getElementById('infoVendaProdutoModal').innerText = `${prod.nome} (${prod.tipoFilamento}) - QTD: ${prod.quantidade || 1}`;
         
+        // Define o modal na opção inicial (Venda Direta) e reseta o desconto
         document.getElementById('vendaModalPlataforma').value = "0|VENDA DIRETA";
         document.getElementById('containerVendaTaxaCustom').style.display = "none";
         document.getElementById('vendaModalTaxaCustom').value = prod.taxaOutro > 0 ? prod.taxaOutro : "";
+        document.getElementById('inputVendaDesconto').value = ""; 
 
-        const pBase = prod.precoBase || prod.precoVenda || 0;
-        let valStr = pBase.toFixed(2).replace('.', ',');
-        valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-        document.getElementById('inputPrecoPraticado').value = valStr;
+        // Aplica e copia automaticamente o valor para o preço exato
+        aplicarMudancaPlataformaVenda();
 
-        recalcularAnaliseVendaModal();
         document.getElementById('modalVendaAjuste').style.display = 'flex';
         checkbox.checked = false;
     }
@@ -1072,12 +1078,12 @@
         itemPendenteVendaId = null;
     }
 
-    function recalcularAnaliseVendaModal() {
+    // Evento 1: Ao trocar a plataforma, calcula o Preço Sugerido e replica no Preço Exato
+    function aplicarMudancaPlataformaVenda() {
         const prod = historicoProdutos.find(p => p.id === itemPendenteVendaId);
         if(!prod) return;
 
         const pBase = prod.precoBase || prod.precoVenda || 0;
-        const custoProd = prod.custoProducao || prod.custoTotal || 0;
 
         const platSelect = document.getElementById('vendaModalPlataforma').value;
         const [taxaVal, platNome] = platSelect.split('|');
@@ -1092,19 +1098,64 @@
         }
 
         const taxaDecimal = taxaPct / 100;
-        const precoIdealPlataforma = (taxaDecimal < 1) ? pBase / (1 - taxaDecimal) : pBase;
+        precoSugeridoModalAtual = (taxaDecimal < 1) ? pBase / (1 - taxaDecimal) : pBase;
         
-        document.getElementById('displayPrecoSugeridoModal').innerText = precoIdealPlataforma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('displayPrecoSugeridoModal').innerText = precoSugeridoModalAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+        // Replica o desconto atual (se preenchido) gerando o Preço Exato no input
+        aplicarMudancaDescontoVenda();
+    }
+
+    // Evento 2: Ao digitar a % de desconto, recalcula o Preço Exato
+    function aplicarMudancaDescontoVenda() {
+        let descStr = document.getElementById('inputVendaDesconto').value;
+        let descPct = converterStringParaFloat(descStr) || 0;
+        
+        let novoPreco = precoSugeridoModalAtual * (1 - (descPct / 100));
+        
+        // Puxa o cálculo pro input de Preço Exato
+        let valStr = novoPreco.toFixed(2).replace('.', ',');
+        valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        document.getElementById('inputPrecoPraticado').value = valStr;
+
+        recalcularAnaliseVendaModal();
+    }
+
+    // Evento 3: Ao digitar no Preço Exato manualmente, preenche a % de desconto
+    function aplicarMudancaPrecoExatoVenda() {
+        const precoPraticado = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
+        if (precoSugeridoModalAtual > 0) {
+            let descCalculado = (1 - (precoPraticado / precoSugeridoModalAtual)) * 100;
+            if(descCalculado <= 0) {
+                // Se for maior que o sugerido (acréscimo), limpa a caixa de desconto
+                document.getElementById('inputVendaDesconto').value = "";
+            } else {
+                document.getElementById('inputVendaDesconto').value = descCalculado.toFixed(2).replace('.',',');
+            }
+        }
+        recalcularAnaliseVendaModal();
+    }
+
+    // Gera o diagnóstico e os indicadores da venda a todo momento
+    function recalcularAnaliseVendaModal() {
+        const prod = historicoProdutos.find(p => p.id === itemPendenteVendaId);
+        if(!prod) return;
+
+        const custoProd = prod.custoProducao || prod.custoTotal || 0;
         const precoPraticado = converterStringParaFloat(document.getElementById('inputPrecoPraticado').value);
 
-        const diff = precoPraticado - precoIdealPlataforma;
+        const platSelect = document.getElementById('vendaModalPlataforma').value;
+        const [taxaVal, platNome] = platSelect.split('|');
+        let taxaPct = (taxaVal === 'custom') ? (parseFloat(document.getElementById('vendaModalTaxaCustom').value) || 0) : parseFloat(taxaVal);
+        const taxaDecimal = taxaPct / 100;
+
+        const diff = precoPraticado - precoSugeridoModalAtual;
         let altTexto = "MANTIDO";
-        if (diff < 0) {
-            const descPct = Math.abs((diff / precoIdealPlataforma) * 100).toFixed(1);
+        if (diff < -0.01) {
+            const descPct = Math.abs((diff / precoSugeridoModalAtual) * 100).toFixed(1);
             altTexto = `DESCONTO ${descPct}% (${diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
-        } else if (diff > 0) {
-            const acrPct = ((diff / precoIdealPlataforma) * 100).toFixed(1);
+        } else if (diff > 0.01) {
+            const acrPct = ((diff / precoSugeridoModalAtual) * 100).toFixed(1);
             altTexto = `ACRÉSCIMO +${acrPct}% (+${diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
         }
 
@@ -1145,7 +1196,7 @@
         const itemVendido = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             nome: prod.nome,
-            linkProduto: prod.linkProduto || prod.linkImagem || '', // Garante pegar o link do histórico antigo também
+            linkProduto: prod.linkProduto || prod.linkImagem || '',
             tipoFilamento: prod.tipoFilamento,
             plataforma: finalPlat,
             quantidade: qtd,
