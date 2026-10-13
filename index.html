@@ -108,6 +108,10 @@
             font-size: 14px;
             text-transform: uppercase;
         }
+        /* Previne o link de ficar maiúsculo no placeholder também, para ficar correto visualmente */
+        #linkProduto { text-transform: none; }
+        #linkProduto::placeholder { text-transform: uppercase; }
+        
         input::placeholder, textarea::placeholder {
             text-transform: uppercase;
         }
@@ -299,6 +303,12 @@
             cursor: pointer;
             accent-color: #28a745;
         }
+        
+        /* Ajuste do hover no link do produto para indicar que é clicável */
+        .produto-link:hover {
+            text-decoration: underline !important;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -308,9 +318,15 @@
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
-    <div class="form-group" style="margin-bottom: 15px;">
-        <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
-        <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
+    <div class="grid-2-cols" style="margin-bottom: 15px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
+            <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="linkProduto">LINK DO PRODUTO/REFERÊNCIA:</label>
+            <input type="text" id="linkProduto" placeholder="COLE A URL AQUI (OPCIONAL)" oninput="calcular()">
+        </div>
     </div>
     
     <div class="grid-2-cols" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
@@ -588,7 +604,7 @@
 
 </div>
 
-<!-- Modal Nova Embalagem -->
+<!-- Modais de Interface -->
 <div class="modal-overlay" id="modalEmbalagem">
     <div class="modal-content">
         <h3 style="margin-top:0; text-transform: uppercase;">ADICIONAR ITEM À BIBLIOTECA</h3>
@@ -610,7 +626,6 @@
     </div>
 </div>
 
-<!-- Modal Confirmação de Venda com Seleção de Plataforma -->
 <div class="modal-overlay" id="modalVendaAjuste">
     <div class="modal-content">
         <h3 style="margin-top:0; text-transform: uppercase; color: #28a745;">REGISTRAR VENDA</h3>
@@ -657,16 +672,13 @@
     </div>
 </div>
 
-<!-- Modal SEDEX Rápido -->
 <div class="modal-overlay" id="modalSedex">
     <div class="modal-content" style="max-width: 350px;">
         <h3 style="margin-top:0; text-transform: uppercase; color: #856404; display:flex; align-items:center; gap:8px;">
             🚚 CÁLCULO SEDEX
         </h3>
         <p id="sedexProdName" style="font-size:12px; font-weight:bold; color:#444; border-bottom:1px solid #ccc; padding-bottom:5px;"></p>
-        
         <p style="font-size: 10px; color: #666; margin-bottom: 15px; text-transform: uppercase;">Origem base fixada: CEP 72300-533 (DF)</p>
-
         <div class="form-group">
             <label style="color:#856404;">CEP DE DESTINO:</label>
             <input type="text" id="sedexCepModal" placeholder="00000-000" maxlength="9" oninput="formatarCEP(this)">
@@ -679,10 +691,8 @@
             </div>
             <span style="font-size:9px; color:#666;">(*Peso da peça + 150g de embalagem)</span>
         </div>
-        
         <button onclick="calcularSedexModal()" class="btn-warning" style="width:100%; padding:10px; font-size:14px; font-weight:bold;">SIMULAR FRETE CORREIOS</button>
         <p id="sedexResultModal" style="margin-top:15px; font-weight:bold; color:#856404; display:none; text-align:center; padding:10px; background:#fff3cd; border:1px dashed #ffeeba; border-radius:5px;"></p>
-        
         <button onclick="fecharModalSedex()" style="background-color: #6c757d; margin-top: 10px;">FECHAR JANELA</button>
     </div>
 </div>
@@ -696,9 +706,12 @@
     let itemPendenteVendaId = null;
     let itemPendenteSedexId = null;
 
+    // Converte automaticamente para maiúsculas (ignorando o campo de Link para não quebrar a URL)
     document.addEventListener('input', function(e) {
         if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
-            e.target.value = e.target.value.toUpperCase();
+            if (e.target.id !== 'linkProduto') {
+                e.target.value = e.target.value.toUpperCase();
+            }
         }
     });
 
@@ -727,9 +740,7 @@
         input.value = v;
     }
     
-    function formatarNumero(input) {
-        input.value = input.value.replace(/\D/g, '');
-    }
+    function formatarNumero(input) { input.value = input.value.replace(/\D/g, ''); }
 
     function formatarCEP(input) {
         let v = input.value.replace(/\D/g, '');
@@ -856,10 +867,12 @@
         
         const tempoImpStr = document.getElementById('tempoImpressao').value || '00:00:00';
         const nomeProd = (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase();
+        const linkDigitado = document.getElementById('linkProduto').value.trim();
 
         ultimoCalculo = {
             id: Date.now().toString(),
             nome: nomeProd,
+            linkProduto: linkDigitado,
             tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
             tempoImpressaoStr: tempoImpStr,
             custoProducao: custoTotal,
@@ -879,14 +892,15 @@
         const prodAtual = selectProd.value;
         const filAtual = selectFil.value;
 
-        const produtosUnicos = [...new Set(historicoProdutos.map(p => p.nome))].sort();
-        const filamentosUnicos = [...new Set(historicoProdutos.map(p => p.tipoFilamento))].sort();
+        // Trata strings nulas ou vazias de legados (|| '')
+        const produtosUnicos = [...new Set(historicoProdutos.map(p => p.nome || ''))].sort();
+        const filamentosUnicos = [...new Set(historicoProdutos.map(p => p.tipoFilamento || ''))].sort();
 
         selectProd.innerHTML = '<option value="TODOS">TODOS</option>';
-        produtosUnicos.forEach(p => { selectProd.innerHTML += `<option value="${p}">${p}</option>`; });
+        produtosUnicos.forEach(p => { if(p) selectProd.innerHTML += `<option value="${p}">${p}</option>`; });
 
         selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
-        filamentosUnicos.forEach(f => { selectFil.innerHTML += `<option value="${f}">${f}</option>`; });
+        filamentosUnicos.forEach(f => { if(f) selectFil.innerHTML += `<option value="${f}">${f}</option>`; });
 
         if(produtosUnicos.includes(prodAtual)) selectProd.value = prodAtual;
         if(filamentosUnicos.includes(filAtual)) selectFil.value = filAtual;
@@ -907,14 +921,15 @@
         const tbody = document.getElementById('corpoHistorico');
         tbody.innerHTML = '';
         
-        const termoBusca = (document.getElementById('pesquisaHistorico') ? document.getElementById('pesquisaHistorico').value.toUpperCase() : '');
+        const pesquisaEl = document.getElementById('pesquisaHistorico');
+        const termoBusca = (pesquisaEl ? pesquisaEl.value.toUpperCase() : '');
         const filtroProd = document.getElementById('filtroEstoqueProduto').value;
         const filtroFil = document.getElementById('filtroEstoqueFilamento').value;
 
         let produtosFiltrados = [...historicoProdutos];
-        produtosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
+        produtosFiltrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         
-        if(termoBusca) produtosFiltrados = produtosFiltrados.filter(p => p.nome.includes(termoBusca));
+        if(termoBusca) produtosFiltrados = produtosFiltrados.filter(p => (p.nome || '').includes(termoBusca));
         if(filtroProd !== 'TODOS') produtosFiltrados = produtosFiltrados.filter(p => p.nome === filtroProd);
         if(filtroFil !== 'TODOS') produtosFiltrados = produtosFiltrados.filter(p => p.tipoFilamento === filtroFil);
 
@@ -924,21 +939,32 @@
         }
 
         produtosFiltrados.forEach((prod) => {
-            const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
-            const pBase = prod.precoBase;
-            const pML = pBase / 0.8; // 20% taxa
-            const pShopee = pBase / 0.8; // 20% taxa
-            const pCartao = pBase / 0.95; // 5% taxa
+            // Tratamento rígido para não quebrar com banco de dados salvo antigamente (fallback 0)
+            const pBase = prod.precoBase || prod.precoVenda || 0;
+            const custoProd = prod.custoProducao || prod.custoTotal || 0;
+            const lucroLiq = prod.lucroLiquidoBase || prod.lucroLiquido || prod.lucro || 0;
+
+            const pML = pBase / 0.8; 
+            const pShopee = pBase / 0.8; 
+            const pCartao = pBase / 0.95; 
             const taxaO = prod.taxaOutro || 0;
             const pOutro = taxaO > 0 && taxaO < 100 ? pBase / (1 - (taxaO/100)) : pBase;
 
+            // Manipulação do Link Clicável
+            let urlProduto = prod.linkProduto || '';
+            if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            const nomeExibicao = urlProduto 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="ABRIR PÁGINA/LINK CADASTRADO"><strong>${prod.nome}</strong> 🔗</a>` 
+                : `<strong>${prod.nome}</strong>`;
+
             tbody.innerHTML += `
                 <tr>
-                    <td style="font-size: 11px; text-align:left;"><strong>${prod.nome}</strong></td>
-                    <td style="font-size: 10px;">${prod.data}</td>
-                    <td><input type="number" min="1" value="${prod.quantidade}" style="width: 45px; padding: 2px; font-size:11px; text-align: center;" onchange="atualizarQuantidadeHistorico('${prod.id}', this.value)"></td>
-                    <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
+                    <td style="font-size: 11px; text-align:left;">${nomeExibicao}</td>
+                    <td style="font-size: 10px;">${prod.data || ''}</td>
+                    <td><input type="number" min="1" value="${prod.quantidade || 1}" style="width: 45px; padding: 2px; font-size:11px; text-align: center;" onchange="atualizarQuantidadeHistorico('${prod.id}', this.value)"></td>
+                    <td><span class="badge-filamento">${prod.tipoFilamento || ''}</span></td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pBase)}</td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pML)}</td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pShopee)}</td>
@@ -950,8 +976,8 @@
                         <div style="font-weight:bold; color:#004085; margin-top:2px;">${formatBRL(pOutro)}</div>
                     </td>
                     <td><button onclick="abrirModalSedex('${prod.id}')" class="btn-warning" style="font-weight:bold;">📦 FRETE</button></td>
-                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(prod.custoProducao)}</td>
-                    <td style="color: #28a745; font-weight:bold;">${formatBRL(prod.lucroLiquidoBase)}</td>
+                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoProd)}</td>
+                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroLiq)}</td>
                     <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
                     <td style="text-align: center;">
                         <input type="checkbox" class="checkbox-vendido" title="MARCAR COMO VENDIDO" onchange="iniciarProcessoVenda('${prod.id}', this)">
@@ -979,7 +1005,8 @@
         const prod = historicoProdutos.find(p => p.id === id);
         if(!prod) return;
         document.getElementById('sedexProdName').innerText = `${prod.nome} (${prod.tipoFilamento})`;
-        const pesoKg = (prod.pesoGrama + 150) / 1000; // Inclui margem da caixa
+        const pesoGrama = prod.pesoGrama || 0;
+        const pesoKg = (pesoGrama + 150) / 1000; 
         document.getElementById('sedexPesoModal').value = pesoKg.toLocaleString('pt-BR', {minimumFractionDigits:3});
         document.getElementById('sedexCepModal').value = '';
         document.getElementById('sedexResultModal').style.display = 'none';
@@ -1020,13 +1047,15 @@
         const prod = historicoProdutos.find(p => p.id === id);
         if(!prod) return;
 
-        document.getElementById('infoVendaProdutoModal').innerText = `${prod.nome} (${prod.tipoFilamento}) - QTD: ${prod.quantidade}`;
+        document.getElementById('infoVendaProdutoModal').innerText = `${prod.nome} (${prod.tipoFilamento}) - QTD: ${prod.quantidade || 1}`;
         
         document.getElementById('vendaModalPlataforma').value = "0|VENDA DIRETA";
         document.getElementById('containerVendaTaxaCustom').style.display = "none";
         document.getElementById('vendaModalTaxaCustom').value = prod.taxaOutro > 0 ? prod.taxaOutro : "";
 
-        let valStr = prod.precoBase.toFixed(2).replace('.', ',');
+        // Trata os dados de forma segura (compatível com antigos)
+        const pBase = prod.precoBase || prod.precoVenda || 0;
+        let valStr = pBase.toFixed(2).replace('.', ',');
         valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
         document.getElementById('inputPrecoPraticado').value = valStr;
 
@@ -1044,6 +1073,9 @@
         const prod = historicoProdutos.find(p => p.id === itemPendenteVendaId);
         if(!prod) return;
 
+        const pBase = prod.precoBase || prod.precoVenda || 0;
+        const custoProd = prod.custoProducao || prod.custoTotal || 0;
+
         const platSelect = document.getElementById('vendaModalPlataforma').value;
         const [taxaVal, platNome] = platSelect.split('|');
         
@@ -1057,8 +1089,7 @@
         }
 
         const taxaDecimal = taxaPct / 100;
-        
-        const precoIdealPlataforma = (taxaDecimal < 1) ? prod.precoBase / (1 - taxaDecimal) : prod.precoBase;
+        const precoIdealPlataforma = (taxaDecimal < 1) ? pBase / (1 - taxaDecimal) : pBase;
         
         document.getElementById('displayPrecoSugeridoModal').innerText = precoIdealPlataforma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -1076,7 +1107,7 @@
 
         const valorRetido = precoPraticado * taxaDecimal;
         const valorLiquidoRecebido = precoPraticado - valorRetido;
-        const novoLucroUn = valorLiquidoRecebido - prod.custoProducao;
+        const novoLucroUn = valorLiquidoRecebido - custoProd;
 
         document.getElementById('modalInfoAlt').innerText = altTexto;
         document.getElementById('modalInfoRetido').innerText = valorRetido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1090,6 +1121,7 @@
 
         const prod = historicoProdutos[index];
         const qtd = prod.quantidade || 1;
+        const custoProd = prod.custoProducao || prod.custoTotal || 0;
         
         const platSelect = document.getElementById('vendaModalPlataforma').value;
         const [taxaVal, platNome] = platSelect.split('|');
@@ -1105,15 +1137,16 @@
         
         let taxaPct = (taxaVal === 'custom') ? (parseFloat(document.getElementById('vendaModalTaxaCustom').value) || 0) : parseFloat(taxaVal);
         const valorLiquido = precoPraticadoUn * (1 - (taxaPct/100));
-        const lucroUnReal = valorLiquido - prod.custoProducao;
+        const lucroUnReal = valorLiquido - custoProd;
 
         const itemVendido = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             nome: prod.nome,
+            linkProduto: prod.linkProduto || '',
             tipoFilamento: prod.tipoFilamento,
             plataforma: finalPlat,
             quantidade: qtd,
-            custoTotal: prod.custoProducao * qtd,
+            custoTotal: custoProd * qtd,
             vendaTotal: precoPraticadoUn * qtd,
             lucroTotal: lucroUnReal * qtd,
             dataVenda: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -1138,14 +1171,14 @@
         const currentProd = selectProduto.value;
         const currentFil = selectFilamento.value;
 
-        const produtosUnicos = [...new Set(produtosVendidos.map(p => p.nome))].sort();
-        const filamentosUnicos = [...new Set(produtosVendidos.map(p => p.tipoFilamento))].sort();
+        const produtosUnicos = [...new Set(produtosVendidos.map(p => p.nome || ''))].sort();
+        const filamentosUnicos = [...new Set(produtosVendidos.map(p => p.tipoFilamento || ''))].sort();
 
         selectProduto.innerHTML = '<option value="TODOS">TODOS OS PRODUTOS</option>';
-        produtosUnicos.forEach(p => { selectProduto.innerHTML += `<option value="${p}">${p}</option>`; });
+        produtosUnicos.forEach(p => { if(p) selectProduto.innerHTML += `<option value="${p}">${p}</option>`; });
 
         selectFilamento.innerHTML = '<option value="TODOS">TODOS OS FILAMENTOS</option>';
-        filamentosUnicos.forEach(f => { selectFilamento.innerHTML += `<option value="${f}">${f}</option>`; });
+        filamentosUnicos.forEach(f => { if(f) selectFilamento.innerHTML += `<option value="${f}">${f}</option>`; });
 
         if (produtosUnicos.includes(currentProd)) selectProduto.value = currentProd;
         if (filamentosUnicos.includes(currentFil)) selectFilamento.value = currentFil;
@@ -1163,25 +1196,32 @@
         tbody.innerHTML = '';
 
         let totalLucro = 0, totalCusto = 0, totalItens = 0;
-        const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         if (filtrados.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777;">NENHUMA VENDA REGISTRADA PARA ESTES FILTROS.</td></tr>';
         } else {
             [...filtrados].reverse().forEach((item) => {
-                totalLucro += item.lucroTotal;
-                totalCusto += item.custoTotal;
-                totalItens += item.quantidade;
+                totalLucro += (item.lucroTotal || 0);
+                totalCusto += (item.custoTotal || 0);
+                totalItens += (item.quantidade || 0);
+
+                // Manipulação do Link Clicável nas Vendas
+                let urlProduto = item.linkProduto || '';
+                if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+                const nomeExibicao = urlProduto 
+                    ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="ABRIR PÁGINA/LINK CADASTRADO"><strong>${item.nome}</strong> 🔗</a>` 
+                    : `<strong>${item.nome}</strong>`;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td style="font-family: monospace; font-size: 10px; color: #666;">${item.dataVenda}</td>
-                        <td style="font-size: 11px; text-align:left;"><strong>${item.nome}</strong></td>
-                        <td style="text-align: center; font-weight: bold;">${item.quantidade}</td>
-                        <td style="font-size:10px; font-weight:bold; color:#004085;">${item.plataforma}</td>
-                        <td style="color: #007bff; font-weight: bold;">${formatBRL(item.vendaTotal)}</td>
-                        <td style="color: #dc3545; font-weight: bold;">${formatBRL(item.custoTotal)}</td>
-                        <td style="color: #28a745; font-weight: bold;">${formatBRL(item.lucroTotal)}</td>
+                        <td style="font-family: monospace; font-size: 10px; color: #666;">${item.dataVenda || ''}</td>
+                        <td style="font-size: 11px; text-align:left;">${nomeExibicao}</td>
+                        <td style="text-align: center; font-weight: bold;">${item.quantidade || 1}</td>
+                        <td style="font-size:10px; font-weight:bold; color:#004085;">${item.plataforma || ''}</td>
+                        <td style="color: #007bff; font-weight: bold;">${formatBRL(item.vendaTotal || 0)}</td>
+                        <td style="color: #dc3545; font-weight: bold;">${formatBRL(item.custoTotal || 0)}</td>
+                        <td style="color: #28a745; font-weight: bold;">${formatBRL(item.lucroTotal || 0)}</td>
                         <td><button onclick="excluirDoVendidos('${item.id}')" class="btn-danger">X</button></td>
                     </tr>
                 `;
@@ -1206,9 +1246,10 @@
 
         const rankingMap = {};
         dados.forEach(item => {
-            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, qtd: 0, lucro: 0 }; }
-            rankingMap[item.nome].qtd += item.quantidade;
-            rankingMap[item.nome].lucro += item.lucroTotal;
+            if(!item.nome) return;
+            if (!rankingMap[item.nome]) { rankingMap[item.nome] = { nome: item.nome, link: item.linkProduto, qtd: 0, lucro: 0 }; }
+            rankingMap[item.nome].qtd += (item.quantidade || 0);
+            rankingMap[item.nome].lucro += (item.lucroTotal || 0);
         });
 
         const rankingArr = Object.values(rankingMap);
@@ -1217,18 +1258,25 @@
             return b.lucro - a.lucro;
         });
 
-        const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         rankingArr.forEach((rank, idx) => {
             let medal = `#${idx + 1}`;
             if (idx === 0) medal = '🥇 1º';
             else if (idx === 1) medal = '🥈 2º';
             else if (idx === 2) medal = '🥉 3º';
+            
+            // Link clicável no ranking também
+            let urlProduto = rank.link || '';
+            if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            const nomeExibicao = urlProduto 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #333; text-decoration: none;"><strong>${rank.nome}</strong> 🔗</a>` 
+                : `<strong>${rank.nome}</strong>`;
 
             tbodyRanking.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="font-weight: bold; color: #555;">${medal}</td>
-                    <td style="font-size: 11px; text-align:left;"><strong>${rank.nome}</strong></td>
+                    <td style="font-size: 11px; text-align:left;">${nomeExibicao}</td>
                     <td style="text-align: center; font-weight: bold; color: #333;">${rank.qtd}</td>
                     <td style="color: #28a745; font-weight: bold; text-align: right;">${formatBRL(rank.lucro)}</td>
                 </tr>
@@ -1239,8 +1287,12 @@
     function salvarNoHistorico() {
         if (!ultimoCalculo) { alert("REALIZE UM CÁLCULO PRIMEIRO PREENCHENDO OS DADOS DA PEÇA."); return; }
         historicoProdutos.push({...ultimoCalculo, id: Date.now().toString()});
-        historicoProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
+        historicoProdutos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
+        
+        // Limpa o link após salvar
+        document.getElementById('linkProduto').value = "";
+        
         renderizarHistorico();
         alert("PRODUTO SALVO NO ESTOQUE COM SUCESSO!");
     }
@@ -1272,7 +1324,7 @@
     }
 
     window.onload = function() {
-        historicoProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
+        historicoProdutos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         renderizarSelectEmbalagem();
         renderizarHistorico();
         atualizarOpcoesFiltro();
