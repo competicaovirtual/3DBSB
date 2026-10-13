@@ -108,7 +108,6 @@
             font-size: 14px;
             text-transform: uppercase;
         }
-        /* Previne o link de ficar maiúsculo no placeholder também, para ficar correto visualmente */
         #linkProduto { text-transform: none; }
         #linkProduto::placeholder { text-transform: uppercase; }
         
@@ -304,10 +303,9 @@
             accent-color: #28a745;
         }
         
-        /* Ajuste do hover no link do produto para indicar que é clicável */
         .produto-link:hover {
             text-decoration: underline !important;
-            opacity: 0.8;
+            color: #0056b3 !important;
         }
     </style>
 </head>
@@ -706,7 +704,6 @@
     let itemPendenteVendaId = null;
     let itemPendenteSedexId = null;
 
-    // Converte automaticamente para maiúsculas (ignorando o campo de Link para não quebrar a URL)
     document.addEventListener('input', function(e) {
         if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
             if (e.target.id !== 'linkProduto') {
@@ -892,7 +889,6 @@
         const prodAtual = selectProd.value;
         const filAtual = selectFil.value;
 
-        // Trata strings nulas ou vazias de legados (|| '')
         const produtosUnicos = [...new Set(historicoProdutos.map(p => p.nome || ''))].sort();
         const filamentosUnicos = [...new Set(historicoProdutos.map(p => p.tipoFilamento || ''))].sort();
 
@@ -941,7 +937,6 @@
         produtosFiltrados.forEach((prod) => {
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
-            // Tratamento rígido para não quebrar com banco de dados salvo antigamente (fallback 0)
             const pBase = prod.precoBase || prod.precoVenda || 0;
             const custoProd = prod.custoProducao || prod.custoTotal || 0;
             const lucroLiq = prod.lucroLiquidoBase || prod.lucroLiquido || prod.lucro || 0;
@@ -952,11 +947,12 @@
             const taxaO = prod.taxaOutro || 0;
             const pOutro = taxaO > 0 && taxaO < 100 ? pBase / (1 - (taxaO/100)) : pBase;
 
-            // Manipulação do Link Clicável
+            // Transforma o NOME em um link limpo
             let urlProduto = prod.linkProduto || '';
             if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            
             const nomeExibicao = urlProduto 
-                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="ABRIR PÁGINA/LINK CADASTRADO"><strong>${prod.nome}</strong> 🔗</a>` 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${prod.nome}</strong></a>` 
                 : `<strong>${prod.nome}</strong>`;
 
             tbody.innerHTML += `
@@ -1053,7 +1049,6 @@
         document.getElementById('containerVendaTaxaCustom').style.display = "none";
         document.getElementById('vendaModalTaxaCustom').value = prod.taxaOutro > 0 ? prod.taxaOutro : "";
 
-        // Trata os dados de forma segura (compatível com antigos)
         const pBase = prod.precoBase || prod.precoVenda || 0;
         let valStr = pBase.toFixed(2).replace('.', ',');
         valStr = valStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
@@ -1061,7 +1056,7 @@
 
         recalcularAnaliseVendaModal();
         document.getElementById('modalVendaAjuste').style.display = 'flex';
-        checkbox.checked = false; // visual rest
+        checkbox.checked = false;
     }
 
     function fecharModalVendaAjuste() {
@@ -1206,11 +1201,11 @@
                 totalCusto += (item.custoTotal || 0);
                 totalItens += (item.quantidade || 0);
 
-                // Manipulação do Link Clicável nas Vendas
                 let urlProduto = item.linkProduto || '';
                 if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+                
                 const nomeExibicao = urlProduto 
-                    ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="ABRIR PÁGINA/LINK CADASTRADO"><strong>${item.nome}</strong> 🔗</a>` 
+                    ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${item.nome}</strong></a>` 
                     : `<strong>${item.nome}</strong>`;
 
                 tbody.innerHTML += `
@@ -1266,11 +1261,11 @@
             else if (idx === 1) medal = '🥈 2º';
             else if (idx === 2) medal = '🥉 3º';
             
-            // Link clicável no ranking também
             let urlProduto = rank.link || '';
             if (urlProduto && !urlProduto.startsWith('http')) { urlProduto = 'https://' + urlProduto; }
+            
             const nomeExibicao = urlProduto 
-                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #333; text-decoration: none;"><strong>${rank.nome}</strong> 🔗</a>` 
+                ? `<a href="${urlProduto}" target="_blank" class="produto-link" style="color: #007bff; text-decoration: none;" title="Acessar página do produto"><strong>${rank.nome}</strong></a>` 
                 : `<strong>${rank.nome}</strong>`;
 
             tbodyRanking.innerHTML += `
@@ -1290,7 +1285,6 @@
         historicoProdutos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         localStorage.setItem('hist_produtos', JSON.stringify(historicoProdutos));
         
-        // Limpa o link após salvar
         document.getElementById('linkProduto').value = "";
         
         renderizarHistorico();
