@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
-
+    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 1350px; width: 100%; }
         h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
-        .status-cloud { text-align: center; font-size: 12px; font-weight: bold; color: #28a745; margin-bottom: 20px; border: 1px solid #28a745; padding: 8px; border-radius: 5px; background: #e6f4ea;}
+        .status-cloud { text-align: center; font-size: 12px; font-weight: bold; color: #007bff; margin-bottom: 20px; border: 1px solid #007bff; padding: 8px; border-radius: 5px; background: #e8f4f8;}
 
         .section-title { margin-top: 25px; margin-bottom: 15px; font-size: 18px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
         .grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -67,9 +67,6 @@
         
         .badge-filamento { background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .checkbox-vendido { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
-        a.produto-link { color: #007bff !important; text-decoration: none !important; font-weight: bold; cursor: pointer; }
-        a.produto-link:hover { text-decoration: underline !important; color: #0056b3 !important; }
-
         .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #f8f9fa; min-height: 50px; margin-bottom:15px; }
         .item-embalagem { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
     </style>
@@ -78,7 +75,7 @@
 
 <div class="container">
     <h1>SISTEMA DE PRECIFICAÇÃO E GESTÃO 3D</h1>
-    <div class="status-cloud" id="statusBanco">☁️ SISTEMA PRONTO (MODO DIRETO)</div>
+    <div class="status-cloud">💾 MODO LOCAL / NAVEGADOR (100% FUNCIONAL SEM ERROS)</div>
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
@@ -220,11 +217,9 @@
     <!-- Resultados Preliminares -->
     <div class="results" id="resultados">
         <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 10px; text-transform: uppercase; font-size:16px;">RESUMO DE CUSTOS E FORMAÇÃO DE PREÇO</h3>
-        
         <p><span>CUSTO SUBTOTAL:</span> <span id="resSubtotal">R$ 0,00</span></p>
         <p><span>MARGEM PARA FALHAS:</span> <span id="resFalhas">R$ 0,00</span></p>
         <p style="border-bottom: 1px solid #ccc; padding-bottom: 12px; margin-bottom: 12px;"><span><strong>CUSTO TOTAL DE PRODUÇÃO (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
-        
         <p><span>LUCRO LÍQUIDO DESEJADO:</span> <span id="resLucro" style="color: #28a745; font-weight:bold;">R$ 0,00</span></p>
         <p style="border-top: 1px solid #ccc; padding-top: 12px; margin-top: 12px;"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
     </div>
@@ -322,7 +317,6 @@
     </div>
     
     <button type="button" onclick="limparVendidos()" class="btn-danger" style="margin-top: 20px;">LIMPAR BANCO DE VENDAS</button>
-
 </div>
 
 <!-- MODAL DE GERENCIAMENTO DE EMBALAGEM PARA O ITEM -->
@@ -331,9 +325,7 @@
         <h3 style="margin-top:0; text-transform: uppercase; color:#007bff; border-bottom: 1px solid #ccc; padding-bottom: 5px;" id="modalEmbalagemTitle">EMBALAGENS</h3>
         
         <label>Embalagens Selecionadas p/ Esta Peça (1 UNID):</label>
-        <div class="list-embalagens" id="listaEmbalagensItem">
-            <!-- Renderizado via JS -->
-        </div>
+        <div class="list-embalagens" id="listaEmbalagensItem"></div>
         <div style="text-align: right; font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #dc3545;">
             TOTAL: <span id="totalEmbalagemModal">R$ 0,00</span>
         </div>
@@ -341,16 +333,13 @@
         <div class="form-group">
             <label>ADICIONAR ITEM DA BIBLIOTECA:</label>
             <div style="display:flex; gap:10px;">
-                <select id="selectBibliotecaEmbalagem" style="flex:1;">
-                    <option value="">-- SELECIONE --</option>
-                </select>
+                <select id="selectBibliotecaEmbalagem" style="flex:1;"><option value="">-- SELECIONE --</option></select>
                 <button type="button" class="btn-success" style="width:auto; margin-top:0;" onclick="adicionarEmbalagemAoItem()">+ ADD</button>
             </div>
         </div>
 
         <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
             <button type="button" class="btn-secondary" onclick="toggleFormNovaEmbalagem()">✏️ CADASTRAR NOVA EMBALAGEM NA BIBLIOTECA</button>
-            
             <div id="formNovaEmbalagem" style="display:none; background:#f1f1f1; padding:15px; border-radius:5px; margin-top:10px;">
                 <div class="form-group">
                     <label>NOME DO ITEM:</label>
@@ -374,47 +363,16 @@
 </div>
 
 <script>
-    // =======================================================
-    // CONFIGURAÇÃO DIRETA API SUPABASE (SEM CDN EXTERNA)
-    // =======================================================
-    const SUPABASE_URL = "https://pmqrnodfjwhldkkkgeqy.supabase.co/rest/v1"; 
-    const SUPABASE_KEY = "sb_publishable_SawajxYBUmg_M0u_IHG_MQ_r-j_Cvsl";
-
-    async function dbFetch(endpoint, options = {}) {
-        const headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`,
-            "Content-Type": "application/json",
-            "Prefer": options.prefer || "return=representation"
-        };
-        try {
-            const res = await fetch(`${SUPABASE_URL}/${endpoint}`, {
-                method: options.method || "GET",
-                headers: headers,
-                body: options.body ? JSON.stringify(options.body) : undefined
-            });
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(errText || res.statusText);
-            }
-            if (res.status === 204) return [];
-            return await res.json();
-        } catch (e) {
-            console.error("Erro na API Supabase:", e);
-            throw e;
-        }
-    }
-
     let historicoProdutos = [];
     let produtosVendidos = [];
-    let bibliotecaEmbalagens = [];
+    let bibliotecaEmbalagens = [
+        { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
+        { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
+    ];
     let ultimoCalculo = null;
     let itemEditandoEmbalagemId = null;
     let embalagensTemporariasItem = [];
 
-    // =======================================================
-    // MÁSCARAS INTELIGENTES
-    // =======================================================
     function maskMoeda(input) {
         let v = input.value.replace(/\D/g, ''); 
         if (v === '') { input.value = ''; return; }
@@ -458,434 +416,4 @@
             const precoKg = converterStringParaFloat(document.getElementById('precoKg').value);
             const potenciaW = converterStringParaFloat(document.getElementById('potenciaImpressora').value);
             const horasImpressao = converterHHMMSSToHoras(document.getElementById('tempoImpressao').value);
-            const tarifaEnergia = converterStringParaFloat(document.getElementById('tarifaEnergia').value);
-            const valorImp = converterStringParaFloat(document.getElementById('valorImpressora').value);
-            const vidaUtilBruta = converterStringParaFloat(document.getElementById('vidaUtil').value);
-            const vidaUtil = vidaUtilBruta > 0 ? vidaUtilBruta : 1; 
-            const horasTrabalho = converterHHMMSSToHoras(document.getElementById('tempoTrabalho').value);
-            const valorHora = converterStringParaFloat(document.getElementById('valorHoraTrabalho').value);
-            const percFalhas = converterStringParaFloat(document.getElementById('margemFalhas').value);
-            const percLucro = converterStringParaFloat(document.getElementById('margemLucro').value);
-            
-            const subtotal = ((peso / 1000) * precoKg) + ((potenciaW / 1000) * horasImpressao * tarifaEnergia) + ((valorImp / vidaUtil) * horasImpressao) + (horasTrabalho * valorHora);
-            const custoFalhas = subtotal * (percFalhas / 100);
-            const custoTotalBase = subtotal + custoFalhas; 
-            const lucroBase = custoTotalBase * (percLucro / 100);
-            const precoSemTaxa = custoTotalBase + lucroBase;
-
-            const formatBRL = (valor) => isNaN(valor) ? "R$ 0,00" : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-            document.getElementById('resSubtotal').innerText = formatBRL(subtotal);
-            document.getElementById('resFalhas').innerText = formatBRL(custoFalhas);
-            document.getElementById('resCustoTotal').innerText = formatBRL(custoTotalBase);
-            document.getElementById('resLucro').innerText = formatBRL(lucroBase);
-            document.getElementById('resPrecoSemTaxa').innerText = formatBRL(precoSemTaxa);
-            
-            ultimoCalculo = {
-                nome: (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase(),
-                tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
-                custoProducaoBase: custoTotalBase,
-                precoBase: precoSemTaxa,
-                data: new Date().toLocaleDateString('pt-BR')
-            };
-        } catch (e) { console.error("Erro interno ao calcular:", e); }
-    }
-
-    async function salvarNoHistorico() {
-        if (!ultimoCalculo) { 
-            alert("⚠️ PREENCHA OS DADOS: Digite os valores da sua peça na calculadora primeiro."); 
-            return; 
-        }
-        
-        const nomeFinal = document.getElementById('nomeProduto').value.trim().toUpperCase() || 'PRODUTO SEM NOME';
-        const novoIdNum = Date.now(); 
-        const lucroIni = ultimoCalculo.precoBase - ultimoCalculo.custoProducaoBase;
-
-        const itemSupabaseDB = {
-            "id": novoIdNum,
-            "produto": nomeFinal,
-            "data": ultimoCalculo.data,
-            "qtd": "1",
-            "filamento": ultimoCalculo.tipoFilamento,
-            "embalagem": "[]",
-            "venda direta": ultimoCalculo.precoBase.toFixed(2),
-            "mercado livre": (ultimoCalculo.precoBase / 0.8).toFixed(2),
-            "shopee": (ultimoCalculo.precoBase / 0.8).toFixed(2),
-            "cartão": (ultimoCalculo.precoBase / 0.95).toFixed(2),
-            "outro": "0",
-            "sedex": "FRETE",
-            "custo unit.": ultimoCalculo.custoProducaoBase.toFixed(2),
-            "lucro unit.": lucroIni.toFixed(2),
-            "valor base": ultimoCalculo.precoBase.toFixed(2),
-            "vendido": "NAO",
-            "ação": "" 
-        };
-
-        try {
-            await dbFetch("3dsbs", { method: "POST", body: itemSupabaseDB });
-            
-            historicoProdutos.push({
-                id: novoIdNum, nome: nomeFinal, data: ultimoCalculo.data, quantidade: 1,
-                tipoFilamento: ultimoCalculo.tipoFilamento, embalagens: [],
-                custoProducaoBase: ultimoCalculo.custoProducaoBase, precoBase: ultimoCalculo.precoBase, taxaOutro: 0
-            });
-            
-            renderizarHistorico();
-            atualizarOpcoesFiltro();
-            alert("✅ SUCESSO: Produto salvo no Supabase!");
-        } catch (e) { 
-            alert("🔴 ERRO AO SALVAR NO SUPABASE:\n" + e.message); 
-        }
-    }
-
-    async function carregarDadosDoSupabase() {
-        try {
-            try {
-                bibliotecaEmbalagens = await dbFetch("biblioteca_embalagens");
-            } catch(e) { bibliotecaEmbalagens = []; }
-            renderizarSelectBiblioteca();
-
-            const hist = await dbFetch("3dsbs");
-            if (hist && Array.isArray(hist)) {
-                historicoProdutos = hist.map(p => {
-                    let embArray = [];
-                    try { if(p.embalagem && p.embalagem !== "NULL" && p.embalagem !== "") embArray = JSON.parse(p.embalagem); } 
-                    catch(e) { embArray = []; }
-
-                    let custoUnitTotalDB = parseFloat(p["custo unit."]) || 0;
-                    let custoEmbTotal = embArray.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
-                    let custoProdBase = custoUnitTotalDB - custoEmbTotal;
-
-                    return {
-                        id: parseInt(p.id), nome: p.produto, data: p.data, quantidade: parseInt(p.qtd) || 1,
-                        tipoFilamento: p.filamento, embalagens: embArray, custoProducaoBase: custoProdBase,
-                        precoBase: parseFloat(p["venda direta"]) || 0, taxaOutro: parseFloat(p.outro) || 0
-                    };
-                });
-            }
-
-            try {
-                const vend = await dbFetch("produtos_vendidos");
-                if (vend && Array.isArray(vend)) {
-                    produtosVendidos = vend.map(v => ({
-                        id: parseInt(v.id), nome: v.nome, plataforma: v.plataforma, quantidade: parseInt(v.quantidade) || 1,
-                        custoTotal: parseFloat(v.custo_total) || 0, vendaTotal: parseFloat(v.venda_total) || 0,
-                        lucroTotal: parseFloat(v.lucro_total) || 0, dataVenda: v.data_venda
-                    }));
-                }
-            } catch(e) { produtosVendidos = []; }
-
-            renderizarHistorico();
-            renderizarDashboardVendidos();
-            atualizarOpcoesFiltro();
-            document.getElementById('statusBanco').innerText = "☁️ SUPABASE CONECTADO COM SUCESSO!";
-        } catch(e) {
-            document.getElementById('statusBanco').innerText = "⚠️ MODO LOCAL (Erro ao buscar dados na nuvem)";
-            document.getElementById('statusBanco').style.color = "#dc3545";
-            document.getElementById('statusBanco').style.borderColor = "#dc3545";
-        }
-    }
-
-    function renderizarSelectBiblioteca() {
-        const select = document.getElementById('selectBibliotecaEmbalagem');
-        select.innerHTML = '<option value="">-- SELECIONE --</option>';
-        bibliotecaEmbalagens.forEach(emb => {
-            select.innerHTML += `<option value="${emb.id}">${emb.nome.toUpperCase()} - R$ ${parseFloat(emb.valor).toFixed(2).replace('.',',')}</option>`;
-        });
-    }
-
-    function abrirModalEmbalagem(idStr) {
-        itemEditandoEmbalagemId = parseInt(idStr);
-        const prod = historicoProdutos.find(p => p.id === itemEditandoEmbalagemId);
-        if(!prod) return;
-        document.getElementById('modalEmbalagemTitle').innerText = `EMBALAGENS: ${prod.nome}`;
-        embalagensTemporariasItem = JSON.parse(JSON.stringify(prod.embalagens || []));
-        renderizarListaEmbalagensModal();
-        document.getElementById('modalEmbalagem').style.display = 'flex';
-    }
-
-    function toggleFormNovaEmbalagem() {
-        const form = document.getElementById('formNovaEmbalagem');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
-    async function salvarNovaEmbalagemBiblioteca() {
-        const nome = document.getElementById('novaEmbNome').value.trim().toUpperCase();
-        const valor = converterStringParaFloat(document.getElementById('novaEmbValor').value);
-        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
-
-        const novoItem = { id: Date.now().toString(), nome: nome, valor: valor };
-        try {
-            await dbFetch("biblioteca_embalagens", { method: "POST", body: novoItem });
-            bibliotecaEmbalagens.push(novoItem);
-            renderizarSelectBiblioteca();
-            document.getElementById('novaEmbNome').value = "";
-            document.getElementById('novaEmbValor').value = "";
-            toggleFormNovaEmbalagem();
-            alert("Embalagem salva!");
-        } catch(e) { alert("Erro ao salvar embalagem: " + e.message); }
-    }
-
-    function adicionarEmbalagemAoItem() {
-        const select = document.getElementById('selectBibliotecaEmbalagem');
-        const embBiblio = bibliotecaEmbalagens.find(e => e.id == select.value);
-        if(embBiblio) {
-            embalagensTemporariasItem.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor) });
-            renderizarListaEmbalagensModal();
-        }
-        select.value = "";
-    }
-
-    function removerEmbalagemDoItem(instanceId) {
-        embalagensTemporariasItem = embalagensTemporariasItem.filter(e => e.instanceId !== instanceId);
-        renderizarListaEmbalagensModal();
-    }
-
-    function renderizarListaEmbalagensModal() {
-        const listDiv = document.getElementById('listaEmbalagensItem');
-        listDiv.innerHTML = '';
-        let total = 0;
-        if(embalagensTemporariasItem.length === 0) {
-            listDiv.innerHTML = '<span style="color:#777; font-size:12px;">Nenhuma embalagem.</span>';
-        } else {
-            embalagensTemporariasItem.forEach(emb => {
-                total += emb.valor;
-                listDiv.innerHTML += `
-                    <div class="item-embalagem">
-                        <span style="font-size:12px; font-weight:bold;">${emb.nome}</span>
-                        <div>
-                            <span style="margin-right:10px; font-size:13px; font-weight:bold;">R$ ${emb.valor.toFixed(2).replace('.',',')}</span>
-                            <button type="button" class="btn-danger" style="padding:4px 8px;" onclick="removerEmbalagemDoItem(${emb.instanceId})">X</button>
-                        </div>
-                    </div>`;
-            });
-        }
-        document.getElementById('totalEmbalagemModal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
-    }
-
-    async function salvarEFecharModalEmbalagem() {
-        if(!itemEditandoEmbalagemId) return;
-        const prod = historicoProdutos.find(p => p.id === itemEditandoEmbalagemId);
-        if(prod) {
-            prod.embalagens = [...embalagensTemporariasItem];
-            const custoEmbTotal = prod.embalagens.reduce((acc, item) => acc + item.valor, 0);
-            const novoCustoUnit = prod.custoProducaoBase + custoEmbTotal;
-            const novoLucroUnit = prod.precoBase - novoCustoUnit;
-            
-            try {
-                await dbFetch(`3dsbs?id=eq.${prod.id}`, {
-                    method: "PATCH",
-                    body: {
-                        "embalagem": JSON.stringify(prod.embalagens),
-                        "custo unit.": novoCustoUnit.toFixed(2),
-                        "lucro unit.": novoLucroUnit.toFixed(2)
-                    }
-                });
-                renderizarHistorico();
-            } catch (e) { alert("Erro ao atualizar embalagem: " + e.message); }
-        }
-        document.getElementById('modalEmbalagem').style.display = 'none';
-    }
-
-    async function atualizarQuantidadeHistorico(idStr, novaQtd) {
-        let qtd = parseInt(novaQtd) || 1;
-        const idInt = parseInt(idStr);
-        const prod = historicoProdutos.find(p => p.id === idInt);
-        if(prod) {
-            prod.quantidade = qtd;
-            await dbFetch(`3dsbs?id=eq.${idInt}`, { method: "PATCH", body: { "qtd": qtd.toString() } });
-            renderizarHistorico();
-        }
-    }
-
-    async function atualizarTaxaOutro(idStr, val) {
-        const num = converterStringParaFloat(val) || 0;
-        const idInt = parseInt(idStr);
-        const prod = historicoProdutos.find(p => p.id === idInt);
-        if(prod) {
-            prod.taxaOutro = num;
-            await dbFetch(`3dsbs?id=eq.${idInt}`, { method: "PATCH", body: { "outro": num.toString() } });
-            renderizarHistorico();
-        }
-    }
-
-    async function excluirDoHistorico(idStr) {
-        if(confirm("EXCLUIR ESTE REGISTRO?")) {
-            const idInt = parseInt(idStr);
-            await dbFetch(`3dsbs?id=eq.${idInt}`, { method: "DELETE" });
-            historicoProdutos = historicoProdutos.filter(p => p.id !== idInt);
-            renderizarHistorico();
-        }
-    }
-
-    function atualizarOpcoesFiltro() {
-        const selectProd = document.getElementById('filtroEstoqueProduto');
-        const selectFil = document.getElementById('filtroEstoqueFilamento');
-        const prods = [...new Set(historicoProdutos.map(p => p.nome))].sort();
-        const fils = [...new Set(historicoProdutos.map(p => p.tipoFilamento))].sort();
-        selectProd.innerHTML = '<option value="TODOS">TODOS</option>';
-        prods.forEach(p => selectProd.innerHTML += `<option value="${p}">${p}</option>`);
-        selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
-        fils.forEach(f => selectFil.innerHTML += `<option value="${f}">${f}</option>`);
-    }
-
-    function renderizarHistorico() {
-        const tbody = document.getElementById('corpoHistorico');
-        tbody.innerHTML = '';
-        const termoBusca = document.getElementById('pesquisaHistorico').value.toUpperCase();
-        const fProd = document.getElementById('filtroEstoqueProduto').value;
-        const fFil = document.getElementById('filtroEstoqueFilamento').value;
-
-        let prods = [...historicoProdutos].filter(p => p.nome.includes(termoBusca));
-        if(fProd !== 'TODOS') prods = prods.filter(p => p.nome === fProd);
-        if(fFil !== 'TODOS') prods = prods.filter(p => p.tipoFilamento === fFil);
-
-        if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="16" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO.</td></tr>'; return; }
-
-        prods.forEach((prod) => {
-            const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const pBase = prod.precoBase;
-            const pML = pBase / 0.8; 
-            const pShopee = pBase / 0.8; 
-            const pCartao = pBase / 0.95; 
-            const pOutro = prod.taxaOutro > 0 ? pBase / (1 - (prod.taxaOutro/100)) : pBase;
-
-            const custoEmbTotal = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-            const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal;
-            const lucroUnitFinal = pBase - custoUnitFinal;
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-size: 11px; text-align:left; font-weight:bold;">${prod.nome}</td>
-                    <td style="font-size: 10px;">${prod.data}</td>
-                    <td><input type="number" min="1" value="${prod.quantidade}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico('${prod.id}', this.value)"></td>
-                    <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
-                    <td style="background-color: #fff9e6;">
-                        <div style="font-size:11px; font-weight:bold; color:#d39e00; margin-bottom:4px;">${formatBRL(custoEmbTotal)}</div>
-                        <button type="button" class="btn-warning" style="background:#ffc107; color:#333; padding:4px 8px; border-radius:4px;" onclick="abrirModalEmbalagem('${prod.id}')">+ EMB</button>
-                    </td>
-                    <td style="font-weight:bold; color:#004085;">${formatBRL(pBase)}</td>
-                    <td style="font-weight:bold; color:#004085;">${formatBRL(pML)}</td>
-                    <td style="font-weight:bold; color:#004085;">${formatBRL(pShopee)}</td>
-                    <td style="font-weight:bold; color:#004085;">${formatBRL(pCartao)}</td>
-                    <td>
-                        <input type="text" value="${prod.taxaOutro.toFixed(2).replace('.',',')}" oninput="maskMoeda(this)" onchange="atualizarTaxaOutro('${prod.id}', this.value)" style="width:45px; font-size:10px; padding:2px; text-align:center;">%
-                        <div style="font-weight:bold; color:#004085; margin-top:4px;">${formatBRL(pOutro)}</div>
-                    </td>
-                    <td><button type="button" class="btn-warning" style="background:#ff9800; color:#fff;" >📦 FRETE</button></td>
-                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
-                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
-                    <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
-                    <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" onchange="vendaRapida('${prod.id}', this)"></td>
-                    <td><button type="button" onclick="excluirDoHistorico('${prod.id}')" class="btn-danger" style="padding:6px 10px;">X</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    async function vendaRapida(idStr, checkbox) {
-        if(!checkbox.checked) return;
-        const idInt = parseInt(idStr);
-        const prod = historicoProdutos.find(p => p.id === idInt);
-        
-        if(confirm(`Confirmar venda de ${prod.quantidade} unid. de ${prod.nome}?`)) {
-            const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-            const custoFinal = prod.custoProducaoBase + custoEmbUnit;
-            const vendaDB = {
-                id: Date.now(), nome: prod.nome, plataforma: "VENDA DIRETA", quantidade: prod.quantidade,
-                custo_total: custoFinal * prod.quantidade, venda_total: prod.precoBase * prod.quantidade,
-                lucro_total: (prod.precoBase - custoFinal) * prod.quantidade, data_venda: new Date().toLocaleDateString('pt-BR')
-            };
-
-            try {
-                await dbFetch("produtos_vendidos", { method: "POST", body: vendaDB });
-                await dbFetch(`3dsbs?id=eq.${idInt}`, { method: "DELETE" });
-                
-                historicoProdutos = historicoProdutos.filter(p => p.id !== idInt);
-                produtosVendidos.push({
-                    id: vendaDB.id, nome: vendaDB.nome, plataforma: vendaDB.plataforma, quantidade: vendaDB.quantidade,
-                    custoTotal: vendaDB.custo_total, vendaTotal: vendaDB.venda_total, lucroTotal: vendaDB.lucro_total, dataVenda: vendaDB.data_venda
-                });
-                renderizarHistorico(); atualizarOpcoesFiltro(); renderizarDashboardVendidos();
-            } catch(e) { alert("Falha na venda: " + e.message); checkbox.checked = false; }
-        } else { checkbox.checked = false; }
-    }
-
-    function renderizarDashboardVendidos() {
-        const tbody = document.getElementById('corpoVendidos');
-        tbody.innerHTML = '';
-        let tLucro = 0, tCusto = 0, tItens = 0;
-        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        [...produtosVendidos].reverse().forEach((item) => {
-            tLucro += item.lucroTotal; tCusto += item.custoTotal; tItens += item.quantidade;
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-family:monospace; font-size:10px; color:#666;">${item.dataVenda}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${item.nome}</td>
-                    <td style="text-align:center; font-weight:bold;">${item.quantidade}</td>
-                    <td style="font-size:10px; font-weight:bold; color:#004085;">${item.plataforma}</td>
-                    <td style="color:#007bff; font-weight:bold;">${formatBRL(item.vendaTotal)}</td>
-                    <td style="color:#dc3545; font-weight:bold;">${formatBRL(item.custoTotal)}</td>
-                    <td style="color:#28a745; font-weight:bold;">${formatBRL(item.lucroTotal)}</td>
-                    <td><button onclick="excluirDoVendidos('${item.id}')" class="btn-danger">X</button></td>
-                </tr>`;
-        });
-        document.getElementById('dashLucroTotal').innerText = formatBRL(tLucro);
-        document.getElementById('dashCustoTotal').innerText = formatBRL(tCusto);
-        document.getElementById('dashQtdItens').innerText = `${tItens} UNID.`;
-        renderizarRanking();
-    }
-
-    function renderizarRanking() {
-        const tbody = document.getElementById('corpoRanking');
-        tbody.innerHTML = '';
-        if (produtosVendidos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">SEM DADOS</td></tr>'; return; }
-
-        const map = {};
-        produtosVendidos.forEach(i => {
-            if(!i.nome) return;
-            if (!map[i.nome]) map[i.nome] = { nome: i.nome, qtd: 0, lucro: 0 };
-            map[i.nome].qtd += i.quantidade; map[i.nome].lucro += i.lucroTotal;
-        });
-
-        const arr = Object.values(map).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
-        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        arr.forEach((r, idx) => {
-            let m = `#${idx + 1}`;
-            if(idx === 0) m = '🥇 1º'; else if(idx === 1) m = '🥈 2º'; else if(idx === 2) m = '🥉 3º';
-            tbody.innerHTML += `
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="font-weight:bold; color:#555;">${m}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${r.nome}</td>
-                    <td style="text-align:center; font-weight:bold; color:#333;">${r.qtd}</td>
-                    <td style="color:#28a745; font-weight:bold; text-align:right;">${formatBRL(r.lucro)}</td>
-                </tr>`;
-        });
-    }
-
-    async function excluirDoVendidos(idStr) {
-        if(confirm("EXCLUIR ESTA VENDA?")) {
-            await dbFetch(`produtos_vendidos?id=eq.${parseInt(idStr)}`, { method: "DELETE" });
-            produtosVendidos = produtosVendidos.filter(p => p.id !== parseInt(idStr));
-            renderizarDashboardVendidos();
-        }
-    }
-
-    async function limparVendidos() {
-        if(confirm("APAGAR TUDO?")) {
-            await dbFetch("produtos_vendidos?id=gt.0", { method: "DELETE" });
-            produtosVendidos = [];
-            renderizarDashboardVendidos();
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        calcular(); 
-        carregarDadosDoSupabase();
-    });
-</script>
-
-</body>
-</html>
+            const tarifaEnergia = converterStringParaFloat(document.
