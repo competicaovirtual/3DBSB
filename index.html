@@ -67,6 +67,9 @@
         
         .badge-filamento { background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .checkbox-vendido { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
+        a.produto-link { color: #007bff !important; text-decoration: none !important; font-weight: bold; cursor: pointer; }
+        a.produto-link:hover { text-decoration: underline !important; color: #0056b3 !important; }
+
         .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #f8f9fa; min-height: 50px; margin-bottom:15px; }
         .item-embalagem { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
     </style>
@@ -416,4 +419,361 @@
             const precoKg = converterStringParaFloat(document.getElementById('precoKg').value);
             const potenciaW = converterStringParaFloat(document.getElementById('potenciaImpressora').value);
             const horasImpressao = converterHHMMSSToHoras(document.getElementById('tempoImpressao').value);
-            const tarifaEnergia = converterStringParaFloat(document.
+            const tarifaEnergia = converterStringParaFloat(document.getElementById('tarifaEnergia').value);
+            const valorImp = converterStringParaFloat(document.getElementById('valorImpressora').value);
+            const vidaUtilBruta = converterStringParaFloat(document.getElementById('vidaUtil').value);
+            const vidaUtil = vidaUtilBruta > 0 ? vidaUtilBruta : 1; 
+            const horasTrabalho = converterHHMMSSToHoras(document.getElementById('tempoTrabalho').value);
+            const valorHora = converterStringParaFloat(document.getElementById('valorHoraTrabalho').value);
+            const percFalhas = converterStringParaFloat(document.getElementById('margemFalhas').value);
+            const percLucro = converterStringParaFloat(document.getElementById('margemLucro').value);
+            
+            const subtotal = ((peso / 1000) * precoKg) + ((potenciaW / 1000) * horasImpressao * tarifaEnergia) + ((valorImp / vidaUtil) * horasImpressao) + (horasTrabalho * valorHora);
+            const custoFalhas = subtotal * (percFalhas / 100);
+            const custoTotalBase = subtotal + custoFalhas; 
+            const lucroBase = custoTotalBase * (percLucro / 100);
+            const precoSemTaxa = custoTotalBase + lucroBase;
+
+            const formatBRL = (valor) => isNaN(valor) ? "R$ 0,00" : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            document.getElementById('resSubtotal').innerText = formatBRL(subtotal);
+            document.getElementById('resFalhas').innerText = formatBRL(custoFalhas);
+            document.getElementById('resCustoTotal').innerText = formatBRL(custoTotalBase);
+            document.getElementById('resLucro').innerText = formatBRL(lucroBase);
+            document.getElementById('resPrecoSemTaxa').innerText = formatBRL(precoSemTaxa);
+            
+            ultimoCalculo = {
+                nome: (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase(),
+                link: document.getElementById('linkProduto').value.trim(),
+                tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
+                custoProducaoBase: custoTotalBase,
+                precoBase: precoSemTaxa,
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+        } catch (e) { console.error("Erro interno ao calcular:", e); }
+    }
+
+    function salvarNoHistorico() {
+        if (!ultimoCalculo) { 
+            alert("⚠️ PREENCHA OS DADOS PRIMEIRO."); 
+            return; 
+        }
+        
+        const nomeFinal = document.getElementById('nomeProduto').value.trim().toUpperCase() || 'PRODUTO SEM NOME';
+        const linkFinal = document.getElementById('linkProduto').value.trim();
+        const novoIdNum = Date.now(); 
+        const lucroIni = ultimoCalculo.precoBase - ultimoCalculo.custoProducaoBase;
+
+        historicoProdutos.push({
+            id: novoIdNum, 
+            nome: nomeFinal, 
+            link: linkFinal,
+            data: ultimoCalculo.data, 
+            quantidade: 1,
+            tipoFilamento: ultimoCalculo.tipoFilamento, 
+            embalagens: [],
+            custoProducaoBase: ultimoCalculo.custoProducaoBase, 
+            precoBase: ultimoCalculo.precoBase, 
+            taxaOutro: 0
+        });
+        
+        renderizarHistorico();
+        atualizarOpcoesFiltro();
+        alert("✅ PRODUTO SALVO NO ESTOQUE LOCAL!");
+    }
+
+    function renderizarSelectBiblioteca() {
+        const select = document.getElementById('selectBibliotecaEmbalagem');
+        select.innerHTML = '<option value="">-- SELECIONE --</option>';
+        bibliotecaEmbalagens.forEach(emb => {
+            select.innerHTML += `<option value="${emb.id}">${emb.nome.toUpperCase()} - R$ ${parseFloat(emb.valor).toFixed(2).replace('.',',')}</option>`;
+        });
+    }
+
+    function abrirModalEmbalagem(idNum) {
+        itemEditandoEmbalagemId = idNum;
+        const prod = historicoProdutos.find(p => p.id === idNum);
+        if(!prod) return;
+        document.getElementById('modalEmbalagemTitle').innerText = `EMBALAGENS: ${prod.nome}`;
+        embalagensTemporariasItem = JSON.parse(JSON.stringify(prod.embalagens || []));
+        renderizarListaEmbalagensModal();
+        document.getElementById('modalEmbalagem').style.display = 'flex';
+    }
+
+    function toggleFormNovaEmbalagem() {
+        const form = document.getElementById('formNovaEmbalagem');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function salvarNovaEmbalagemBiblioteca() {
+        const nome = document.getElementById('novaEmbNome').value.trim().toUpperCase();
+        const valor = converterStringParaFloat(document.getElementById('novaEmbValor').value);
+        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
+
+        const novoItem = { id: Date.now().toString(), nome: nome, valor: valor };
+        bibliotecaEmbalagens.push(novoItem);
+        renderizarSelectBiblioteca();
+        document.getElementById('novaEmbNome').value = "";
+        document.getElementById('novaEmbValor').value = "";
+        toggleFormNovaEmbalagem();
+        alert("Embalagem salva!");
+    }
+
+    function adicionarEmbalagemAoItem() {
+        const select = document.getElementById('selectBibliotecaEmbalagem');
+        const embBiblio = bibliotecaEmbalagens.find(e => e.id == select.value);
+        if(embBiblio) {
+            embalagensTemporariasItem.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor) });
+            renderizarListaEmbalagensModal();
+        }
+        select.value = "";
+    }
+
+    function removerEmbalagemDoItem(instanceId) {
+        embalagensTemporariasItem = embalagensTemporariasItem.filter(e => e.instanceId !== instanceId);
+        renderizarListaEmbalagensModal();
+    }
+
+    function renderizarListaEmbalagensModal() {
+        const listDiv = document.getElementById('listaEmbalagensItem');
+        listDiv.innerHTML = '';
+        let total = 0;
+        if(embalagensTemporariasItem.length === 0) {
+            listDiv.innerHTML = '<span style="color:#777; font-size:12px;">Nenhuma embalagem.</span>';
+        } else {
+            embalagensTemporariasItem.forEach(emb => {
+                total += emb.valor;
+                listDiv.innerHTML += `
+                    <div class="item-embalagem">
+                        <span style="font-size:12px; font-weight:bold;">${emb.nome}</span>
+                        <div>
+                            <span style="margin-right:10px; font-size:13px; font-weight:bold;">R$ ${emb.valor.toFixed(2).replace('.',',')}</span>
+                            <button type="button" class="btn-danger" style="padding:4px 8px;" onclick="removerEmbalagemDoItem(${emb.instanceId})">X</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        document.getElementById('totalEmbalagemModal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
+    }
+
+    function salvarEFecharModalEmbalagem() {
+        if(!itemEditandoEmbalagemId) return;
+        const prod = historicoProdutos.find(p => p.id === itemEditandoEmbalagemId);
+        if(prod) {
+            prod.embalagens = [...embalagensTemporariasItem];
+            renderizarHistorico();
+        }
+        document.getElementById('modalEmbalagem').style.display = 'none';
+    }
+
+    function atualizarQuantidadeHistorico(idNum, novaQtd) {
+        let qtd = parseInt(novaQtd) || 1;
+        const prod = historicoProdutos.find(p => p.id === idNum);
+        if(prod) {
+            prod.quantidade = qtd;
+            renderizarHistorico();
+        }
+    }
+
+    function atualizarTaxaOutro(idNum, val) {
+        const num = converterStringParaFloat(val) || 0;
+        const prod = historicoProdutos.find(p => p.id === idNum);
+        if(prod) {
+            prod.taxaOutro = num;
+            renderizarHistorico();
+        }
+    }
+
+    function excluirDoHistorico(idNum) {
+        if(confirm("EXCLUIR ESTE REGISTRO?")) {
+            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
+            renderizarHistorico();
+            atualizarOpcoesFiltro();
+        }
+    }
+
+    function atualizarOpcoesFiltro() {
+        const selectProd = document.getElementById('filtroEstoqueProduto');
+        const selectFil = document.getElementById('filtroEstoqueFilamento');
+        const prods = [...new Set(historicoProdutos.map(p => p.nome))].sort();
+        const fils = [...new Set(historicoProdutos.map(p => p.tipoFilamento))].sort();
+        selectProd.innerHTML = '<option value="TODOS">TODOS</option>';
+        prods.forEach(p => selectProd.innerHTML += `<option value="${p}">${p}</option>`);
+        selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
+        fils.forEach(f => selectFil.innerHTML += `<option value="${f}">${f}</option>`);
+    }
+
+    function calcularSedex(cepOrigem, cepDestino) {
+        const destino = prompt("DIGITE O CEP DE DESTINO (SOMENTE NÚMEROS):", "70000000");
+        if (!destino) return;
+        const url = `https://www.correios.com.br/@@calcprecocep-pld-iframe?cepOrigem=${cepOrigem}&cepDestino=${destino.replace(/\D/g, '')}`;
+        window.open(url, '_blank');
+    }
+
+    function renderizarHistorico() {
+        const tbody = document.getElementById('corpoHistorico');
+        tbody.innerHTML = '';
+        const termoBusca = document.getElementById('pesquisaHistorico').value.toUpperCase();
+        const fProd = document.getElementById('filtroEstoqueProduto').value;
+        const fFil = document.getElementById('filtroEstoqueFilamento').value;
+
+        let prods = [...historicoProdutos].filter(p => p.nome.includes(termoBusca));
+        if(fProd !== 'TODOS') prods = prods.filter(p => p.nome === fProd);
+        if(fFil !== 'TODOS') prods = prods.filter(p => p.tipoFilamento === fFil);
+
+        if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="16" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO.</td></tr>'; return; }
+
+        prods.forEach((prod) => {
+            const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            const pBase = prod.precoBase;
+            const pML = pBase / 0.8; 
+            const pShopee = pBase / 0.8; 
+            const pCartao = pBase / 0.95; 
+            const pOutro = prod.taxaOutro > 0 ? pBase / (1 - (prod.taxaOutro/100)) : pBase;
+
+            const custoEmbTotal = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+            const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal;
+            const lucroUnitFinal = pBase - custoUnitFinal;
+
+            // Renderização do nome com link condicional
+            let nomeHtml = prod.nome;
+            if (prod.link && prod.link.startsWith('http')) {
+                nomeHtml = `<a href="${prod.link}" target="_blank" class="produto-link" title="Abrir link do produto">${prod.nome}</a>`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-size: 11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
+                    <td style="font-size: 10px;">${prod.data}</td>
+                    <td><input type="number" min="1" value="${prod.quantidade}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico(${prod.id}, this.value)"></td>
+                    <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
+                    <td style="background-color: #fff9e6;">
+                        <div style="font-size:11px; font-weight:bold; color:#d39e00; margin-bottom:4px;">${formatBRL(custoEmbTotal)}</div>
+                        <button type="button" class="btn-warning" style="background:#ffc107; color:#333; padding:4px 8px; border-radius:4px;" onclick="abrirModalEmbalagem(${prod.id})">+ EMB</button>
+                    </td>
+                    <td style="font-weight:bold; color:#004085;">${formatBRL(pBase)}</td>
+                    <td style="font-weight:bold; color:#004085;">${formatBRL(pML)}</td>
+                    <td style="font-weight:bold; color:#004085;">${formatBRL(pShopee)}</td>
+                    <td style="font-weight:bold; color:#004085;">${formatBRL(pCartao)}</td>
+                    <td>
+                        <input type="text" value="${prod.taxaOutro.toFixed(2).replace('.',',')}" oninput="maskMoeda(this)" onchange="atualizarTaxaOutro(${prod.id}, this.value)" style="width:45px; font-size:10px; padding:2px; text-align:center;">%
+                        <div style="font-weight:bold; color:#004085; margin-top:4px;">${formatBRL(pOutro)}</div>
+                    </td>
+                    <td><button type="button" class="btn-warning" style="background:#ff9800; color:#fff;" onclick="calcularSedex('72300533')">📦 FRETE</button></td>
+                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
+                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
+                    <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
+                    <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" onchange="vendaRapida(${prod.id}, this)"></td>
+                    <td><button type="button" onclick="excluirDoHistorico(${prod.id})" class="btn-danger" style="padding:6px 10px;">X</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function vendaRapida(idNum, checkbox) {
+        if(!checkbox.checked) return;
+        const prod = historicoProdutos.find(p => p.id === idNum);
+        
+        if(confirm(`Confirmar venda de ${prod.quantidade} unid. de ${prod.nome}?`)) {
+            const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+            const custoFinal = prod.custoProducaoBase + custoEmbUnit;
+            const vendaDB = {
+                id: Date.now(), 
+                nome: prod.nome, 
+                plataforma: "VENDA DIRETA", 
+                quantidade: prod.quantidade,
+                custo_total: custoFinal * prod.quantidade, 
+                venda_total: prod.precoBase * prod.quantidade,
+                lucro_total: (prod.precoBase - custoFinal) * prod.quantidade, 
+                data_venda: new Date().toLocaleDateString('pt-BR')
+            };
+
+            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
+            produtosVendidos.push(vendaDB);
+            renderizarHistorico(); 
+            atualizarOpcoesFiltro(); 
+            renderizarDashboardVendidos();
+        } else { 
+            checkbox.checked = false; 
+        }
+    }
+
+    function renderizarDashboardVendidos() {
+        const tbody = document.getElementById('corpoVendidos');
+        tbody.innerHTML = '';
+        let tLucro = 0, tCusto = 0, tItens = 0;
+        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        [...produtosVendidos].reverse().forEach((item) => {
+            tLucro += item.lucro_total; 
+            tCusto += item.custo_total; 
+            tItens += item.quantidade;
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-family:monospace; font-size:10px; color:#666;">${item.data_venda}</td>
+                    <td style="font-size:11px; text-align:left; font-weight:bold;">${item.nome}</td>
+                    <td style="text-align:center; font-weight:bold;">${item.quantidade}</td>
+                    <td style="font-size:10px; font-weight:bold; color:#004085;">${item.plataforma}</td>
+                    <td style="color:#007bff; font-weight:bold;">${formatBRL(item.venda_total)}</td>
+                    <td style="color:#dc3545; font-weight:bold;">${formatBRL(item.custo_total)}</td>
+                    <td style="color:#28a745; font-weight:bold;">${formatBRL(item.lucro_total)}</td>
+                    <td><button onclick="excluirDoVendidos(${item.id})" class="btn-danger">X</button></td>
+                </tr>`;
+        });
+        document.getElementById('dashLucroTotal').innerText = formatBRL(tLucro);
+        document.getElementById('dashCustoTotal').innerText = formatBRL(tCusto);
+        document.getElementById('dashQtdItens').innerText = `${tItens} UNID.`;
+        renderizarRanking();
+    }
+
+    function renderizarRanking() {
+        const tbody = document.getElementById('corpoRanking');
+        tbody.innerHTML = '';
+        if (produtosVendidos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">SEM DADOS</td></tr>'; return; }
+
+        const map = {};
+        produtosVendidos.forEach(i => {
+            if(!i.nome) return;
+            if (!map[i.nome]) map[i.nome] = { nome: i.nome, qtd: 0, lucro: 0 };
+            map[i.nome].qtd += i.quantidade; 
+            map[i.nome].lucro += i.lucro_total;
+        });
+
+        const arr = Object.values(map).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
+        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        arr.forEach((r, idx) => {
+            let m = `#${idx + 1}`;
+            if(idx === 0) m = '🥇 1º'; else if(idx === 1) m = '🥈 2º'; else if(idx === 2) m = '🥉 3º';
+            tbody.innerHTML += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="font-weight:bold; color:#555;">${m}</td>
+                    <td style="font-size:11px; text-align:left; font-weight:bold;">${r.nome}</td>
+                    <td style="text-align:center; font-weight:bold; color:#333;">${r.qtd}</td>
+                    <td style="color:#28a745; font-weight:bold; text-align:right;">${formatBRL(r.lucro)}</td>
+                </tr>`;
+        });
+    }
+
+    function excluirDoVendidos(idNum) {
+        if(confirm("EXCLUIR ESTA VENDA?")) {
+            produtosVendidos = produtosVendidos.filter(p => p.id !== idNum);
+            renderizarDashboardVendidos();
+        }
+    }
+
+    function limparVendidos() {
+        if(confirm("APAGAR TUDO?")) {
+            produtosVendidos = [];
+            renderizarDashboardVendidos();
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        calcular();
+        renderizarSelectBiblioteca();
+    });
+</script>
+
+</body>
+</html>
