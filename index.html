@@ -266,9 +266,9 @@
                     <th style="color: #004085;">CARTÃO<br>(5%)</th>
                     <th style="color: #004085;">OUTRO<br>(%)</th>
                     <th>SEDEX</th>
-                    <th style="color: #dc3545;" title="Custo Base + Embalagem + Frete">CUSTO UNIT.</th>
-                    <th style="color: #28a745;">LUCRO UNIT.</th>
-                    <th style="color: #333;">VALOR BASE</th>
+                    <th style="color: #dc3545;" title="Custo Base + Embalagem + Frete (Total por Qtd)">CUSTO TOTAL</th>
+                    <th style="color: #28a745;">LUCRO TOTAL</th>
+                    <th style="color: #333;">VALOR TOTAL</th>
                     <th>VENDIDO?</th>
                     <th>AÇÃO</th>
                 </tr>
@@ -400,10 +400,10 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>DESCONTO ADICIONAL (R$):</label>
+                <label>DESCONTO ADICIONAL (%):</label>
                 <div class="input-group">
-                    <span class="input-group-addon-prefix">R$</span>
                     <input type="text" id="vendaDesconto" value="0,00" oninput="maskMoeda(this); calcularModalVenda()" class="time-input">
+                    <span class="input-group-addon">%</span>
                 </div>
             </div>
         </div>
@@ -783,16 +783,30 @@
 
         prods.forEach((prod) => {
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const pBase = prod.precoBase;
-            const pML = pBase / 0.8; 
-            const pShopee = pBase / 0.8; 
-            const pCartao = pBase / 0.95; 
-            const pOutro = prod.taxaOutro > 0 ? pBase / (1 - (prod.taxaOutro/100)) : pBase;
-
-            const custoEmbTotal = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+            
+            const qtd = prod.quantidade || 1;
+            
+            // Valores UNITÁRIOS base
+            const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
             const freteUnit = prod.valorFrete || 0;
-            const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal + freteUnit;
-            const lucroUnitFinal = pBase - custoUnitFinal;
+            const custoUnitFinal = prod.custoProducaoBase + custoEmbUnit + freteUnit;
+            
+            // O valor da embalagem é somado ao valor de venda para ser repassado ao cliente.
+            const pBaseUnit = prod.precoBase + custoEmbUnit; 
+            const lucroUnitFinal = pBaseUnit - custoUnitFinal;
+            
+            // Valores TOTAIS baseados na QUANTIDADE (Qtd selecionada no input)
+            const custoEmbTotal = custoEmbUnit * qtd;
+            const freteTotal = freteUnit * qtd;
+            const custoTotalFinal = custoUnitFinal * qtd;
+            const pBaseTotal = pBaseUnit * qtd;
+            const lucroTotalFinal = lucroUnitFinal * qtd;
+
+            // Preços por plataforma sobre o Valor Base TOTAL
+            const pML = pBaseTotal / 0.8; 
+            const pShopee = pBaseTotal / 0.8; 
+            const pCartao = pBaseTotal / 0.95; 
+            const pOutro = prod.taxaOutro > 0 ? pBaseTotal / (1 - (prod.taxaOutro/100)) : pBaseTotal;
 
             let nomeHtml = prod.nome;
             if (prod.link && prod.link.startsWith('http')) {
@@ -803,13 +817,13 @@
                 <tr>
                     <td style="font-size: 11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
                     <td style="font-size: 10px;">${prod.data}</td>
-                    <td><input type="number" min="1" value="${prod.quantidade}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico(${prod.id}, this.value)"></td>
+                    <td><input type="number" min="1" value="${qtd}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico(${prod.id}, this.value)"></td>
                     <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
                     <td style="background-color: #fff9e6;">
                         <div style="font-size:11px; font-weight:bold; color:#d39e00; margin-bottom:4px;">${formatBRL(custoEmbTotal)}</div>
                         <button type="button" class="btn-warning" style="background:#ffc107; color:#333; padding:4px 8px; border-radius:4px;" onclick="abrirModalEmbalagem(${prod.id})">+ EMB</button>
                     </td>
-                    <td style="font-weight:bold; color:#004085;">${formatBRL(pBase)}</td>
+                    <td style="font-weight:bold; color:#004085;">${formatBRL(pBaseTotal)}</td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pML)}</td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pShopee)}</td>
                     <td style="font-weight:bold; color:#004085;">${formatBRL(pCartao)}</td>
@@ -819,11 +833,11 @@
                     </td>
                     <td>
                         <button type="button" class="btn-warning" style="background:#ff9800; color:#fff; margin-bottom:4px;" onclick="calcularSedex(${prod.id}, '72300533')">📦 FRETE</button>
-                        <div style="font-size:10px; font-weight:bold; color:#333;">${formatBRL(freteUnit)}</div>
+                        <div style="font-size:10px; font-weight:bold; color:#333;">${formatBRL(freteTotal)}</div>
                     </td>
-                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
-                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
-                    <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
+                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoTotalFinal)}</td>
+                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroTotalFinal)}</td>
+                    <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBaseTotal)}</td>
                     <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" onchange="abrirModalVenda(${prod.id}, this)"></td>
                     <td><button type="button" onclick="excluirDoHistorico(${prod.id})" class="btn-danger" style="padding:6px 10px;">X</button></td>
                 </tr>
@@ -845,7 +859,7 @@
 
         // Injeta dados no Modal
         document.getElementById('vendaNomeProd').innerText = itemVendaSelecionado.nome;
-        document.getElementById('vendaQtd').value = itemVendaSelecionado.quantidade;
+        document.getElementById('vendaQtd').value = itemVendaSelecionado.quantidade || 1;
         
         const optOutro = document.getElementById('vendaOptOutro');
         optOutro.value = itemVendaSelecionado.taxaOutro || 0;
@@ -853,15 +867,18 @@
 
         // Recupera a margem atual calculada para preencher por padrão
         const custoEmb = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-        const custoFinal = itemVendaSelecionado.custoProducaoBase + custoEmb + (itemVendaSelecionado.valorFrete || 0);
+        const freteUnit = itemVendaSelecionado.valorFrete || 0;
+        
+        const custoFinalUnit = itemVendaSelecionado.custoProducaoBase + custoEmb + freteUnit;
+        const precoVendaUnit = itemVendaSelecionado.precoBase + custoEmb; // Somado ao valor de venda
         
         let margemAtual = 0;
-        if (custoFinal > 0) {
-            margemAtual = ((itemVendaSelecionado.precoBase / custoFinal) - 1) * 100;
+        if (custoFinalUnit > 0) {
+            margemAtual = ((precoVendaUnit / custoFinalUnit) - 1) * 100;
         }
         
         document.getElementById('vendaMargem').value = Math.max(0, margemAtual).toFixed(2).replace('.', ',');
-        document.getElementById('vendaDesconto').value = "0,00";
+        document.getElementById('vendaDesconto').value = "0,00"; // Agora reflete Porcentagem (%)
         document.getElementById('vendaPlataforma').value = "0"; // Default: VENDA DIRETA
 
         calcularModalVenda();
@@ -881,11 +898,13 @@
         const qtd = parseInt(document.getElementById('vendaQtd').value) || 1;
         const taxaPlataforma = converterStringParaFloat(document.getElementById('vendaPlataforma').value) / 100;
         const margem = converterStringParaFloat(document.getElementById('vendaMargem').value) / 100;
-        const desconto = converterStringParaFloat(document.getElementById('vendaDesconto').value);
+        
+        // Agora o desconto é coletado como Percentual (%)
+        const descontoPerc = converterStringParaFloat(document.getElementById('vendaDesconto').value) / 100;
 
-        const custoEmb = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-        const frete = itemVendaSelecionado.valorFrete || 0;
-        const custoUnit = itemVendaSelecionado.custoProducaoBase + custoEmb + frete;
+        const custoEmbUnit = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+        const freteUnit = itemVendaSelecionado.valorFrete || 0;
+        const custoUnit = itemVendaSelecionado.custoProducaoBase + custoEmbUnit + freteUnit;
         const custoTotal = custoUnit * qtd;
 
         // Base para preço desejado antes da taxa (Custo unitário incrementado da nova margem)
@@ -899,8 +918,9 @@
         
         let valorTotalBruto = precoPlatUnit * qtd;
         
-        // Valor Final que o cliente paga (com desconto já aplicado)
-        let valorTotalFinal = Math.max(0, valorTotalBruto - desconto);
+        // Aplicação do desconto em Percentual (%) sobre o valor total bruto da transação
+        let valorDescontoCalc = valorTotalBruto * descontoPerc;
+        let valorTotalFinal = Math.max(0, valorTotalBruto - valorDescontoCalc);
         
         // A plataforma morde sua taxa sobre o valor final de venda pago pelo cliente
         let valorTaxa = valorTotalFinal * taxaPlataforma;
