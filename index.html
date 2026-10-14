@@ -37,6 +37,7 @@
         input::placeholder { text-transform: uppercase; }
         
         .time-input { font-family: monospace; text-align: right; font-weight: bold; }
+        #tipoFilamento { text-align: left !important; width: 200px; font-weight: bold; }
         
         .results { margin-top: 25px; background-color: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
         .results p { margin: 12px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; }
@@ -100,14 +101,14 @@
         <div class="form-group" style="margin-bottom:0;">
             <label for="comprimentoFilamento" style="color: #444;">COMPRIMENTO FILAMENTO (BAMBU STUDIO):</label>
             <div class="input-group" style="width: 150px;">
-                <input type="text" id="comprimentoFilamento" value="17,67" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
+                <input type="text" id="comprimentoFilamento" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
                 <span class="input-group-addon">M</span>
             </div>
         </div>
         <div class="form-group" style="margin-bottom:0;">
             <label for="pesoPeca" style="color: #444;">PESO TOTAL DA PEÇA (BAMBU STUDIO):</label>
             <div class="input-group" style="width: 150px;">
-                <input type="text" id="pesoPeca" value="53,55" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
+                <input type="text" id="pesoPeca" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
                 <span class="input-group-addon">G</span>
             </div>
         </div>
@@ -118,12 +119,12 @@
             <label for="precoKg">PREÇO DO FILAMENTO (KG):</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="precoKg" value="120,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
+                <input type="text" id="precoKg" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
             </div>
         </div>
         <div class="form-group">
             <label for="tipoFilamento">TIPO DE FILAMENTO:</label>
-            <select id="tipoFilamento" class="time-input" onchange="calcular()">
+            <select id="tipoFilamento" onchange="calcular()">
                 <option value="PLA">PLA</option>
                 <option value="PLA SILK">PLA SILK</option>
                 <option value="PLA MATTE">PLA MATTE</option>
@@ -167,7 +168,7 @@
         <div class="form-group">
             <label for="tempoImpressao">TEMPO DE IMPRESSÃO (HH:MM:SS):</label>
             <div class="input-group">
-                <input type="text" id="tempoImpressao" value="01:30:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
+                <input type="text" id="tempoImpressao" value="00:00:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
                 <span class="input-group-addon">H</span>
             </div>
         </div>
@@ -193,7 +194,7 @@
         <div class="form-group">
             <label for="tempoTrabalho">TEMPO TRABALHO MANUAL (HH:MM:SS):</label>
             <div class="input-group">
-                <input type="text" id="tempoTrabalho" value="00:15:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
+                <input type="text" id="tempoTrabalho" value="00:00:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
                 <span class="input-group-addon">H</span>
             </div>
         </div>
@@ -201,7 +202,7 @@
             <label for="valorHoraTrabalho">VALOR DA SUA HORA:</label>
             <div class="input-group">
                 <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="valorHoraTrabalho" value="25,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
+                <input type="text" id="valorHoraTrabalho" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
             </div>
         </div>
         <div class="form-group">
@@ -466,7 +467,6 @@
             const { data, error } = await supabaseClient.from('3dbsb').select('*');
             if (error) throw error;
             if (data) {
-                // Mapeia registros do banco para a estrutura local
                 historicoProdutos = data.map(item => ({
                     id: item.id,
                     nome: item.nome || '',
@@ -481,7 +481,6 @@
                     vendido: item.vendido || false
                 }));
 
-                // Separa os vendidos para o dashboard
                 produtosVendidos = historicoProdutos.filter(p => p.vendido);
                 historicoProdutos = historicoProdutos.filter(p => !p.vendido);
 
@@ -671,7 +670,7 @@
         const destino = prompt("DIGITE O CEP DE DESTINO (SOMENTE NÚMEROS):", "70000000");
         if (!destino) return;
         const url = `https://www.correios.com.br/@@calcprecocep-pld-iframe?cepOrigem=${cepOrigem}&cepDestino=${destino.replace(/\D/g, '')}`;
-        window.open(url, '_blank');
+        window.open(url, '_blank', 'width=800,height=600,top=100,left=100');
     }
 
     function renderizarHistorico() {
@@ -741,7 +740,6 @@
             const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
             const custoFinal = prod.custoProducaoBase + custoEmbUnit;
             
-            // Marca como vendido no Supabase
             await supabaseClient.from('3dbsb').update({ vendido: true }).eq('id', idNum);
 
             historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
