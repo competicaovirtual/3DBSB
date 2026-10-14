@@ -266,7 +266,7 @@
                     <th style="color: #004085;">CARTÃO<br>(5%)</th>
                     <th style="color: #004085;">OUTRO<br>(%)</th>
                     <th>SEDEX</th>
-                    <th style="color: #dc3545;" title="Custo Base + Embalagem">CUSTO UNIT.</th>
+                    <th style="color: #dc3545;" title="Custo Base + Embalagem + Frete">CUSTO UNIT.</th>
                     <th style="color: #28a745;">LUCRO UNIT.</th>
                     <th style="color: #333;">VALOR BASE</th>
                     <th>VENDIDO?</th>
@@ -478,6 +478,7 @@
                     custoProducaoBase: item.custo_producao_base || 0,
                     precoBase: item.preco_base || 0,
                     taxaOutro: item.taxa_outro || 0,
+                    valorFrete: item.valor_frete || 0,
                     vendido: item.vendido || false
                 }));
 
@@ -512,6 +513,7 @@
             custo_producao_base: ultimoCalculo.custoProducaoBase,
             preco_base: ultimoCalculo.precoBase,
             taxa_outro: 0,
+            valor_frete: 0,
             vendido: false
         };
 
@@ -533,7 +535,8 @@
                 embalagens: itemSalvo.embalagens || [],
                 custoProducaoBase: itemSalvo.custo_producao_base,
                 precoBase: itemSalvo.preco_base,
-                taxaOutro: itemSalvo.taxa_outro
+                taxaOutro: itemSalvo.taxa_outro,
+                valorFrete: itemSalvo.valor_frete || 0
             });
             renderizarHistorico();
             atualizarOpcoesFiltro();
@@ -646,6 +649,16 @@
         }
     }
 
+    async function atualizarValorFrete(idNum, val) {
+        const num = converterStringParaFloat(val) || 0;
+        const prod = historicoProdutos.find(p => p.id === idNum);
+        if(prod) {
+            prod.valorFrete = num;
+            await supabaseClient.from('3dbsb').update({ valor_frete: num }).eq('id', idNum);
+            renderizarHistorico();
+        }
+    }
+
     async function excluirDoHistorico(idNum) {
         if(confirm("EXCLUIR ESTE REGISTRO?")) {
             await supabaseClient.from('3dbsb').delete().eq('id', idNum);
@@ -666,11 +679,22 @@
         fils.forEach(f => selectFil.innerHTML += `<option value="${f}">${f}</option>`);
     }
 
-    function calcularSedex(cepOrigem) {
+    function calcularSedex(idNum, cepOrigem) {
         const destino = prompt("DIGITE O CEP DE DESTINO (SOMENTE NÚMEROS):", "70000000");
         if (!destino) return;
+        
+        // Abre o link dos Correios com o remetente fixo e o destino informado
         const url = `https://www.correios.com.br/@@calcprecocep-pld-iframe?cepOrigem=${cepOrigem}&cepDestino=${destino.replace(/\D/g, '')}`;
         window.open(url, '_blank', 'width=800,height=600,top=100,left=100');
+
+        // Pergunta o valor calculado para acrescer ao custo do produto
+        setTimeout(() => {
+            const valorCalculadoStr = prompt("INFORME O VALOR DO FRETE CALCULADO (EX: 25,50):", "0,00");
+            if (valorCalculadoStr !== null) {
+                const valorFrete = converterStringParaFloat(valorCalculadoStr);
+                atualizarValorFrete(idNum, valorFrete);
+            }
+        }, 500);
     }
 
     function renderizarHistorico() {
@@ -695,7 +719,8 @@
             const pOutro = prod.taxaOutro > 0 ? pBase / (1 - (prod.taxaOutro/100)) : pBase;
 
             const custoEmbTotal = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-            const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal;
+            const freteUnit = prod.valorFrete || 0;
+            const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal + freteUnit;
             const lucroUnitFinal = pBase - custoUnitFinal;
 
             let nomeHtml = prod.nome;
@@ -721,7 +746,10 @@
                         <input type="text" value="${prod.taxaOutro.toFixed(2).replace('.',',')}" oninput="maskMoeda(this)" onchange="atualizarTaxaOutro(${prod.id}, this.value)" style="width:45px; font-size:10px; padding:2px; text-align:center;">%
                         <div style="font-weight:bold; color:#004085; margin-top:4px;">${formatBRL(pOutro)}</div>
                     </td>
-                    <td><button type="button" class="btn-warning" style="background:#ff9800; color:#fff;" onclick="calcularSedex('72300533')">📦 FRETE</button></td>
+                    <td>
+                        <button type="button" class="btn-warning" style="background:#ff9800; color:#fff; margin-bottom:4px;" onclick="calcularSedex(${prod.id}, '72300533')">📦 FRETE</button>
+                        <div style="font-size:10px; font-weight:bold; color:#333;">${formatBRL(freteUnit)}</div>
+                    </td>
                     <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
                     <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
@@ -738,7 +766,8 @@
         
         if(confirm(`Confirmar venda de ${prod.quantidade} unid. de ${prod.nome}?`)) {
             const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-            const custoFinal = prod.custoProducaoBase + custoEmbUnit;
+            const freteUnit = prod.valorFrete || 0;
+            const custoFinal = prod.custoProducaoBase + custoEmbUnit + freteUnit;
             
             await supabaseClient.from('3dbsb').update({ vendido: true }).eq('id', idNum);
 
