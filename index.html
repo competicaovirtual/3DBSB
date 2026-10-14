@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
     
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 1350px; width: 100%; }
         h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
-        .status-cloud { text-align: center; font-size: 12px; font-weight: bold; color: #007bff; margin-bottom: 20px; border: 1px solid #007bff; padding: 8px; border-radius: 5px; background: #e8f4f8;}
+        .status-cloud { text-align: center; font-size: 12px; font-weight: bold; color: #28a745; margin-bottom: 20px; border: 1px solid #28a745; padding: 8px; border-radius: 5px; background: #e6f4ea;}
 
         .section-title { margin-top: 25px; margin-bottom: 15px; font-size: 18px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
         .grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -67,6 +70,9 @@
         
         .badge-filamento { background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .checkbox-vendido { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
+        a.produto-link { color: #007bff !important; text-decoration: none !important; font-weight: bold; cursor: pointer; }
+        a.produto-link:hover { text-decoration: underline !important; color: #0056b3 !important; }
+
         .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #f8f9fa; min-height: 50px; margin-bottom:15px; }
         .item-embalagem { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
     </style>
@@ -75,7 +81,7 @@
 
 <div class="container">
     <h1>SISTEMA DE PRECIFICAÇÃO E GESTÃO 3D</h1>
-    <div class="status-cloud">💾 MODO LOCAL / NAVEGADOR (100% FUNCIONAL SEM ERROS)</div>
+    <div class="status-cloud">☁️ MODO SUPABASE CONECTADO (TABELA: 3DBSB)</div>
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
@@ -363,6 +369,11 @@
 </div>
 
 <script>
+    // Configuração Supabase
+    const SUPABASE_URL = "https://pmqrnodfjwhldkkkgeqy.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_SawajxYBUmg_M0u_IHG_MQ_r-j_Cvsl";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     let historicoProdutos = [];
     let produtosVendidos = [];
     let bibliotecaEmbalagens = [
@@ -441,6 +452,7 @@
             
             ultimoCalculo = {
                 nome: (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase(),
+                link: document.getElementById('linkProduto').value.trim(),
                 tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
                 custoProducaoBase: custoTotalBase,
                 precoBase: precoSemTaxa,
@@ -449,31 +461,85 @@
         } catch (e) { console.error("Erro interno ao calcular:", e); }
     }
 
-    function salvarNoHistorico() {
+    async function carregarDadosSupabase() {
+        try {
+            const { data, error } = await supabaseClient.from('3dbsb').select('*');
+            if (error) throw error;
+            if (data) {
+                // Mapeia registros do banco para a estrutura local
+                historicoProdutos = data.map(item => ({
+                    id: item.id,
+                    nome: item.nome || '',
+                    link: item.link || '',
+                    data: item.data || new Date().toLocaleDateString('pt-BR'),
+                    quantidade: item.quantidade || 1,
+                    tipoFilamento: item.tipo_filamento || 'PLA',
+                    embalagens: item.embalagens || [],
+                    custoProducaoBase: item.custo_producao_base || 0,
+                    precoBase: item.preco_base || 0,
+                    taxaOutro: item.taxa_outro || 0,
+                    vendido: item.vendido || false
+                }));
+
+                // Separa os vendidos para o dashboard
+                produtosVendidos = historicoProdutos.filter(p => p.vendido);
+                historicoProdutos = historicoProdutos.filter(p => !p.vendido);
+
+                renderizarHistorico();
+                atualizarOpcoesFiltro();
+                renderizarDashboardVendidos();
+            }
+        } catch (err) {
+            console.error("Erro ao carregar do Supabase:", err.message);
+        }
+    }
+
+    async function salvarNoHistorico() {
         if (!ultimoCalculo) { 
             alert("⚠️ PREENCHA OS DADOS PRIMEIRO."); 
             return; 
         }
         
         const nomeFinal = document.getElementById('nomeProduto').value.trim().toUpperCase() || 'PRODUTO SEM NOME';
-        const novoIdNum = Date.now(); 
-        const lucroIni = ultimoCalculo.precoBase - ultimoCalculo.custoProducaoBase;
+        const linkFinal = document.getElementById('linkProduto').value.trim();
 
-        historicoProdutos.push({
-            id: novoIdNum, 
-            nome: nomeFinal, 
-            data: ultimoCalculo.data, 
+        const novoRegistro = {
+            nome: nomeFinal,
+            link: linkFinal,
+            data: ultimoCalculo.data,
             quantidade: 1,
-            tipoFilamento: ultimoCalculo.tipoFilamento, 
+            tipo_filamento: ultimoCalculo.tipoFilamento,
             embalagens: [],
-            custoProducaoBase: ultimoCalculo.custoProducaoBase, 
-            precoBase: ultimoCalculo.precoBase, 
-            taxaOutro: 0
-        });
-        
-        renderizarHistorico();
-        atualizarOpcoesFiltro();
-        alert("✅ PRODUTO SALVO NO ESTOQUE LOCAL!");
+            custo_producao_base: ultimoCalculo.custoProducaoBase,
+            preco_base: ultimoCalculo.precoBase,
+            taxa_outro: 0,
+            vendido: false
+        };
+
+        const { data, error } = await supabaseClient.from('3dbsb').insert([novoRegistro]).select();
+        if (error) {
+            alert("Erro ao salvar no Supabase: " + error.message);
+            return;
+        }
+
+        if (data && data.length > 0) {
+            const itemSalvo = data[0];
+            historicoProdutos.push({
+                id: itemSalvo.id,
+                nome: itemSalvo.nome,
+                link: itemSalvo.link,
+                data: itemSalvo.data,
+                quantidade: itemSalvo.quantidade,
+                tipoFilamento: itemSalvo.tipo_filamento,
+                embalagens: itemSalvo.embalagens || [],
+                custoProducaoBase: itemSalvo.custo_producao_base,
+                precoBase: itemSalvo.preco_base,
+                taxaOutro: itemSalvo.taxa_outro
+            });
+            renderizarHistorico();
+            atualizarOpcoesFiltro();
+            alert("✅ PRODUTO SALVO NO SUPABASE COM SUCESSO!");
+        }
     }
 
     function renderizarSelectBiblioteca() {
@@ -550,36 +616,40 @@
         document.getElementById('totalEmbalagemModal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
     }
 
-    function salvarEFecharModalEmbalagem() {
+    async function salvarEFecharModalEmbalagem() {
         if(!itemEditandoEmbalagemId) return;
         const prod = historicoProdutos.find(p => p.id === itemEditandoEmbalagemId);
         if(prod) {
             prod.embalagens = [...embalagensTemporariasItem];
+            await supabaseClient.from('3dbsb').update({ embalagens: prod.embalagens }).eq('id', prod.id);
             renderizarHistorico();
         }
         document.getElementById('modalEmbalagem').style.display = 'none';
     }
 
-    function atualizarQuantidadeHistorico(idNum, novaQtd) {
+    async function atualizarQuantidadeHistorico(idNum, novaQtd) {
         let qtd = parseInt(novaQtd) || 1;
         const prod = historicoProdutos.find(p => p.id === idNum);
         if(prod) {
             prod.quantidade = qtd;
+            await supabaseClient.from('3dbsb').update({ quantidade: qtd }).eq('id', idNum);
             renderizarHistorico();
         }
     }
 
-    function atualizarTaxaOutro(idNum, val) {
+    async function atualizarTaxaOutro(idNum, val) {
         const num = converterStringParaFloat(val) || 0;
         const prod = historicoProdutos.find(p => p.id === idNum);
         if(prod) {
             prod.taxaOutro = num;
+            await supabaseClient.from('3dbsb').update({ taxa_outro: num }).eq('id', idNum);
             renderizarHistorico();
         }
     }
 
-    function excluirDoHistorico(idNum) {
+    async function excluirDoHistorico(idNum) {
         if(confirm("EXCLUIR ESTE REGISTRO?")) {
+            await supabaseClient.from('3dbsb').delete().eq('id', idNum);
             historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
             renderizarHistorico();
             atualizarOpcoesFiltro();
@@ -595,6 +665,13 @@
         prods.forEach(p => selectProd.innerHTML += `<option value="${p}">${p}</option>`);
         selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
         fils.forEach(f => selectFil.innerHTML += `<option value="${f}">${f}</option>`);
+    }
+
+    function calcularSedex(cepOrigem) {
+        const destino = prompt("DIGITE O CEP DE DESTINO (SOMENTE NÚMEROS):", "70000000");
+        if (!destino) return;
+        const url = `https://www.correios.com.br/@@calcprecocep-pld-iframe?cepOrigem=${cepOrigem}&cepDestino=${destino.replace(/\D/g, '')}`;
+        window.open(url, '_blank');
     }
 
     function renderizarHistorico() {
@@ -622,9 +699,14 @@
             const custoUnitFinal = prod.custoProducaoBase + custoEmbTotal;
             const lucroUnitFinal = pBase - custoUnitFinal;
 
+            let nomeHtml = prod.nome;
+            if (prod.link && prod.link.startsWith('http')) {
+                nomeHtml = `<a href="${prod.link}" target="_blank" class="produto-link" title="Abrir link do produto">${prod.nome}</a>`;
+            }
+
             tbody.innerHTML += `
                 <tr>
-                    <td style="font-size: 11px; text-align:left; font-weight:bold;">${prod.nome}</td>
+                    <td style="font-size: 11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
                     <td style="font-size: 10px;">${prod.data}</td>
                     <td><input type="number" min="1" value="${prod.quantidade}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico(${prod.id}, this.value)"></td>
                     <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
@@ -640,7 +722,7 @@
                         <input type="text" value="${prod.taxaOutro.toFixed(2).replace('.',',')}" oninput="maskMoeda(this)" onchange="atualizarTaxaOutro(${prod.id}, this.value)" style="width:45px; font-size:10px; padding:2px; text-align:center;">%
                         <div style="font-weight:bold; color:#004085; margin-top:4px;">${formatBRL(pOutro)}</div>
                     </td>
-                    <td><button type="button" class="btn-warning" style="background:#ff9800; color:#fff;" >📦 FRETE</button></td>
+                    <td><button type="button" class="btn-warning" style="background:#ff9800; color:#fff;" onclick="calcularSedex('72300533')">📦 FRETE</button></td>
                     <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
                     <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
@@ -651,15 +733,21 @@
         });
     }
 
-    function vendaRapida(idNum, checkbox) {
+    async function vendaRapida(idNum, checkbox) {
         if(!checkbox.checked) return;
         const prod = historicoProdutos.find(p => p.id === idNum);
         
         if(confirm(`Confirmar venda de ${prod.quantidade} unid. de ${prod.nome}?`)) {
             const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
             const custoFinal = prod.custoProducaoBase + custoEmbUnit;
+            
+            // Marca como vendido no Supabase
+            await supabaseClient.from('3dbsb').update({ vendido: true }).eq('id', idNum);
+
+            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
+            
             const vendaDB = {
-                id: Date.now(), 
+                id: prod.id, 
                 nome: prod.nome, 
                 plataforma: "VENDA DIRETA", 
                 quantidade: prod.quantidade,
@@ -669,7 +757,6 @@
                 data_venda: new Date().toLocaleDateString('pt-BR')
             };
 
-            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
             produtosVendidos.push(vendaDB);
             renderizarHistorico(); 
             atualizarOpcoesFiltro(); 
@@ -736,15 +823,20 @@
         });
     }
 
-    function excluirDoVendidos(idNum) {
+    async function excluirDoVendidos(idNum) {
         if(confirm("EXCLUIR ESTA VENDA?")) {
+            await supabaseClient.from('3dbsb').delete().eq('id', idNum);
             produtosVendidos = produtosVendidos.filter(p => p.id !== idNum);
             renderizarDashboardVendidos();
         }
     }
 
-    function limparVendidos() {
-        if(confirm("APAGAR TUDO?")) {
+    async function limparVendidos() {
+        if(confirm("APAGAR TUDO DOS VENDIDOS?")) {
+            const idsVendidos = produtosVendidos.map(p => p.id);
+            if (idsVendidos.length > 0) {
+                await supabaseClient.from('3dbsb').delete().in('id', idsVendidos);
+            }
             produtosVendidos = [];
             renderizarDashboardVendidos();
         }
@@ -753,6 +845,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         calcular();
         renderizarSelectBiblioteca();
+        carregarDadosSupabase();
     });
 </script>
 
