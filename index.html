@@ -37,7 +37,7 @@
         input::placeholder { text-transform: uppercase; }
         
         .time-input { font-family: monospace; text-align: right; font-weight: bold; }
-        #tipoFilamento { text-align: left !important; width: 200px; font-weight: bold; }
+        #tipoFilamento { text-align: left !important; width: 160px; font-weight: bold; }
         
         .results { margin-top: 25px; background-color: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
         .results p { margin: 12px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; }
@@ -52,8 +52,8 @@
         .btn-danger:hover { background-color: #c82333; }
         .btn-secondary { background-color: #6c757d; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
         
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
@@ -369,6 +369,75 @@
     </div>
 </div>
 
+<!-- MODAL DE CONFIRMAÇÃO DE VENDA COM CALCULADORA FINAL -->
+<div class="modal-overlay" id="modalVendaConfirmacao">
+    <div class="modal-content" style="max-width: 650px;">
+        <h3 style="margin-top:0; text-transform: uppercase; color:#28a745; border-bottom: 2px solid #28a745; padding-bottom: 8px;">
+            🛒 FINALIZAR VENDA
+        </h3>
+        <p style="font-weight:bold; font-size:18px; margin-bottom:15px; text-align:center; color: #444;" id="vendaNomeProd"></p>
+        
+        <div class="grid-2-cols">
+            <div class="form-group">
+                <label>QTD VENDIDA:</label>
+                <input type="number" id="vendaQtd" min="1" value="1" onchange="calcularModalVenda()">
+            </div>
+            <div class="form-group">
+                <label>FORMA DE VENDA (PLATAFORMA):</label>
+                <select id="vendaPlataforma" onchange="calcularModalVenda()">
+                    <option value="0" data-name="VENDA DIRETA">VENDA DIRETA (0%)</option>
+                    <option value="20" data-name="MERCADO LIVRE">MERCADO LIVRE (20%)</option>
+                    <option value="20" data-name="SHOPEE">SHOPEE (20%)</option>
+                    <option value="5" data-name="CARTÃO">CARTÃO (5%)</option>
+                    <option value="0" id="vendaOptOutro" data-name="OUTRO">OUTRO (%)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>NOVA MARGEM DE LUCRO (%):</label>
+                <div class="input-group">
+                    <input type="text" id="vendaMargem" oninput="maskMoeda(this); calcularModalVenda()" class="time-input">
+                    <span class="input-group-addon">%</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>DESCONTO ADICIONAL (R$):</label>
+                <div class="input-group">
+                    <span class="input-group-addon-prefix">R$</span>
+                    <input type="text" id="vendaDesconto" value="0,00" oninput="maskMoeda(this); calcularModalVenda()" class="time-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="results" style="margin-top: 15px; background-color: #f1f8f5; padding: 20px; border-radius: 8px; border: 1px solid #c3e6cb;">
+            <h4 style="margin-top: 0; color: #155724; text-transform: uppercase; border-bottom: 1px solid #c3e6cb; padding-bottom: 8px;">RESUMO FINAL DA TRANSAÇÃO</h4>
+            <p style="margin: 8px 0; font-size:14px; display:flex; justify-content:space-between;">
+                <span>CUSTO TOTAL (PRODUÇÃO + EMB + FRETE):</span> 
+                <span id="vendaCustoTotalCalc" style="font-weight:bold; color:#444;">R$ 0,00</span>
+            </p>
+            <p style="margin: 8px 0; font-size:14px; display:flex; justify-content:space-between;">
+                <span>TAXA DEDUZIDA P/ PLATAFORMA:</span> 
+                <span id="vendaTaxaPlat" style="color: #dc3545; font-weight:bold;">R$ 0,00</span>
+            </p>
+            <p style="margin: 8px 0; font-size:15px; font-weight:bold; display:flex; justify-content:space-between;">
+                <span>VALOR FINAL RECEBIDO DO CLIENTE:</span> 
+                <span id="vendaValorTotal" style="color: #007bff;">R$ 0,00</span>
+            </p>
+            <p style="border-top: 1px dashed #c3e6cb; padding-top: 12px; margin-top: 12px; font-weight:bold; font-size:18px; display:flex; justify-content:space-between;">
+                <span>LUCRO LÍQUIDO FINAL:</span> 
+                <span>
+                    <span id="vendaLucroFinal" style="color: #28a745;">R$ 0,00</span>
+                    <span id="vendaPercLucro" style="font-size: 14px; color: #555; font-weight:normal; margin-left: 5px;">(0%)</span>
+                </span>
+            </p>
+        </div>
+
+        <div style="display:flex; gap:15px; margin-top: 25px;">
+            <button type="button" class="btn-success" onclick="confirmarVendaModal()" style="font-size: 16px; padding: 14px;">✅ FINALIZAR VENDA</button>
+            <button type="button" class="btn-danger" onclick="fecharModalVenda()" style="font-size: 16px; padding: 14px;">❌ CANCELAR</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Configuração Supabase
     const SUPABASE_URL = "https://pmqrnodfjwhldkkkgeqy.supabase.co";
@@ -384,6 +453,10 @@
     let ultimoCalculo = null;
     let itemEditandoEmbalagemId = null;
     let embalagensTemporariasItem = [];
+
+    // Variáveis para a Modal de Venda
+    let itemVendaSelecionado = null;
+    let checkboxVendaSelecionado = null;
 
     function maskMoeda(input) {
         let v = input.value.replace(/\D/g, ''); 
@@ -683,11 +756,9 @@
         const destino = prompt("DIGITE O CEP DE DESTINO (SOMENTE NÚMEROS):", "70000000");
         if (!destino) return;
         
-        // Abre o link dos Correios com o remetente fixo e o destino informado
         const url = `https://www.correios.com.br/@@calcprecocep-pld-iframe?cepOrigem=${cepOrigem}&cepDestino=${destino.replace(/\D/g, '')}`;
         window.open(url, '_blank', 'width=800,height=600,top=100,left=100');
 
-        // Pergunta o valor calculado para acrescer ao custo do produto
         setTimeout(() => {
             const valorCalculadoStr = prompt("INFORME O VALOR DO FRETE CALCULADO (EX: 25,50):", "0,00");
             if (valorCalculadoStr !== null) {
@@ -753,45 +824,146 @@
                     <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoUnitFinal)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroUnitFinal)}</td>
                     <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBase)}</td>
-                    <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" onchange="vendaRapida(${prod.id}, this)"></td>
+                    <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" onchange="abrirModalVenda(${prod.id}, this)"></td>
                     <td><button type="button" onclick="excluirDoHistorico(${prod.id})" class="btn-danger" style="padding:6px 10px;">X</button></td>
                 </tr>
             `;
         });
     }
 
-    async function vendaRapida(idNum, checkbox) {
+    // ============================================
+    // LÓGICA DO MODAL DE CONFIRMAÇÃO DE VENDA
+    // ============================================
+
+    function abrirModalVenda(idNum, checkbox) {
         if(!checkbox.checked) return;
-        const prod = historicoProdutos.find(p => p.id === idNum);
         
-        if(confirm(`Confirmar venda de ${prod.quantidade} unid. de ${prod.nome}?`)) {
-            const custoEmbUnit = (prod.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-            const freteUnit = prod.valorFrete || 0;
-            const custoFinal = prod.custoProducaoBase + custoEmbUnit + freteUnit;
-            
-            await supabaseClient.from('3dbsb').update({ vendido: true }).eq('id', idNum);
+        itemVendaSelecionado = historicoProdutos.find(p => p.id === idNum);
+        checkboxVendaSelecionado = checkbox;
+        
+        if(!itemVendaSelecionado) return;
 
-            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
-            
-            const vendaDB = {
-                id: prod.id, 
-                nome: prod.nome, 
-                plataforma: "VENDA DIRETA", 
-                quantidade: prod.quantidade,
-                custo_total: custoFinal * prod.quantidade, 
-                venda_total: prod.precoBase * prod.quantidade,
-                lucro_total: (prod.precoBase - custoFinal) * prod.quantidade, 
-                data_venda: new Date().toLocaleDateString('pt-BR')
-            };
+        // Injeta dados no Modal
+        document.getElementById('vendaNomeProd').innerText = itemVendaSelecionado.nome;
+        document.getElementById('vendaQtd').value = itemVendaSelecionado.quantidade;
+        
+        const optOutro = document.getElementById('vendaOptOutro');
+        optOutro.value = itemVendaSelecionado.taxaOutro || 0;
+        optOutro.innerText = `OUTRO (${itemVendaSelecionado.taxaOutro || 0}%)`;
 
-            produtosVendidos.push(vendaDB);
-            renderizarHistorico(); 
-            atualizarOpcoesFiltro(); 
-            renderizarDashboardVendidos();
-        } else { 
-            checkbox.checked = false; 
+        // Recupera a margem atual calculada para preencher por padrão
+        const custoEmb = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+        const custoFinal = itemVendaSelecionado.custoProducaoBase + custoEmb + (itemVendaSelecionado.valorFrete || 0);
+        
+        let margemAtual = 0;
+        if (custoFinal > 0) {
+            margemAtual = ((itemVendaSelecionado.precoBase / custoFinal) - 1) * 100;
         }
+        
+        document.getElementById('vendaMargem').value = Math.max(0, margemAtual).toFixed(2).replace('.', ',');
+        document.getElementById('vendaDesconto').value = "0,00";
+        document.getElementById('vendaPlataforma').value = "0"; // Default: VENDA DIRETA
+
+        calcularModalVenda();
+        document.getElementById('modalVendaConfirmacao').style.display = 'flex';
     }
+
+    function fecharModalVenda() {
+        document.getElementById('modalVendaConfirmacao').style.display = 'none';
+        if(checkboxVendaSelecionado) checkboxVendaSelecionado.checked = false; // Desmarca se cancelou
+        itemVendaSelecionado = null;
+        checkboxVendaSelecionado = null;
+    }
+
+    function calcularModalVenda() {
+        if(!itemVendaSelecionado) return;
+
+        const qtd = parseInt(document.getElementById('vendaQtd').value) || 1;
+        const taxaPlataforma = converterStringParaFloat(document.getElementById('vendaPlataforma').value) / 100;
+        const margem = converterStringParaFloat(document.getElementById('vendaMargem').value) / 100;
+        const desconto = converterStringParaFloat(document.getElementById('vendaDesconto').value);
+
+        const custoEmb = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
+        const frete = itemVendaSelecionado.valorFrete || 0;
+        const custoUnit = itemVendaSelecionado.custoProducaoBase + custoEmb + frete;
+        const custoTotal = custoUnit * qtd;
+
+        // Base para preço desejado antes da taxa (Custo unitário incrementado da nova margem)
+        const precoAlvoUnit = custoUnit * (1 + margem);
+        
+        // Embutindo a taxa da plataforma (markup inverso sobre a taxa)
+        let precoPlatUnit = precoAlvoUnit;
+        if (taxaPlataforma < 1 && taxaPlataforma > 0) {
+            precoPlatUnit = precoAlvoUnit / (1 - taxaPlataforma);
+        }
+        
+        let valorTotalBruto = precoPlatUnit * qtd;
+        
+        // Valor Final que o cliente paga (com desconto já aplicado)
+        let valorTotalFinal = Math.max(0, valorTotalBruto - desconto);
+        
+        // A plataforma morde sua taxa sobre o valor final de venda pago pelo cliente
+        let valorTaxa = valorTotalFinal * taxaPlataforma;
+        
+        // Cálculo do Lucro (Valor Recebido - Taxa Cobrada - Custos)
+        let lucroLiquido = valorTotalFinal - valorTaxa - custoTotal;
+        let percLucro = custoTotal > 0 ? (lucroLiquido / custoTotal) * 100 : 0;
+
+        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        document.getElementById('vendaCustoTotalCalc').innerText = formatBRL(custoTotal);
+        document.getElementById('vendaTaxaPlat').innerText = formatBRL(valorTaxa);
+        document.getElementById('vendaValorTotal').innerText = formatBRL(valorTotalFinal);
+        document.getElementById('vendaLucroFinal').innerText = formatBRL(lucroLiquido);
+        document.getElementById('vendaPercLucro').innerText = `(${percLucro.toFixed(2)}%)`;
+        
+        // Ajusta a cor do percentual para vermelho em caso de prejuízo
+        document.getElementById('vendaPercLucro').style.color = lucroLiquido >= 0 ? "#555" : "#dc3545";
+        document.getElementById('vendaLucroFinal').style.color = lucroLiquido >= 0 ? "#28a745" : "#dc3545";
+    }
+
+    async function confirmarVendaModal() {
+        if(!itemVendaSelecionado) return;
+        
+        const selectPlat = document.getElementById('vendaPlataforma');
+        const nomePlataforma = selectPlat.options[selectPlat.selectedIndex].getAttribute('data-name');
+        const qtd = parseInt(document.getElementById('vendaQtd').value) || 1;
+        
+        // Capturar cálculos da tela para os dados finais de Venda
+        const custoFinalStr = document.getElementById('vendaCustoTotalCalc').innerText;
+        const vendaFinalStr = document.getElementById('vendaValorTotal').innerText;
+        const lucroFinalStr = document.getElementById('vendaLucroFinal').innerText;
+
+        const custoTotalF = converterStringParaFloat(custoFinalStr.replace('R$', '').trim());
+        const valorVendaF = converterStringParaFloat(vendaFinalStr.replace('R$', '').trim());
+        const lucroLiquidoF = converterStringParaFloat(lucroFinalStr.replace('R$', '').trim());
+        
+        // Salva na Base Supabase como vendido
+        await supabaseClient.from('3dbsb').update({ vendido: true, quantidade: qtd }).eq('id', itemVendaSelecionado.id);
+        
+        // Remove do array local
+        historicoProdutos = historicoProdutos.filter(p => p.id !== itemVendaSelecionado.id);
+        
+        const vendaDB = {
+            id: itemVendaSelecionado.id, 
+            nome: itemVendaSelecionado.nome, 
+            plataforma: nomePlataforma, 
+            quantidade: qtd,
+            custo_total: custoTotalF, 
+            venda_total: valorVendaF,
+            lucro_total: lucroLiquidoF, 
+            data_venda: new Date().toLocaleDateString('pt-BR')
+        };
+
+        produtosVendidos.push(vendaDB);
+        
+        fecharModalVenda();
+        renderizarHistorico(); 
+        atualizarOpcoesFiltro(); 
+        renderizarDashboardVendidos();
+    }
+
+    // ============================================
 
     function renderizarDashboardVendidos() {
         const tbody = document.getElementById('corpoVendidos');
