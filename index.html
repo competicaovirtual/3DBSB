@@ -865,19 +865,9 @@
         optOutro.value = itemVendaSelecionado.taxaOutro || 0;
         optOutro.innerText = `OUTRO (${itemVendaSelecionado.taxaOutro || 0}%)`;
 
-        // Recupera a margem atual calculada para preencher por padrão
-        const custoEmb = (itemVendaSelecionado.embalagens || []).reduce((acc, item) => acc + item.valor, 0);
-        const freteUnit = itemVendaSelecionado.valorFrete || 0;
+        // Define a margem inicial padrão de 100% conforme solicitado
+        document.getElementById('vendaMargem').value = "100,00";
         
-        const custoFinalUnit = itemVendaSelecionado.custoProducaoBase + custoEmb + freteUnit;
-        const precoVendaUnit = itemVendaSelecionado.precoBase + custoEmb; // Somado ao valor de venda
-        
-        let margemAtual = 0;
-        if (custoFinalUnit > 0) {
-            margemAtual = ((precoVendaUnit / custoFinalUnit) - 1) * 100;
-        }
-        
-        document.getElementById('vendaMargem').value = Math.max(0, margemAtual).toFixed(2).replace('.', ',');
         document.getElementById('vendaDesconto').value = "0,00"; // Agora reflete Porcentagem (%)
         document.getElementById('vendaPlataforma').value = "0"; // Default: VENDA DIRETA
 
