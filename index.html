@@ -82,7 +82,7 @@
 <body>
 
 <div class="container">
-    <h1>SISTEMA DE PRECIFICAÇÃO E GESTÃO 3D</h1>
+    <h1>SISTEMA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</h1>
     <div class="status-cloud">☁️ MODO SUPABASE CONECTADO (TABELA: 3DBSB)</div>
 
     <!-- 1. Detalhes da Peça e Material -->
@@ -563,19 +563,22 @@
     async function carregarEmbalagensSupabase() {
         try {
             const { data, error } = await supabaseClient.from('embalagens').select('*');
-            if (error) {
+            if (error || !data || data.length === 0) {
+                // Fallback local caso a tabela esteja vazia ou com erro
                 bibliotecaEmbalagens = [
                     { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
                     { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
                 ];
-            } else if (data && data.length > 0) {
-                bibliotecaEmbalagens = data;
             } else {
-                bibliotecaEmbalagens = [];
+                bibliotecaEmbalagens = data;
             }
             renderizarSelectBiblioteca();
         } catch (err) {
-            console.error("Erro ao carregar embalagens:", err.message);
+            bibliotecaEmbalagens = [
+                { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
+                { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
+            ];
+            renderizarSelectBiblioteca();
         }
     }
 
@@ -588,7 +591,14 @@
         const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
         
         if (error) {
-            alert("ERRO: Crie a tabela 'embalagens' no seu Supabase.");
+            // Se houver erro no Supabase, salva na lista local para não travar o usuário
+            novoItem.id = Date.now().toString();
+            bibliotecaEmbalagens.push(novoItem);
+            renderizarSelectBiblioteca();
+            document.getElementById('novaEmbNome').value = "";
+            document.getElementById('novaEmbValor').value = "";
+            toggleFormNovaEmbalagem();
+            alert("⚠️ Salvo localmente (Erro ao sincronizar com Supabase: " + error.message + ")");
             return;
         }
 
@@ -901,7 +911,6 @@
             let valorDescontoCalc = precoPlat * descontoPerc;
             valorTotalFinal = Math.max(0, precoPlat - valorDescontoCalc);
             
-            // Atualiza o input com o valor formatado calculado
             let vStr = valorTotalFinal.toFixed(2).replace('.', ',');
             vStr = vStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
             document.getElementById('vendaValorTotal').value = vStr;
