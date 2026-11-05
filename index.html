@@ -190,7 +190,7 @@
     </div>
 
     <!-- 3. Mão de Obra e Margem de Falha -->
-    <div class="section-title">3. MÃO DE OBRA E MARGEM DE Falha</div>
+    <div class="section-title">3. MÃO DE OBRA E MARGEM DE FALHA</div>
     <div class="grid-2-cols">
         <div class="form-group">
             <label for="tempoTrabalho">TEMPO TRABALHO MANUAL (HH:MM:SS):</label>
@@ -417,7 +417,7 @@
                 <span id="vendaTaxaPlat" style="color: #dc3545; font-weight:bold;">R$ 0,00</span>
             </p>
             <p style="margin: 8px 0; font-size:15px; font-weight:bold; display:flex; justify-content:space-between;">
-                <span>VALOR FINAL RECEBIDO DO CLIENTE:</span> 
+                <span>VALOR FINAL DE VENDA:</span> 
                 <span id="vendaValorTotal" style="color: #007bff;">R$ 0,00</span>
             </p>
             <p style="border-top: 1px dashed #c3e6cb; padding-top: 12px; margin-top: 12px; font-weight:bold; font-size:18px; display:flex; justify-content:space-between;">
@@ -444,10 +444,10 @@
 
     let historicoProdutos = [];
     let produtosVendidos = [];
-    let bibliotecaEmbalagens = [
-        { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
-        { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
-    ];
+    
+    // Variável vazia para carregar da nuvem
+    let bibliotecaEmbalagens = [];
+    
     let ultimoCalculo = null;
     
     // Variáveis para a Modal Múltipla de Venda
@@ -559,6 +559,55 @@
             console.error("Erro ao carregar do Supabase:", err.message);
         }
     }
+
+    // ==== INTEGRAÇÃO DA TABELA DE EMBALAGENS NA NUVEM ==== //
+    
+    async function carregarEmbalagensSupabase() {
+        try {
+            const { data, error } = await supabaseClient.from('embalagens').select('*');
+            if (error) {
+                console.warn("Tabela 'embalagens' não encontrada no banco. Exibindo apenas padroes locais.", error);
+                bibliotecaEmbalagens = [
+                    { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
+                    { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
+                ];
+            } else if (data && data.length > 0) {
+                bibliotecaEmbalagens = data;
+            } else {
+                bibliotecaEmbalagens = [];
+            }
+            renderizarSelectBiblioteca();
+        } catch (err) {
+            console.error("Erro ao carregar embalagens:", err.message);
+        }
+    }
+
+    async function salvarNovaEmbalagemBiblioteca() {
+        const nome = document.getElementById('novaEmbNome').value.trim().toUpperCase();
+        const valor = converterStringParaFloat(document.getElementById('novaEmbValor').value);
+        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
+
+        const novoItem = { nome: nome, valor: valor };
+        
+        // Salva direto no Supabase
+        const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
+        
+        if (error) {
+            alert("ERRO: A tabela 'embalagens' ainda não existe no seu Supabase. Siga as instruções para criar a tabela no painel antes de salvar.");
+            return;
+        }
+
+        if (data && data.length > 0) {
+            bibliotecaEmbalagens.push(data[0]); // Adiciona o dado real retornado da nuvem
+            renderizarSelectBiblioteca();
+            document.getElementById('novaEmbNome').value = "";
+            document.getElementById('novaEmbValor').value = "";
+            toggleFormNovaEmbalagem();
+            alert("✅ Embalagem salva na nuvem com sucesso!");
+        }
+    }
+
+    // ======================================================= //
 
     async function salvarNoHistorico() {
         if (!ultimoCalculo) { 
@@ -779,20 +828,6 @@
     function toggleFormNovaEmbalagem() {
         const form = document.getElementById('formNovaEmbalagem');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function salvarNovaEmbalagemBiblioteca() {
-        const nome = document.getElementById('novaEmbNome').value.trim().toUpperCase();
-        const valor = converterStringParaFloat(document.getElementById('novaEmbValor').value);
-        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
-
-        const novoItem = { id: Date.now().toString(), nome: nome, valor: valor };
-        bibliotecaEmbalagens.push(novoItem);
-        renderizarSelectBiblioteca();
-        document.getElementById('novaEmbNome').value = "";
-        document.getElementById('novaEmbValor').value = "";
-        toggleFormNovaEmbalagem();
-        alert("Embalagem salva na biblioteca!");
     }
 
     function adicionarEmbalagemVenda() {
@@ -1063,7 +1098,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         calcular();
-        renderizarSelectBiblioteca();
+        carregarEmbalagensSupabase();
         carregarDadosSupabase();
     });
 </script>
