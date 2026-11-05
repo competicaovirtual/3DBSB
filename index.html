@@ -53,8 +53,8 @@
         .btn-secondary { background-color: #6c757d; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
         .btn-primary { background-color: #007bff; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
         
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
@@ -190,7 +190,7 @@
     </div>
 
     <!-- 3. Mão de Obra e Margem de Falha -->
-    <div class="section-title">3. MÃO DE OBRA E MARGEM DE FALHA</div>
+    <div class="section-title">3. MÃO DE OBRA E MARGEM DE Falha</div>
     <div class="grid-2-cols">
         <div class="form-group">
             <label for="tempoTrabalho">TEMPO TRABALHO MANUAL (HH:MM:SS):</label>
@@ -325,7 +325,7 @@
 
 <!-- MODAL DE CONFIRMAÇÃO DE VENDA COM CALCULADORA FINAL -->
 <div class="modal-overlay" id="modalVendaConfirmacao">
-    <div class="modal-content" style="max-width: 750px;">
+    <div class="modal-content">
         <h3 style="margin-top:0; text-transform: uppercase; color:#28a745; border-bottom: 2px solid #28a745; padding-bottom: 8px;">
             🛒 FINALIZAR VENDA
         </h3>
@@ -354,15 +354,17 @@
             <div style="border-top: 1px dashed #ccc; padding-top: 10px;">
                 <button type="button" class="btn-secondary" onclick="toggleFormNovaEmbalagem()">✏️ CADASTRAR NOVA EMBALAGEM</button>
                 <div id="formNovaEmbalagem" style="display:none; background:#fff; border:1px solid #ddd; padding:10px; border-radius:5px; margin-top:10px;">
-                    <div class="form-group" style="margin-bottom:10px;">
-                        <label style="font-size:11px;">NOME DO ITEM:</label>
-                        <input type="text" id="novaEmbNome" placeholder="EX: CAIXA KRAFT P" style="padding:8px; font-size:12px;">
-                    </div>
-                    <div class="form-group" style="margin-bottom:10px;">
-                        <label style="font-size:11px;">VALOR UNITÁRIO:</label>
-                        <div class="input-group">
-                            <span class="input-group-addon-prefix" style="padding:8px;">R$</span>
-                            <input type="text" id="novaEmbValor" class="time-input" oninput="maskMoeda(this)" placeholder="0,00" style="padding:8px; font-size:12px;">
+                    <div class="grid-2-cols" style="gap:10px; margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">NOME DO ITEM:</label>
+                            <input type="text" id="novaEmbNome" placeholder="EX: CAIXA KRAFT P" style="padding:8px; font-size:12px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">VALOR UNITÁRIO:</label>
+                            <div class="input-group">
+                                <span class="input-group-addon-prefix" style="padding:8px;">R$</span>
+                                <input type="text" id="novaEmbValor" class="time-input" oninput="maskMoeda(this)" placeholder="0,00" style="padding:8px; font-size:12px;">
+                            </div>
                         </div>
                     </div>
                     <button type="button" class="btn-success" style="margin-top:5px; padding:8px; font-size:12px;" onclick="salvarNovaEmbalagemBiblioteca()">SALVAR NA BIBLIOTECA</button>
@@ -730,20 +732,23 @@
                     <tr style="background-color: #f2f2f2;">
                         <th style="text-align: left; padding: 8px; border: 1px solid #ddd;">PRODUTO</th>
                         <th style="width: 80px; padding: 8px; border: 1px solid #ddd;">QTD</th>
-                        <th style="width: 120px; padding: 8px; border: 1px solid #ddd;">CUSTO UNIT.</th>
+                        <th style="width: 140px; padding: 8px; border: 1px solid #ddd;">CUSTO TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
         itensVendaSelecionados.forEach((item, index) => {
-            const formatedCusto = item.custoProducaoBase.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            // Calcula o custo total multiplicando o custo base pela quantidade informada no input de venda
+            const custoTotalItem = item.custoProducaoBase * item.qtdVenda;
+            const formatedCusto = custoTotalItem.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
             html += `
                 <tr>
                     <td style="text-align: left; padding: 8px; border: 1px solid #ddd; font-weight:bold;">${item.nome}</td>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align:center;">
                         <input type="number" min="1" value="${item.qtdVenda}" onchange="atualizarQtdVenda(${index}, this.value)" style="width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px;">
                     </td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${formatedCusto}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align:center; color:#dc3545; font-weight:bold;">${formatedCusto}</td>
                 </tr>
             `;
         });
@@ -755,6 +760,7 @@
         let val = parseInt(value);
         if(isNaN(val) || val < 1) val = 1;
         itensVendaSelecionados[index].qtdVenda = val;
+        renderizarListaProdutosVenda(); // Re-renderiza para atualizar a coluna do Custo Total
         calcularModalVenda();
     }
 
@@ -793,11 +799,23 @@
         const select = document.getElementById('selectBibliotecaEmbalagem');
         const embBiblio = bibliotecaEmbalagens.find(e => e.id == select.value);
         if(embBiblio) {
-            embalagensVendaAtual.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor) });
+            // Insere qtd padrao 1 ao adicionar
+            embalagensVendaAtual.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor), qtd: 1 });
             renderizarListaEmbalagensVenda();
             calcularModalVenda();
         }
         select.value = "";
+    }
+
+    function atualizarQtdEmbalagem(instanceId, novaQtd) {
+        let val = parseInt(novaQtd);
+        if(isNaN(val) || val < 1) val = 1;
+        const emb = embalagensVendaAtual.find(e => e.instanceId === instanceId);
+        if(emb) {
+            emb.qtd = val;
+            renderizarListaEmbalagensVenda();
+            calcularModalVenda();
+        }
     }
 
     function removerEmbalagemVenda(instanceId) {
@@ -813,14 +831,18 @@
         if(embalagensVendaAtual.length === 0) {
             listDiv.innerHTML = '<span style="color:#777; font-size:12px;">Nenhuma embalagem selecionada.</span>';
         } else {
-            embalagensVendaAtual.forEach(emb => {
-                total += emb.valor;
+            embalagensVendaAtual.forEach((emb) => {
+                const qtd = emb.qtd || 1;
+                const subtotalEmb = emb.valor * qtd;
+                total += subtotalEmb;
                 listDiv.innerHTML += `
-                    <div class="item-embalagem">
-                        <span style="font-size:12px; font-weight:bold;">${emb.nome}</span>
-                        <div>
-                            <span style="margin-right:10px; font-size:13px; font-weight:bold;">R$ ${emb.valor.toFixed(2).replace('.',',')}</span>
-                            <button type="button" class="btn-danger" style="padding:4px 8px;" onclick="removerEmbalagemVenda(${emb.instanceId})">X</button>
+                    <div class="item-embalagem" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <span style="font-size:12px; font-weight:bold; flex:1;">${emb.nome} (R$ ${emb.valor.toFixed(2).replace('.',',')} un.)</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <label style="font-size:11px; font-weight:bold; margin:0;">QTD:</label>
+                            <input type="number" min="1" value="${qtd}" onchange="atualizarQtdEmbalagem(${emb.instanceId}, this.value)" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                            <span style="font-size:13px; font-weight:bold; color:#d39e00; width:90px; text-align:right;">R$ ${subtotalEmb.toFixed(2).replace('.',',')}</span>
+                            <button type="button" class="btn-danger" style="padding:4px 8px; margin:0;" onclick="removerEmbalagemVenda(${emb.instanceId})">X</button>
                         </div>
                     </div>`;
             });
@@ -844,10 +866,10 @@
             custoProducaoTotal += item.custoProducaoBase * item.qtdVenda;
         });
 
-        // Somatório das Embalagens Adicionadas
+        // Somatório das Embalagens Adicionadas com Base na QTD
         let custoEmbalagens = 0;
         embalagensVendaAtual.forEach(emb => {
-            custoEmbalagens += emb.valor;
+            custoEmbalagens += emb.valor * (emb.qtd || 1);
         });
 
         // Custo total final do pacote de venda
