@@ -40,7 +40,7 @@
         #tipoFilamento { text-align: left !important; width: 160px; font-weight: bold; }
         
         .results { margin-top: 25px; background-color: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
-        .results p { margin: 12px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; }
+        .results p { margin: 12px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; align-items: center; }
         
         button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background-color 0.3s; text-transform: uppercase; }
         button:hover { background-color: #0056b3; }
@@ -416,9 +416,12 @@
                 <span>TAXA DEDUZIDA P/ PLATAFORMA:</span> 
                 <span id="vendaTaxaPlat" style="color: #dc3545; font-weight:bold;">R$ 0,00</span>
             </p>
-            <p style="margin: 8px 0; font-size:15px; font-weight:bold; display:flex; justify-content:space-between;">
-                <span>VALOR FINAL DE VENDA:</span> 
-                <span id="vendaValorTotal" style="color: #007bff;">R$ 0,00</span>
+            <p style="margin: 8px 0; font-size:15px; font-weight:bold; display:flex; justify-content:space-between; align-items: center;">
+                <span>VALOR FINAL DE VENDA:</span>
+                <span class="input-group" style="width: 200px;">
+                    <span class="input-group-addon-prefix" style="padding:6px;">R$</span>
+                    <input type="text" id="vendaValorTotal" value="0,00" class="time-input" oninput="maskMoeda(this); calcularModalVendaPorValorManual()" style="padding:6px; font-size:15px; color:#007bff; font-weight:bold;">
+                </span>
             </p>
             <p style="border-top: 1px dashed #c3e6cb; padding-top: 12px; margin-top: 12px; font-weight:bold; font-size:18px; display:flex; justify-content:space-between;">
                 <span>LUCRO LÍQUIDO FINAL:</span> 
@@ -444,15 +447,12 @@
 
     let historicoProdutos = [];
     let produtosVendidos = [];
-    
-    // Variável vazia para carregar da nuvem
     let bibliotecaEmbalagens = [];
-    
     let ultimoCalculo = null;
     
-    // Variáveis para a Modal Múltipla de Venda
     let itensVendaSelecionados = [];
     let embalagensVendaAtual = [];
+    let alterandoValorManualmente = false;
 
     function maskMoeda(input) {
         let v = input.value.replace(/\D/g, ''); 
@@ -560,13 +560,10 @@
         }
     }
 
-    // ==== INTEGRAÇÃO DA TABELA DE EMBALAGENS NA NUVEM ==== //
-    
     async function carregarEmbalagensSupabase() {
         try {
             const { data, error } = await supabaseClient.from('embalagens').select('*');
             if (error) {
-                console.warn("Tabela 'embalagens' não encontrada no banco. Exibindo apenas padroes locais.", error);
                 bibliotecaEmbalagens = [
                     { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
                     { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
@@ -588,17 +585,15 @@
         if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
 
         const novoItem = { nome: nome, valor: valor };
-        
-        // Salva direto no Supabase
         const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
         
         if (error) {
-            alert("ERRO: A tabela 'embalagens' ainda não existe no seu Supabase. Siga as instruções para criar a tabela no painel antes de salvar.");
+            alert("ERRO: Crie a tabela 'embalagens' no seu Supabase.");
             return;
         }
 
         if (data && data.length > 0) {
-            bibliotecaEmbalagens.push(data[0]); // Adiciona o dado real retornado da nuvem
+            bibliotecaEmbalagens.push(data[0]);
             renderizarSelectBiblioteca();
             document.getElementById('novaEmbNome').value = "";
             document.getElementById('novaEmbValor').value = "";
@@ -606,8 +601,6 @@
             alert("✅ Embalagem salva na nuvem com sucesso!");
         }
     }
-
-    // ======================================================= //
 
     async function salvarNoHistorico() {
         if (!ultimoCalculo) { 
@@ -700,8 +693,6 @@
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
             const qtd = prod.quantidade || 1;
-            
-            // Valores TOTAIS baseados na QUANTIDADE
             const custoTotalFinal = prod.custoProducaoBase * qtd;
             const pBaseTotal = prod.precoBase * qtd;
             const lucroTotalFinal = pBaseTotal - custoTotalFinal;
@@ -727,10 +718,6 @@
         });
     }
 
-    // ============================================
-    // LÓGICA DO MODAL DE CONFIRMAÇÃO DE VENDA MÚLTIPLA
-    // ============================================
-
     function abrirModalVendaMultipla() {
         const checkboxes = document.querySelectorAll('.checkbox-vendido:checked');
         if (checkboxes.length === 0) {
@@ -743,7 +730,6 @@
             const id = cb.getAttribute('data-id');
             const prod = historicoProdutos.find(p => p.id == id);
             if (prod) {
-                // Clonamos o item para o pop-up com a qtd atual
                 itensVendaSelecionados.push({
                     ...prod,
                     qtdVenda: prod.quantidade || 1
@@ -751,12 +737,12 @@
             }
         });
 
-        // Limpa configs de embalagem e frete para a nova venda
         embalagensVendaAtual = [];
         document.getElementById('vendaFrete').value = "0,00";
         document.getElementById('vendaMargem').value = "100,00";
         document.getElementById('vendaDesconto').value = "0,00";
         document.getElementById('vendaPlataforma').value = "0";
+        alterandoValorManualmente = false;
 
         renderizarListaProdutosVenda();
         renderizarListaEmbalagensVenda();
@@ -771,6 +757,7 @@
         checkboxes.forEach(cb => cb.checked = false);
         itensVendaSelecionados = [];
         embalagensVendaAtual = [];
+        alterandoValorManualmente = false;
     }
 
     function renderizarListaProdutosVenda() {
@@ -787,7 +774,6 @@
                 <tbody>
         `;
         itensVendaSelecionados.forEach((item, index) => {
-            // Calcula o custo total multiplicando o custo base pela quantidade informada no input de venda
             const custoTotalItem = item.custoProducaoBase * item.qtdVenda;
             const formatedCusto = custoTotalItem.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
@@ -809,13 +795,10 @@
         let val = parseInt(value);
         if(isNaN(val) || val < 1) val = 1;
         itensVendaSelecionados[index].qtdVenda = val;
-        renderizarListaProdutosVenda(); // Re-renderiza para atualizar a coluna do Custo Total
+        alterandoValorManualmente = false;
+        renderizarListaProdutosVenda();
         calcularModalVenda();
     }
-
-    // ============================================
-    // LÓGICA DE EMBALAGENS DENTRO DA VENDA
-    // ============================================
 
     function renderizarSelectBiblioteca() {
         const select = document.getElementById('selectBibliotecaEmbalagem');
@@ -834,8 +817,8 @@
         const select = document.getElementById('selectBibliotecaEmbalagem');
         const embBiblio = bibliotecaEmbalagens.find(e => e.id == select.value);
         if(embBiblio) {
-            // Insere qtd padrao 1 ao adicionar
             embalagensVendaAtual.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor), qtd: 1 });
+            alterandoValorManualmente = false;
             renderizarListaEmbalagensVenda();
             calcularModalVenda();
         }
@@ -848,6 +831,7 @@
         const emb = embalagensVendaAtual.find(e => e.instanceId === instanceId);
         if(emb) {
             emb.qtd = val;
+            alterandoValorManualmente = false;
             renderizarListaEmbalagensVenda();
             calcularModalVenda();
         }
@@ -855,6 +839,7 @@
 
     function removerEmbalagemVenda(instanceId) {
         embalagensVendaAtual = embalagensVendaAtual.filter(e => e.instanceId !== instanceId);
+        alterandoValorManualmente = false;
         renderizarListaEmbalagensVenda();
         calcularModalVenda();
     }
@@ -885,8 +870,6 @@
         document.getElementById('totalEmbalagemModal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
     }
 
-    // ============================================
-
     function calcularModalVenda() {
         if(itensVendaSelecionados.length === 0) return;
 
@@ -895,38 +878,38 @@
         const descontoPerc = converterStringParaFloat(document.getElementById('vendaDesconto').value) / 100;
         const frete = converterStringParaFloat(document.getElementById('vendaFrete').value);
 
-        // Somatório dos Custos de Produção (Item x Qtd)
         let custoProducaoTotal = 0;
         itensVendaSelecionados.forEach(item => {
             custoProducaoTotal += item.custoProducaoBase * item.qtdVenda;
         });
 
-        // Somatório das Embalagens Adicionadas com Base na QTD
         let custoEmbalagens = 0;
         embalagensVendaAtual.forEach(emb => {
             custoEmbalagens += emb.valor * (emb.qtd || 1);
         });
 
-        // Custo total final do pacote de venda
         const custoTotal = custoProducaoTotal + custoEmbalagens + frete;
+        
+        let valorTotalFinal = 0;
 
-        // Base para preço desejado (Custo Global incrementado da nova margem)
-        const precoAlvo = custoTotal * (1 + margem);
-        
-        // Embutindo a taxa da plataforma (markup inverso sobre a taxa)
-        let precoPlat = precoAlvo;
-        if (taxaPlataforma < 1 && taxaPlataforma > 0) {
-            precoPlat = precoAlvo / (1 - taxaPlataforma);
+        if (!alterandoValorManualmente) {
+            const precoAlvo = custoTotal * (1 + margem);
+            let precoPlat = precoAlvo;
+            if (taxaPlataforma < 1 && taxaPlataforma > 0) {
+                precoPlat = precoAlvo / (1 - taxaPlataforma);
+            }
+            let valorDescontoCalc = precoPlat * descontoPerc;
+            valorTotalFinal = Math.max(0, precoPlat - valorDescontoCalc);
+            
+            // Atualiza o input com o valor formatado calculado
+            let vStr = valorTotalFinal.toFixed(2).replace('.', ',');
+            vStr = vStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            document.getElementById('vendaValorTotal').value = vStr;
+        } else {
+            valorTotalFinal = converterStringParaFloat(document.getElementById('vendaValorTotal').value);
         }
-        
-        // Aplicação do desconto
-        let valorDescontoCalc = precoPlat * descontoPerc;
-        let valorTotalFinal = Math.max(0, precoPlat - valorDescontoCalc);
-        
-        // A plataforma morde sua taxa sobre o valor final cobrado
+
         let valorTaxa = valorTotalFinal * taxaPlataforma;
-        
-        // Cálculo do Lucro (Valor Recebido - Taxa Cobrada - Custos)
         let lucroLiquido = valorTotalFinal - valorTaxa - custoTotal;
         let percLucro = custoTotal > 0 ? (lucroLiquido / custoTotal) * 100 : 0;
 
@@ -934,13 +917,16 @@
 
         document.getElementById('vendaCustoTotalCalc').innerText = formatBRL(custoTotal);
         document.getElementById('vendaTaxaPlat').innerText = formatBRL(valorTaxa);
-        document.getElementById('vendaValorTotal').innerText = formatBRL(valorTotalFinal);
         document.getElementById('vendaLucroFinal').innerText = formatBRL(lucroLiquido);
         document.getElementById('vendaPercLucro').innerText = `(${percLucro.toFixed(2)}%)`;
         
-        // Ajusta a cor do percentual para vermelho em caso de prejuízo
         document.getElementById('vendaPercLucro').style.color = lucroLiquido >= 0 ? "#555" : "#dc3545";
         document.getElementById('vendaLucroFinal').style.color = lucroLiquido >= 0 ? "#28a745" : "#dc3545";
+    }
+
+    function calcularModalVendaPorValorManual() {
+        alterandoValorManualmente = true;
+        calcularModalVenda();
     }
 
     async function confirmarVendaModal() {
@@ -949,35 +935,30 @@
         const selectPlat = document.getElementById('vendaPlataforma');
         const nomePlataforma = selectPlat.options[selectPlat.selectedIndex].getAttribute('data-name');
         
-        // Capturar cálculos da tela para os dados finais de Venda
         const custoFinalStr = document.getElementById('vendaCustoTotalCalc').innerText;
-        const vendaFinalStr = document.getElementById('vendaValorTotal').innerText;
+        const vendaFinalStr = document.getElementById('vendaValorTotal').value;
         const lucroFinalStr = document.getElementById('vendaLucroFinal').innerText;
 
         const custoTotalF = converterStringParaFloat(custoFinalStr.replace('R$', '').trim());
-        const valorVendaF = converterStringParaFloat(vendaFinalStr.replace('R$', '').trim());
+        const valorVendaF = converterStringParaFloat(vendaFinalStr);
         const lucroLiquidoF = converterStringParaFloat(lucroFinalStr.replace('R$', '').trim());
         
-        // Prepara texto consolidado para exibir no Dashboard
         const nomesArr = itensVendaSelecionados.map(i => `${i.qtdVenda}x ${i.nome}`);
         const nomeExibicao = nomesArr.length > 2 ? nomesArr.slice(0, 2).join(" + ") + `... (+${nomesArr.length - 2})` : nomesArr.join(" + ");
         let totalQtd = itensVendaSelecionados.reduce((sum, i) => sum + i.qtdVenda, 0);
 
-        // Atualiza a Base Supabase marcando os selecionados como vendidos
         for (const item of itensVendaSelecionados) {
             await supabaseClient.from('3dbsb').update({ 
                 vendido: true, 
                 quantidade: item.qtdVenda 
             }).eq('id', item.id);
             
-            // Remove do array local de estoque
             historicoProdutos = historicoProdutos.filter(p => p.id !== item.id);
         }
         
-        // Objeto consolidado para compor o Dashboard (Não afeta estrutura Supabase antiga)
         const vendaDB = {
-            id: Date.now(), // ID temporal para manipulação do dashboard local
-            ids_agrupados: itensVendaSelecionados.map(i => i.id), // Guarda referência real
+            id: Date.now(),
+            ids_agrupados: itensVendaSelecionados.map(i => i.id),
             nome: nomeExibicao, 
             plataforma: nomePlataforma, 
             quantidade: totalQtd,
@@ -995,8 +976,6 @@
         renderizarDashboardVendidos();
     }
 
-    // ============================================
-
     function renderizarDashboardVendidos() {
         const tbody = document.getElementById('corpoVendidos');
         tbody.innerHTML = '';
@@ -1004,7 +983,6 @@
         const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         [...produtosVendidos].reverse().forEach((item) => {
-            // Em caso de array gerado pelo carregarDadosSupabase que falte campos (devido ser de antes)
             const lucroTotalSafe = item.lucro_total || 0;
             const custoTotalSafe = item.custo_total || item.custoProducaoBase || 0;
             const vendaTotalSafe = item.venda_total || item.precoBase || 0;
@@ -1040,7 +1018,7 @@
         const map = {};
         produtosVendidos.forEach(i => {
             if(!i.nome) return;
-            const nomeStr = i.nome; // Em vendas múltiplas isso mesclará os nomes, mas manterá rastreável
+            const nomeStr = i.nome;
             if (!map[nomeStr]) map[nomeStr] = { nome: nomeStr, qtd: 0, lucro: 0 };
             map[nomeStr].qtd += (i.quantidade || 1); 
             map[nomeStr].lucro += (i.lucro_total || 0);
@@ -1065,7 +1043,6 @@
     async function excluirDoVendidos(idNum) {
         if(confirm("EXCLUIR ESTA VENDA?")) {
             const venda = produtosVendidos.find(p => p.id === idNum);
-            // Se for uma venda agrupada local, exclui todos os IDs reais atrelados no Supabase
             if (venda && venda.ids_agrupados) {
                 await supabaseClient.from('3dbsb').delete().in('id', venda.ids_agrupados);
             } else {
@@ -1078,7 +1055,6 @@
 
     async function limparVendidos() {
         if(confirm("APAGAR TUDO DOS VENDIDOS?")) {
-            // Coletar todos os IDs reais para deletar
             let idsParaDeletar = [];
             produtosVendidos.forEach(p => {
                 if (p.ids_agrupados) {
