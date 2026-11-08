@@ -83,13 +83,13 @@
 
 <div class="container">
     <h1>SISTEMA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</h1>
-    <div class="status-cloud">☁️ MODO SUPABASE CONECTADO (TABELA: 3DBSB)</div>
+    <div class="status-cloud">☁️ MODO SUPABASE CONECTADO (TABELAS: 3DBSB, VENDAS, EMBALAGENS)</div>
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
     <div class="grid-2-cols" style="margin-bottom: 15px;">
         <div class="form-group" style="margin-bottom: 0;">
-            <label for="nomeProduto">NOME DO PRODUTO/PROJETO:</label>
+            <label for="nomeProduto">NOME DO PRODUTO/PROJETO (MOLDE):</label>
             <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
@@ -232,17 +232,17 @@
         <p style="border-top: 1px solid #ccc; padding-top: 12px; margin-top: 12px;"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
     </div>
 
-    <button type="button" onclick="salvarNoHistorico()" class="btn-success" style="margin-top: 15px; font-size: 16px; padding: 15px;">SALVAR PRODUTO NO ESTOQUE (GERADOS)</button>
+    <button type="button" onclick="salvarNoHistorico()" class="btn-success" style="margin-top: 15px; font-size: 16px; padding: 15px;">SALVAR MOLDE DE PRODUTO NO ESTOQUE</button>
 
     <!-- ESTOQUE DE PRODUTOS GERADOS -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 5px;">
-        <div class="section-title" style="margin: 0; border: none; padding: 0;">ESTOQUE DE PRODUTOS GERADOS</div>
+        <div class="section-title" style="margin: 0; border: none; padding: 0;">ESTOQUE (CATÁLOGO DE PRODUTOS)</div>
         <button type="button" class="btn-success" style="width: auto; padding: 10px 20px; font-size: 13px; margin: 0;" onclick="abrirModalVendaMultipla()">🛒 VENDER ITENS SELECIONADOS</button>
     </div>
     
     <div class="filter-container" style="margin-bottom: 15px;">
         <div class="form-group" style="margin-bottom: 0; flex: 2;">
-            <label for="pesquisaHistorico" style="color: #444; font-size: 12px;">PESQUISAR NO ESTOQUE:</label>
+            <label for="pesquisaHistorico" style="color: #444; font-size: 12px;">PESQUISAR NO CATÁLOGO:</label>
             <input type="text" id="pesquisaHistorico" placeholder="🔍 DIGITE O NOME..." style="font-weight: normal; font-size: 13px;" onkeyup="renderizarHistorico()">
         </div>
         <div class="form-group" style="margin-bottom: 0; flex: 1;">
@@ -260,14 +260,14 @@
             <thead>
                 <tr>
                     <th>PRODUTO</th>
-                    <th>DATA</th>
-                    <th>QTD</th>
+                    <th>DATA CADASTRO</th>
+                    <th>QTD <br>(P/ CÁLCULO)</th>
                     <th>FILAMENTO</th>
                     <th style="color: #dc3545;">CUSTO TOTAL</th>
                     <th style="color: #28a745;">LUCRO TOTAL</th>
                     <th style="color: #333;">VALOR TOTAL</th>
-                    <th>VENDIDO?</th>
-                    <th>AÇÃO</th>
+                    <th>SELECIONAR<br>P/ VENDA</th>
+                    <th>EXCLUIR</th>
                 </tr>
             </thead>
             <tbody id="corpoHistorico">
@@ -285,16 +285,16 @@
     
     <div class="grid-dashboard-vendas">
         <div class="table-responsive history-container border border-slate-200 rounded-xl bg-white p-4">
-            <h4 style="margin-top:0; color:#333; text-transform:uppercase; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px;">📊 HISTÓRICO DE VENDAS RECENTES</h4>
+            <h4 style="margin-top:0; color:#333; text-transform:uppercase; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px;">📊 HISTÓRICO DE VENDAS RECENTES (ITEM A ITEM)</h4>
             <table id="tabelaVendidos" style="margin-top: 10px;">
                 <thead>
                     <tr>
                         <th>DATA</th>
-                        <th>PRODUTO(S)</th>
+                        <th>PRODUTO</th>
                         <th>QTD</th>
                         <th>PLATAFORMA</th>
                         <th>VALOR VENDA</th>
-                        <th>CUSTO</th>
+                        <th>CUSTO (INC. EXTRAS)</th>
                         <th>LUCRO LÍQ.</th>
                         <th>AÇÃO</th>
                     </tr>
@@ -531,11 +531,13 @@
         } catch (e) { console.error("Erro interno ao calcular:", e); }
     }
 
+    // AGORA O ESTOQUE CARREGA TUDO (MESMO O QUE JÁ FOI VENDIDO ANTES) E NUNCA MAIS EXCLUI NADA
     async function carregarDadosSupabase() {
         try {
             const { data, error } = await supabaseClient.from('3dbsb').select('*');
             if (error) throw error;
             if (data) {
+                // Removemos o filtro de p.vendido. Tudo vai para o catálogo.
                 historicoProdutos = data.map(item => ({
                     id: item.id,
                     nome: item.nome || '',
@@ -544,19 +546,27 @@
                     quantidade: item.quantidade || 1,
                     tipoFilamento: item.tipo_filamento || 'PLA',
                     custoProducaoBase: item.custo_producao_base || 0,
-                    precoBase: item.preco_base || 0,
-                    vendido: item.vendido || false
+                    precoBase: item.preco_base || 0
                 }));
-
-                produtosVendidos = historicoProdutos.filter(p => p.vendido);
-                historicoProdutos = historicoProdutos.filter(p => !p.vendido);
 
                 renderizarHistorico();
                 atualizarOpcoesFiltro();
+            }
+        } catch (err) {
+            console.error("Erro ao carregar do Supabase (Estoque):", err.message);
+        }
+    }
+
+    // CARREGA AS VENDAS EXCLUSIVAMENTE DA NOVA TABELA 'vendas'
+    async function carregarVendasSupabase() {
+        try {
+            const { data, error } = await supabaseClient.from('vendas').select('*');
+            if (!error && data) {
+                produtosVendidos = data;
                 renderizarDashboardVendidos();
             }
         } catch (err) {
-            console.error("Erro ao carregar do Supabase:", err.message);
+            console.error("Erro ao carregar vendas:", err.message);
         }
     }
 
@@ -564,7 +574,6 @@
         try {
             const { data, error } = await supabaseClient.from('embalagens').select('*');
             if (error || !data || data.length === 0) {
-                // Fallback local caso a tabela esteja vazia ou com erro
                 bibliotecaEmbalagens = [
                     { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
                     { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
@@ -591,7 +600,6 @@
         const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
         
         if (error) {
-            // Se houver erro no Supabase, salva na lista local para não travar o usuário
             novoItem.id = Date.now().toString();
             bibliotecaEmbalagens.push(novoItem);
             renderizarSelectBiblioteca();
@@ -652,7 +660,7 @@
             });
             renderizarHistorico();
             atualizarOpcoesFiltro();
-            alert("✅ PRODUTO SALVO NO SUPABASE COM SUCESSO!");
+            alert("✅ MOLDE DE PRODUTO SALVO NO CATÁLOGO COM SUCESSO!");
         }
     }
 
@@ -667,7 +675,7 @@
     }
 
     async function excluirDoHistorico(idNum) {
-        if(confirm("EXCLUIR ESTE REGISTRO?")) {
+        if(confirm("EXCLUIR ESTE REGISTRO DEFINITIVAMENTE DO CATÁLOGO?")) {
             await supabaseClient.from('3dbsb').delete().eq('id', idNum);
             historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
             renderizarHistorico();
@@ -697,7 +705,7 @@
         if(fProd !== 'TODOS') prods = prods.filter(p => p.nome === fProd);
         if(fFil !== 'TODOS') prods = prods.filter(p => p.tipoFilamento === fFil);
 
-        if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO.</td></tr>'; return; }
+        if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO NO CATÁLOGO.</td></tr>'; return; }
 
         prods.forEach((prod) => {
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -764,7 +772,7 @@
     function fecharModalVenda() {
         document.getElementById('modalVendaConfirmacao').style.display = 'none';
         const checkboxes = document.querySelectorAll('.checkbox-vendido');
-        checkboxes.forEach(cb => cb.checked = false);
+        checkboxes.forEach(cb => cb.checked = false); // Desmarca tudo após fechar/vender
         itensVendaSelecionados = [];
         embalagensVendaAtual = [];
         alterandoValorManualmente = false;
@@ -778,7 +786,7 @@
                     <tr style="background-color: #f2f2f2;">
                         <th style="text-align: left; padding: 8px; border: 1px solid #ddd;">PRODUTO</th>
                         <th style="width: 80px; padding: 8px; border: 1px solid #ddd;">QTD</th>
-                        <th style="width: 140px; padding: 8px; border: 1px solid #ddd;">CUSTO TOTAL</th>
+                        <th style="width: 140px; padding: 8px; border: 1px solid #ddd;">CUSTO TOTAL (PRODUÇÃO)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -938,51 +946,63 @@
         calcularModalVenda();
     }
 
+    // AGORA A VENDA GERA UM REGISTRO POR PRODUTO MANTENDO A PRECISÃO DE CUSTO/LUCRO
     async function confirmarVendaModal() {
         if(itensVendaSelecionados.length === 0) return;
         
         const selectPlat = document.getElementById('vendaPlataforma');
         const nomePlataforma = selectPlat.options[selectPlat.selectedIndex].getAttribute('data-name');
         
-        const custoFinalStr = document.getElementById('vendaCustoTotalCalc').innerText;
-        const vendaFinalStr = document.getElementById('vendaValorTotal').value;
-        const lucroFinalStr = document.getElementById('vendaLucroFinal').innerText;
-
-        const custoTotalF = converterStringParaFloat(custoFinalStr.replace('R$', '').trim());
-        const valorVendaF = converterStringParaFloat(vendaFinalStr);
-        const lucroLiquidoF = converterStringParaFloat(lucroFinalStr.replace('R$', '').trim());
+        // Coleta os totais calculados na interface
+        const custoTotalGlobal = converterStringParaFloat(document.getElementById('vendaCustoTotalCalc').innerText.replace('R$', '').trim());
+        const valorVendaGlobal = converterStringParaFloat(document.getElementById('vendaValorTotal').value);
+        const lucroLiquidoGlobal = converterStringParaFloat(document.getElementById('vendaLucroFinal').innerText.replace('R$', '').trim());
         
-        const nomesArr = itensVendaSelecionados.map(i => `${i.qtdVenda}x ${i.nome}`);
-        const nomeExibicao = nomesArr.length > 2 ? nomesArr.slice(0, 2).join(" + ") + `... (+${nomesArr.length - 2})` : nomesArr.join(" + ");
-        let totalQtd = itensVendaSelecionados.reduce((sum, i) => sum + i.qtdVenda, 0);
+        let custoProducaoTotalBase = 0;
+        itensVendaSelecionados.forEach(item => { custoProducaoTotalBase += item.custoProducaoBase * item.qtdVenda; });
 
+        const novasVendas = [];
+
+        // Distribuímos o Lucro e Custo Extras (Frete/Embalagem) de forma proporcional para cada item
         for (const item of itensVendaSelecionados) {
-            await supabaseClient.from('3dbsb').update({ 
-                vendido: true, 
-                quantidade: item.qtdVenda 
-            }).eq('id', item.id);
+            const custoBaseItem = item.custoProducaoBase * item.qtdVenda;
             
-            historicoProdutos = historicoProdutos.filter(p => p.id !== item.id);
+            // Peso que este item representa na venda total
+            const proporcao = custoProducaoTotalBase > 0 ? (custoBaseItem / custoProducaoTotalBase) : (1 / itensVendaSelecionados.length);
+
+            const itemValorVenda = valorVendaGlobal * proporcao;
+            const itemCustoTotal = custoTotalGlobal * proporcao;
+            const itemLucro = lucroLiquidoGlobal * proporcao;
+
+            novasVendas.push({
+                nome: item.nome,
+                link: item.link || '',
+                quantidade: item.qtdVenda,
+                plataforma: nomePlataforma,
+                valor_venda: itemValorVenda,
+                custo: itemCustoTotal,
+                lucro: itemLucro,
+                data_venda: new Date().toLocaleDateString('pt-BR')
+            });
         }
         
-        const vendaDB = {
-            id: Date.now(),
-            ids_agrupados: itensVendaSelecionados.map(i => i.id),
-            nome: nomeExibicao, 
-            plataforma: nomePlataforma, 
-            quantidade: totalQtd,
-            custo_total: custoTotalF, 
-            venda_total: valorVendaF,
-            lucro_total: lucroLiquidoF, 
-            data_venda: new Date().toLocaleDateString('pt-BR')
-        };
+        // Insere as vendas item a item na tabela VENDAS
+        const { data, error } = await supabaseClient.from('vendas').insert(novasVendas).select();
+        
+        if (error) {
+            alert("⚠️ Erro ao salvar vendas. Crie a tabela 'vendas' no Supabase conforme as instruções do assistente.");
+            // Fallback: Adiciona na tela se falhar o BD (sem id verdadeiro)
+            novasVendas.forEach(d => { d.id = Date.now() + Math.random(); produtosVendidos.push(d); });
+        } else if (data) {
+            data.forEach(d => produtosVendidos.push(d));
+        }
 
-        produtosVendidos.push(vendaDB);
+        // NÃO apagamos mais os itens do catálogo (historicoProdutos)!
+        // Eles ficam lá intactos para a próxima vez.
         
         fecharModalVenda();
-        renderizarHistorico(); 
-        atualizarOpcoesFiltro(); 
         renderizarDashboardVendidos();
+        alert("✅ Venda(s) salva(s) com sucesso! Os produtos continuam no estoque.");
     }
 
     function renderizarDashboardVendidos() {
@@ -992,19 +1012,24 @@
         const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         [...produtosVendidos].reverse().forEach((item) => {
-            const lucroTotalSafe = item.lucro_total || 0;
-            const custoTotalSafe = item.custo_total || item.custoProducaoBase || 0;
-            const vendaTotalSafe = item.venda_total || item.precoBase || 0;
+            const lucroTotalSafe = item.lucro || item.lucro_total || 0;
+            const custoTotalSafe = item.custo || item.custo_total || 0;
+            const vendaTotalSafe = item.valor_venda || item.venda_total || 0;
             const plat = item.plataforma || "N/A";
 
             tLucro += lucroTotalSafe; 
             tCusto += custoTotalSafe; 
             tItens += item.quantidade || 1;
+            
+            let nomeHtml = item.nome;
+            if (item.link && item.link.startsWith('http')) {
+                nomeHtml = `<a href="${item.link}" target="_blank" class="produto-link">${item.nome}</a>`;
+            }
 
             tbody.innerHTML += `
                 <tr>
                     <td style="font-family:monospace; font-size:10px; color:#666;">${item.data_venda || item.data}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${item.nome}</td>
+                    <td style="font-size:11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
                     <td style="text-align:center; font-weight:bold;">${item.quantidade || 1}</td>
                     <td style="font-size:10px; font-weight:bold; color:#004085;">${plat}</td>
                     <td style="color:#007bff; font-weight:bold;">${formatBRL(vendaTotalSafe)}</td>
@@ -1022,15 +1047,15 @@
     function renderizarRanking() {
         const tbody = document.getElementById('corpoRanking');
         tbody.innerHTML = '';
-        if (produtosVendidos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">SEM DADOS</td></tr>'; return; }
+        if (produtosVendidos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">SEM DADOS DE VENDA</td></tr>'; return; }
 
         const map = {};
         produtosVendidos.forEach(i => {
             if(!i.nome) return;
             const nomeStr = i.nome;
-            if (!map[nomeStr]) map[nomeStr] = { nome: nomeStr, qtd: 0, lucro: 0 };
+            if (!map[nomeStr]) map[nomeStr] = { nome: nomeStr, link: i.link, qtd: 0, lucro: 0 };
             map[nomeStr].qtd += (i.quantidade || 1); 
-            map[nomeStr].lucro += (i.lucro_total || 0);
+            map[nomeStr].lucro += (i.lucro || i.lucro_total || 0);
         });
 
         const arr = Object.values(map).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
@@ -1039,10 +1064,16 @@
         arr.forEach((r, idx) => {
             let m = `#${idx + 1}`;
             if(idx === 0) m = '🥇 1º'; else if(idx === 1) m = '🥈 2º'; else if(idx === 2) m = '🥉 3º';
+            
+            let nomeHtml = r.nome;
+            if (r.link && r.link.startsWith('http')) {
+                nomeHtml = `<a href="${r.link}" target="_blank" class="produto-link" title="Acessar produto">${r.nome}</a>`;
+            }
+
             tbody.innerHTML += `
                 <tr style="border-bottom:1px solid #eee;">
                     <td style="font-weight:bold; color:#555;">${m}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${r.nome}</td>
+                    <td style="font-size:11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
                     <td style="text-align:center; font-weight:bold; color:#333;">${r.qtd}</td>
                     <td style="color:#28a745; font-weight:bold; text-align:right;">${formatBRL(r.lucro)}</td>
                 </tr>`;
@@ -1051,30 +1082,17 @@
 
     async function excluirDoVendidos(idNum) {
         if(confirm("EXCLUIR ESTA VENDA?")) {
-            const venda = produtosVendidos.find(p => p.id === idNum);
-            if (venda && venda.ids_agrupados) {
-                await supabaseClient.from('3dbsb').delete().in('id', venda.ids_agrupados);
-            } else {
-                await supabaseClient.from('3dbsb').delete().eq('id', idNum);
-            }
+            await supabaseClient.from('vendas').delete().eq('id', idNum);
             produtosVendidos = produtosVendidos.filter(p => p.id !== idNum);
             renderizarDashboardVendidos();
         }
     }
 
     async function limparVendidos() {
-        if(confirm("APAGAR TUDO DOS VENDIDOS?")) {
-            let idsParaDeletar = [];
-            produtosVendidos.forEach(p => {
-                if (p.ids_agrupados) {
-                    idsParaDeletar = idsParaDeletar.concat(p.ids_agrupados);
-                } else {
-                    idsParaDeletar.push(p.id);
-                }
-            });
-
+        if(confirm("APAGAR TODO O HISTÓRICO DE VENDAS?")) {
+            const idsParaDeletar = produtosVendidos.map(p => p.id);
             if (idsParaDeletar.length > 0) {
-                await supabaseClient.from('3dbsb').delete().in('id', idsParaDeletar);
+                await supabaseClient.from('vendas').delete().in('id', idsParaDeletar);
             }
             produtosVendidos = [];
             renderizarDashboardVendidos();
@@ -1085,6 +1103,7 @@
         calcular();
         carregarEmbalagensSupabase();
         carregarDadosSupabase();
+        carregarVendasSupabase();
     });
 </script>
 
