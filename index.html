@@ -54,8 +54,10 @@
         .btn-primary { background-color: #007bff; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
         
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; transition: color 0.2s; }
+        .modal-close:hover { color: #333; }
+
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
@@ -232,11 +234,11 @@
         <p style="border-top: 1px solid #ccc; padding-top: 12px; margin-top: 12px;"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
     </div>
 
-    <button type="button" onclick="salvarNoHistorico()" class="btn-success" style="margin-top: 15px; font-size: 16px; padding: 15px;">SALVAR MOLDE DE PRODUTO NO ESTOQUE</button>
+    <button type="button" onclick="salvarNoHistorico()" class="btn-success" style="margin-top: 15px; font-size: 16px; padding: 15px;">SALVAR NO CATÁLOGO DE PRODUTOS</button>
 
-    <!-- ESTOQUE DE PRODUTOS GERADOS -->
+    <!-- CATÁLOGO DE PRODUTOS -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 5px;">
-        <div class="section-title" style="margin: 0; border: none; padding: 0;">ESTOQUE (CATÁLOGO DE PRODUTOS)</div>
+        <div class="section-title" style="margin: 0; border: none; padding: 0;">CATÁLOGO DE PRODUTOS</div>
         <button type="button" class="btn-success" style="width: auto; padding: 10px 20px; font-size: 13px; margin: 0;" onclick="abrirModalVendaMultipla()">🛒 VENDER ITENS SELECIONADOS</button>
     </div>
     
@@ -261,16 +263,50 @@
                 <tr>
                     <th>PRODUTO</th>
                     <th>DATA CADASTRO</th>
-                    <th>QTD <br>(P/ CÁLCULO)</th>
                     <th>FILAMENTO</th>
                     <th style="color: #dc3545;">CUSTO TOTAL</th>
                     <th style="color: #28a745;">LUCRO TOTAL</th>
                     <th style="color: #333;">VALOR TOTAL</th>
                     <th>SELECIONAR<br>P/ VENDA</th>
+                    <th>EDITAR</th>
                     <th>EXCLUIR</th>
                 </tr>
             </thead>
             <tbody id="corpoHistorico">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CATÁLOGO DE EMBALAGENS -->
+    <div class="section-title" style="margin-top: 40px; border-bottom-color: #17a2b8;">CATÁLOGO DE EMBALAGENS</div>
+    <div style="background: #f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom: 20px;">
+        <div class="grid-2-cols" style="gap:15px; margin-bottom: 10px;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>NOME DA NOVA EMBALAGEM:</label>
+                <input type="text" id="catEmbNome" placeholder="EX: CAIXA KRAFT P">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>VALOR UNITÁRIO:</label>
+                <div class="input-group">
+                    <span class="input-group-addon-prefix">R$</span>
+                    <input type="text" id="catEmbValor" class="time-input" oninput="maskMoeda(this)" placeholder="0,00">
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-success" style="background-color: #17a2b8;" onclick="salvarEmbalagemCatalogo()">+ ADICIONAR EMBALAGEM</button>
+    </div>
+    
+    <div class="table-responsive history-container" style="max-height: 300px;">
+        <table id="tabelaCatalogoEmbalagens">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">NOME DA EMBALAGEM</th>
+                    <th>VALOR UNITÁRIO</th>
+                    <th>EDITAR</th>
+                    <th>EXCLUIR</th>
+                </tr>
+            </thead>
+            <tbody id="corpoCatalogoEmbalagens">
             </tbody>
         </table>
     </div>
@@ -326,6 +362,7 @@
 <!-- MODAL DE CONFIRMAÇÃO DE VENDA COM CALCULADORA FINAL -->
 <div class="modal-overlay" id="modalVendaConfirmacao">
     <div class="modal-content">
+        <span class="modal-close" onclick="fecharModalVenda()" title="Fechar Pop-up">&times;</span>
         <h3 style="margin-top:0; text-transform: uppercase; color:#28a745; border-bottom: 2px solid #28a745; padding-bottom: 8px;">
             🛒 FINALIZAR VENDA
         </h3>
@@ -344,30 +381,10 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-size:11px;">ADICIONAR ITEM DA BIBLIOTECA:</label>
+                <label style="font-size:11px;">ADICIONAR ITEM DO CATÁLOGO DE EMBALAGENS:</label>
                 <div style="display:flex; gap:10px;">
                     <select id="selectBibliotecaEmbalagem" style="flex:1;"><option value="">-- SELECIONE --</option></select>
                     <button type="button" class="btn-primary" style="width:auto; margin-top:0;" onclick="adicionarEmbalagemVenda()">+ ADD</button>
-                </div>
-            </div>
-
-            <div style="border-top: 1px dashed #ccc; padding-top: 10px;">
-                <button type="button" class="btn-secondary" onclick="toggleFormNovaEmbalagem()">✏️ CADASTRAR NOVA EMBALAGEM</button>
-                <div id="formNovaEmbalagem" style="display:none; background:#fff; border:1px solid #ddd; padding:10px; border-radius:5px; margin-top:10px;">
-                    <div class="grid-2-cols" style="gap:10px; margin-bottom: 10px;">
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:11px;">NOME DO ITEM:</label>
-                            <input type="text" id="novaEmbNome" placeholder="EX: CAIXA KRAFT P" style="padding:8px; font-size:12px;">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:11px;">VALOR UNITÁRIO:</label>
-                            <div class="input-group">
-                                <span class="input-group-addon-prefix" style="padding:8px;">R$</span>
-                                <input type="text" id="novaEmbValor" class="time-input" oninput="maskMoeda(this)" placeholder="0,00" style="padding:8px; font-size:12px;">
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-success" style="margin-top:5px; padding:8px; font-size:12px;" onclick="salvarNovaEmbalagemBiblioteca()">SALVAR NA BIBLIOTECA</button>
                 </div>
             </div>
         </div>
@@ -531,19 +548,17 @@
         } catch (e) { console.error("Erro interno ao calcular:", e); }
     }
 
-    // AGORA O ESTOQUE CARREGA TUDO (MESMO O QUE JÁ FOI VENDIDO ANTES) E NUNCA MAIS EXCLUI NADA
+    // ==== CARREGAMENTO DE DADOS ====
     async function carregarDadosSupabase() {
         try {
             const { data, error } = await supabaseClient.from('3dbsb').select('*');
             if (error) throw error;
             if (data) {
-                // Removemos o filtro de p.vendido. Tudo vai para o catálogo.
                 historicoProdutos = data.map(item => ({
                     id: item.id,
                     nome: item.nome || '',
                     link: item.link || '',
                     data: item.data || new Date().toLocaleDateString('pt-BR'),
-                    quantidade: item.quantidade || 1,
                     tipoFilamento: item.tipo_filamento || 'PLA',
                     custoProducaoBase: item.custo_producao_base || 0,
                     precoBase: item.preco_base || 0
@@ -553,11 +568,10 @@
                 atualizarOpcoesFiltro();
             }
         } catch (err) {
-            console.error("Erro ao carregar do Supabase (Estoque):", err.message);
+            console.error("Erro ao carregar do Supabase (Catálogo):", err.message);
         }
     }
 
-    // CARREGA AS VENDAS EXCLUSIVAMENTE DA NOVA TABELA 'vendas'
     async function carregarVendasSupabase() {
         try {
             const { data, error } = await supabaseClient.from('vendas').select('*');
@@ -581,20 +595,46 @@
             } else {
                 bibliotecaEmbalagens = data;
             }
+            renderizarCatalogoEmbalagens();
             renderizarSelectBiblioteca();
         } catch (err) {
             bibliotecaEmbalagens = [
                 { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
                 { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
             ];
+            renderizarCatalogoEmbalagens();
             renderizarSelectBiblioteca();
         }
     }
 
-    async function salvarNovaEmbalagemBiblioteca() {
-        const nome = document.getElementById('novaEmbNome').value.trim().toUpperCase();
-        const valor = converterStringParaFloat(document.getElementById('novaEmbValor').value);
-        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR."); return; }
+    // ==== CATÁLOGO DE EMBALAGENS (TELA INICIAL) ====
+    function renderizarCatalogoEmbalagens() {
+        const tbody = document.getElementById('corpoCatalogoEmbalagens');
+        tbody.innerHTML = '';
+        if (bibliotecaEmbalagens.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">NENHUMA EMBALAGEM CADASTRADA.</td></tr>';
+            return;
+        }
+
+        bibliotecaEmbalagens.forEach(emb => {
+            const val = isNaN(emb.valor) ? 0 : emb.valor;
+            const valFormatado = val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:bold; text-align:left; font-size:11px;">${emb.nome}</td>
+                    <td style="font-weight:bold; color:#007bff;">${valFormatado}</td>
+                    <td><button type="button" onclick="editarEmbalagemCatalogo('${emb.id}')" class="btn-warning">✏️</button></td>
+                    <td><button type="button" onclick="excluirEmbalagemCatalogo('${emb.id}')" class="btn-danger" style="padding:6px 10px;">X</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    async function salvarEmbalagemCatalogo() {
+        const nome = document.getElementById('catEmbNome').value.trim().toUpperCase();
+        const valor = converterStringParaFloat(document.getElementById('catEmbValor').value);
+        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR VÁLIDO PARA A EMBALAGEM."); return; }
 
         const novoItem = { nome: nome, valor: valor };
         const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
@@ -602,24 +642,51 @@
         if (error) {
             novoItem.id = Date.now().toString();
             bibliotecaEmbalagens.push(novoItem);
-            renderizarSelectBiblioteca();
-            document.getElementById('novaEmbNome').value = "";
-            document.getElementById('novaEmbValor').value = "";
-            toggleFormNovaEmbalagem();
             alert("⚠️ Salvo localmente (Erro ao sincronizar com Supabase: " + error.message + ")");
-            return;
+        } else if (data && data.length > 0) {
+            bibliotecaEmbalagens.push(data[0]);
         }
 
-        if (data && data.length > 0) {
-            bibliotecaEmbalagens.push(data[0]);
+        document.getElementById('catEmbNome').value = "";
+        document.getElementById('catEmbValor').value = "";
+        renderizarCatalogoEmbalagens();
+        renderizarSelectBiblioteca();
+    }
+
+    async function editarEmbalagemCatalogo(id) {
+        const emb = bibliotecaEmbalagens.find(e => e.id == id);
+        if(!emb) return;
+
+        const novoNome = prompt("Digite o novo nome da embalagem:", emb.nome);
+        if(novoNome === null) return; 
+
+        let novoValorStr = prompt("Digite o novo valor unitário (Ex: 2,50):", parseFloat(emb.valor).toFixed(2).replace('.', ','));
+        if(novoValorStr === null) return;
+
+        const novoValor = converterStringParaFloat(novoValorStr);
+
+        const { error } = await supabaseClient.from('embalagens').update({ nome: novoNome.toUpperCase(), valor: novoValor }).eq('id', id);
+        if(!error) {
+            emb.nome = novoNome.toUpperCase();
+            emb.valor = novoValor;
+            renderizarCatalogoEmbalagens();
             renderizarSelectBiblioteca();
-            document.getElementById('novaEmbNome').value = "";
-            document.getElementById('novaEmbValor').value = "";
-            toggleFormNovaEmbalagem();
-            alert("✅ Embalagem salva na nuvem com sucesso!");
+        } else {
+            alert("Erro ao atualizar: " + error.message);
         }
     }
 
+    async function excluirEmbalagemCatalogo(id) {
+        if(confirm("EXCLUIR ESTA EMBALAGEM DO CATÁLOGO?")) {
+            await supabaseClient.from('embalagens').delete().eq('id', id);
+            bibliotecaEmbalagens = bibliotecaEmbalagens.filter(e => e.id != id);
+            renderizarCatalogoEmbalagens();
+            renderizarSelectBiblioteca();
+        }
+    }
+
+
+    // ==== CATÁLOGO DE PRODUTOS ====
     async function salvarNoHistorico() {
         if (!ultimoCalculo) { 
             alert("⚠️ PREENCHA OS DADOS PRIMEIRO."); 
@@ -633,7 +700,7 @@
             nome: nomeFinal,
             link: linkFinal,
             data: ultimoCalculo.data,
-            quantidade: 1,
+            quantidade: 1, // Fixado como base na nuvem, mas na interface nem aparece mais
             tipo_filamento: ultimoCalculo.tipoFilamento,
             custo_producao_base: ultimoCalculo.custoProducaoBase,
             preco_base: ultimoCalculo.precoBase,
@@ -653,24 +720,35 @@
                 nome: itemSalvo.nome,
                 link: itemSalvo.link,
                 data: itemSalvo.data,
-                quantidade: itemSalvo.quantidade,
                 tipoFilamento: itemSalvo.tipo_filamento,
                 custoProducaoBase: itemSalvo.custo_producao_base,
                 precoBase: itemSalvo.preco_base
             });
             renderizarHistorico();
             atualizarOpcoesFiltro();
-            alert("✅ MOLDE DE PRODUTO SALVO NO CATÁLOGO COM SUCESSO!");
+            alert("✅ PRODUTO SALVO NO CATÁLOGO COM SUCESSO!");
         }
     }
 
-    async function atualizarQuantidadeHistorico(idNum, novaQtd) {
-        let qtd = parseInt(novaQtd) || 1;
-        const prod = historicoProdutos.find(p => p.id === idNum);
-        if(prod) {
-            prod.quantidade = qtd;
-            await supabaseClient.from('3dbsb').update({ quantidade: qtd }).eq('id', idNum);
+    async function editarProduto(id) {
+        const prod = historicoProdutos.find(p => p.id === id);
+        if(!prod) return;
+
+        const novoNome = prompt("Digite o novo nome do produto:", prod.nome);
+        if (novoNome === null) return;
+        
+        const novoLink = prompt("Digite o novo link de referência (opcional):", prod.link || "");
+        if (novoLink === null) return;
+
+        const { error } = await supabaseClient.from('3dbsb').update({ nome: novoNome.toUpperCase(), link: novoLink }).eq('id', id);
+        
+        if (!error) {
+            prod.nome = novoNome.toUpperCase();
+            prod.link = novoLink;
             renderizarHistorico();
+            atualizarOpcoesFiltro();
+        } else {
+            alert("Erro ao atualizar o produto: " + error.message);
         }
     }
 
@@ -710,10 +788,10 @@
         prods.forEach((prod) => {
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
-            const qtd = prod.quantidade || 1;
-            const custoTotalFinal = prod.custoProducaoBase * qtd;
-            const pBaseTotal = prod.precoBase * qtd;
-            const lucroTotalFinal = pBaseTotal - custoTotalFinal;
+            // O catálogo sempre mostra o valor unitário
+            const custoBase = prod.custoProducaoBase;
+            const pBaseTotal = prod.precoBase;
+            const lucroTotalFinal = pBaseTotal - custoBase;
 
             let nomeHtml = prod.nome;
             if (prod.link && prod.link.startsWith('http')) {
@@ -724,17 +802,19 @@
                 <tr>
                     <td style="font-size: 11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
                     <td style="font-size: 10px;">${prod.data}</td>
-                    <td><input type="number" min="1" value="${qtd}" style="width: 50px; padding: 4px; text-align: center; border-radius:4px; border:1px solid #ccc;" onchange="atualizarQuantidadeHistorico(${prod.id}, this.value)"></td>
                     <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
-                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoTotalFinal)}</td>
+                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoBase)}</td>
                     <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroTotalFinal)}</td>
                     <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBaseTotal)}</td>
                     <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" data-id="${prod.id}"></td>
+                    <td><button type="button" onclick="editarProduto(${prod.id})" class="btn-warning">✏️</button></td>
                     <td><button type="button" onclick="excluirDoHistorico(${prod.id})" class="btn-danger" style="padding:6px 10px;">X</button></td>
                 </tr>
             `;
         });
     }
+
+    // ==== LÓGICA DO POP-UP (MODAL DE VENDAS) ====
 
     function abrirModalVendaMultipla() {
         const checkboxes = document.querySelectorAll('.checkbox-vendido:checked');
@@ -750,7 +830,7 @@
             if (prod) {
                 itensVendaSelecionados.push({
                     ...prod,
-                    qtdVenda: prod.quantidade || 1
+                    qtdVenda: 1 // Default no modal sempre é 1, pode ser ajustado lá
                 });
             }
         });
@@ -772,7 +852,7 @@
     function fecharModalVenda() {
         document.getElementById('modalVendaConfirmacao').style.display = 'none';
         const checkboxes = document.querySelectorAll('.checkbox-vendido');
-        checkboxes.forEach(cb => cb.checked = false); // Desmarca tudo após fechar/vender
+        checkboxes.forEach(cb => cb.checked = false); 
         itensVendaSelecionados = [];
         embalagensVendaAtual = [];
         alterandoValorManualmente = false;
@@ -824,11 +904,6 @@
         bibliotecaEmbalagens.forEach(emb => {
             select.innerHTML += `<option value="${emb.id}">${emb.nome.toUpperCase()} - R$ ${parseFloat(emb.valor).toFixed(2).replace('.',',')}</option>`;
         });
-    }
-
-    function toggleFormNovaEmbalagem() {
-        const form = document.getElementById('formNovaEmbalagem');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 
     function adicionarEmbalagemVenda() {
@@ -946,14 +1021,12 @@
         calcularModalVenda();
     }
 
-    // AGORA A VENDA GERA UM REGISTRO POR PRODUTO MANTENDO A PRECISÃO DE CUSTO/LUCRO
     async function confirmarVendaModal() {
         if(itensVendaSelecionados.length === 0) return;
         
         const selectPlat = document.getElementById('vendaPlataforma');
         const nomePlataforma = selectPlat.options[selectPlat.selectedIndex].getAttribute('data-name');
         
-        // Coleta os totais calculados na interface
         const custoTotalGlobal = converterStringParaFloat(document.getElementById('vendaCustoTotalCalc').innerText.replace('R$', '').trim());
         const valorVendaGlobal = converterStringParaFloat(document.getElementById('vendaValorTotal').value);
         const lucroLiquidoGlobal = converterStringParaFloat(document.getElementById('vendaLucroFinal').innerText.replace('R$', '').trim());
@@ -963,11 +1036,8 @@
 
         const novasVendas = [];
 
-        // Distribuímos o Lucro e Custo Extras (Frete/Embalagem) de forma proporcional para cada item
         for (const item of itensVendaSelecionados) {
             const custoBaseItem = item.custoProducaoBase * item.qtdVenda;
-            
-            // Peso que este item representa na venda total
             const proporcao = custoProducaoTotalBase > 0 ? (custoBaseItem / custoProducaoTotalBase) : (1 / itensVendaSelecionados.length);
 
             const itemValorVenda = valorVendaGlobal * proporcao;
@@ -986,23 +1056,18 @@
             });
         }
         
-        // Insere as vendas item a item na tabela VENDAS
         const { data, error } = await supabaseClient.from('vendas').insert(novasVendas).select();
         
         if (error) {
-            alert("⚠️ Erro ao salvar vendas. Crie a tabela 'vendas' no Supabase conforme as instruções do assistente.");
-            // Fallback: Adiciona na tela se falhar o BD (sem id verdadeiro)
+            alert("⚠️ Erro ao salvar vendas. Crie a tabela 'vendas' no Supabase conforme as instruções.");
             novasVendas.forEach(d => { d.id = Date.now() + Math.random(); produtosVendidos.push(d); });
         } else if (data) {
             data.forEach(d => produtosVendidos.push(d));
         }
 
-        // NÃO apagamos mais os itens do catálogo (historicoProdutos)!
-        // Eles ficam lá intactos para a próxima vez.
-        
         fecharModalVenda();
         renderizarDashboardVendidos();
-        alert("✅ Venda(s) salva(s) com sucesso! Os produtos continuam no estoque.");
+        alert("✅ Venda(s) salva(s) com sucesso! Os produtos continuam no catálogo.");
     }
 
     function renderizarDashboardVendidos() {
