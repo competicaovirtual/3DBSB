@@ -609,6 +609,9 @@
 
     // ==== CATÁLOGO DE EMBALAGENS (TELA INICIAL) ====
     function renderizarCatalogoEmbalagens() {
+        // Ordena embalagens em ordem alfabética antes de renderizar
+        bibliotecaEmbalagens.sort((a, b) => a.nome.localeCompare(b.nome));
+
         const tbody = document.getElementById('corpoCatalogoEmbalagens');
         tbody.innerHTML = '';
         if (bibliotecaEmbalagens.length === 0) {
@@ -700,7 +703,7 @@
             nome: nomeFinal,
             link: linkFinal,
             data: ultimoCalculo.data,
-            quantidade: 1, // Fixado como base na nuvem, mas na interface nem aparece mais
+            quantidade: 1, 
             tipo_filamento: ultimoCalculo.tipoFilamento,
             custo_producao_base: ultimoCalculo.custoProducaoBase,
             preco_base: ultimoCalculo.precoBase,
@@ -783,12 +786,14 @@
         if(fProd !== 'TODOS') prods = prods.filter(p => p.nome === fProd);
         if(fFil !== 'TODOS') prods = prods.filter(p => p.tipoFilamento === fFil);
 
+        // Ordena produtos em ordem alfabética antes de renderizar
+        prods.sort((a, b) => a.nome.localeCompare(b.nome));
+
         if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO NO CATÁLOGO.</td></tr>'; return; }
 
         prods.forEach((prod) => {
             const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
-            // O catálogo sempre mostra o valor unitário
             const custoBase = prod.custoProducaoBase;
             const pBaseTotal = prod.precoBase;
             const lucroTotalFinal = pBaseTotal - custoBase;
@@ -830,7 +835,7 @@
             if (prod) {
                 itensVendaSelecionados.push({
                     ...prod,
-                    qtdVenda: 1 // Default no modal sempre é 1, pode ser ajustado lá
+                    qtdVenda: 1
                 });
             }
         });
@@ -899,6 +904,9 @@
     }
 
     function renderizarSelectBiblioteca() {
+        // Ordena antes de criar as opções do pop-up
+        bibliotecaEmbalagens.sort((a, b) => a.nome.localeCompare(b.nome));
+
         const select = document.getElementById('selectBibliotecaEmbalagem');
         select.innerHTML = '<option value="">-- SELECIONE --</option>';
         bibliotecaEmbalagens.forEach(emb => {
