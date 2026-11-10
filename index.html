@@ -1,151 +1,169 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
-    
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#007bff">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/core.js"></script>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,.1); max-width: 1350px; width: 100%; }
+    h1 { text-align: center; color: #333; font-size: 24px; margin: 0 0 15px; text-transform: uppercase; }
+    .topo { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .status-cloud { font-size: 12px; font-weight: bold; padding: 8px 12px; border-radius: 5px; border: 1px solid #28a745; color: #28a745; background: #e6f4ea; }
+    .status-cloud.aviso { border-color: #d39e00; color: #856404; background: #fff3cd; }
+    .status-cloud.erro { border-color: #dc3545; color: #721c24; background: #f8d7da; }
+    a.btn-app { background: #343a40; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 5px; font-size: 12px; font-weight: bold; }
 
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 1350px; width: 100%; }
-        h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
-        .status-cloud { text-align: center; font-size: 12px; font-weight: bold; color: #28a745; margin-bottom: 20px; border: 1px solid #28a745; padding: 8px; border-radius: 5px; background: #e6f4ea;}
+    .section-title { margin: 25px 0 15px; font-size: 18px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-4-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    .grid-dashboard-vendas { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; }
+    @media (max-width: 900px) { .grid-dashboard-vendas, .grid-2-cols { grid-template-columns: 1fr; } .grid-4-cards { grid-template-columns: 1fr 1fr; } body { padding: 8px; } .container { padding: 15px; } }
 
-        .section-title { margin-top: 25px; margin-bottom: 15px; font-size: 18px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        .grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-3-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .grid-dashboard-vendas { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; }
-        @media (max-width: 768px) { .grid-dashboard-vendas, .grid-2-cols, .grid-3-cards { grid-template-columns: 1fr; } }
-        
-        .metric-card { padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .metric-card.green { background-color: #e6f4ea; border: 1px solid #c3e6cb; color: #155724; }
-        .metric-card.red { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .metric-card.blue { background-color: #e8f4f8; border: 1px solid #b8daff; color: #004085; }
-        .metric-card h4 { margin: 0 0 5px 0; font-size: 12px; text-transform: uppercase; }
-        .metric-card p { margin: 0; font-size: 22px; font-weight: bold; }
+    .metric-card { padding: 15px; border-radius: 8px; text-align: center; }
+    .metric-card.green { background: #e6f4ea; border: 1px solid #c3e6cb; color: #155724; }
+    .metric-card.red { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    .metric-card.blue { background: #e8f4f8; border: 1px solid #b8daff; color: #004085; }
+    .metric-card.gray { background: #f1f3f5; border: 1px solid #dee2e6; color: #343a40; }
+    .metric-card h4 { margin: 0 0 5px; font-size: 12px; text-transform: uppercase; }
+    .metric-card p { margin: 0; font-size: 22px; font-weight: bold; }
 
-        .filter-container { display: flex; gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; align-items: center; }
-        .form-group { margin-bottom: 15px; width: 100%; }
-        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 13px; text-transform: uppercase; }
-        
-        input[type="number"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; text-transform: uppercase; }
-        #linkProduto { text-transform: none; }
-        #linkProduto::placeholder { text-transform: uppercase; }
-        input::placeholder { text-transform: uppercase; }
-        
-        .time-input { font-family: monospace; text-align: right; font-weight: bold; }
-        #tipoFilamento { text-align: left !important; width: 160px; font-weight: bold; }
-        
-        .results { margin-top: 25px; background-color: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
-        .results p { margin: 12px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; align-items: center; }
-        
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background-color 0.3s; text-transform: uppercase; }
-        button:hover { background-color: #0056b3; }
-        .btn-success { background-color: #28a745; }
-        .btn-success:hover { background-color: #218838; }
-        .btn-warning { background-color: #ffc107; color: #212529; padding: 6px 10px; font-size: 10px; width: auto; margin-top: 0; }
-        .btn-warning:hover { background-color: #e0a800; }
-        .btn-danger { background-color: #dc3545; padding: 6px 10px; font-size: 10px; width: auto; margin-top: 0; }
-        .btn-danger:hover { background-color: #c82333; }
-        .btn-secondary { background-color: #6c757d; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
-        .btn-primary { background-color: #007bff; padding: 8px 12px; font-size: 12px; margin-top:0; width: auto;}
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; transition: color 0.2s; }
-        .modal-close:hover { color: #333; }
+    .painel { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
+    .filter-container { display: flex; gap: 15px; margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; align-items: flex-end; flex-wrap: wrap; }
+    .filter-container .form-group { margin: 0; flex: 1; min-width: 160px; }
+    .form-group { margin-bottom: 15px; width: 100%; }
+    label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 13px; text-transform: uppercase; }
+    input[type="number"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-transform: uppercase; background: #fff; }
+    input.sem-caixa, #linkProduto, #edLink { text-transform: none; }
+    input::placeholder { text-transform: uppercase; }
+    .num { font-family: monospace; text-align: right; font-weight: bold; }
 
-        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
-        th { background-color: #f2f2f2; color: #333; font-size: 10px; }
-        .history-container { max-height: 400px; overflow-y: auto; }
-        .ranking-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; max-height: 400px; overflow-y: auto; }
-        
-        .input-group { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; background: #fff; }
-        .input-group input { border: none; border-radius: 0; margin: 0; flex-grow: 1; }
-        .input-group input:focus { outline: none; }
-        .input-group-addon, .input-group-addon-prefix { background-color: #e9ecef; padding: 10px; color: #555; font-weight: bold; font-size: 14px; text-align: center; }
-        .input-group-addon { border-left: 1px solid #ccc; min-width: 30px; }
-        .input-group-addon-prefix { border-right: 1px solid #ccc; }
-        
-        .badge-filamento { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; }
-        .checkbox-vendido { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
-        a.produto-link { color: #007bff !important; text-decoration: none !important; font-weight: bold; cursor: pointer; }
-        a.produto-link:hover { text-decoration: underline !important; color: #0056b3 !important; }
+    .results { margin-top: 25px; background: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
+    .results p { margin: 10px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .results .detalhe { font-size: 12px; color: #666; margin: 4px 0 4px 15px; }
 
-        .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #fff; min-height: 50px; margin-bottom:15px; }
-        .item-embalagem { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
-    </style>
+    button { width: 100%; padding: 12px; background: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background-color .2s, opacity .2s; text-transform: uppercase; }
+    button:hover { background: #0056b3; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .btn-success { background: #28a745; } .btn-success:hover { background: #218838; }
+    .btn-info { background: #17a2b8; } .btn-info:hover { background: #117a8b; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; width: auto; margin-top: 0; }
+    .btn-warning { background: #ffc107; color: #212529; } .btn-warning:hover { background: #e0a800; }
+    .btn-danger { background: #dc3545; } .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #6c757d; } .btn-secondary:hover { background: #545b62; }
+    .btn-auto { width: auto; margin-top: 0; padding: 10px 18px; font-size: 13px; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+    .modal-overlay.aberto { display: flex; }
+    .modal-content { background: #fff; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 12px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
+    .modal-close:hover { color: #333; }
+
+    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 760px; }
+    th, td { border: 1px solid #ddd; padding: 7px; text-align: center; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
+    th { background: #f2f2f2; color: #333; font-size: 10px; position: sticky; top: 0; z-index: 1; }
+    td.esq, th.esq { text-align: left; }
+    .history-container { max-height: 420px; overflow-y: auto; }
+    .ranking-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; max-height: 420px; overflow-y: auto; }
+    .ranking-card table { min-width: 0; }
+    tr.selecionado td { background: #e8f5e9; }
+
+    .input-group { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; background: #fff; }
+    .input-group input { border: none; border-radius: 0; margin: 0; flex-grow: 1; min-width: 0; }
+    .input-group input:focus { outline: none; }
+    .addon, .addon-pre { background: #e9ecef; padding: 10px; color: #555; font-weight: bold; font-size: 14px; text-align: center; }
+    .addon { border-left: 1px solid #ccc; min-width: 30px; }
+    .addon-pre { border-right: 1px solid #ccc; }
+
+    .badge { background: #e9ecef; padding: 3px 7px; border-radius: 4px; font-weight: bold; font-size: 10px; display: inline-block; }
+    .badge.kit { background: #6f42c1; color: #fff; }
+    .badge.foto { background: #e7f1ff; color: #0056b3; }
+    .chk { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
+    a.produto-link { color: #007bff; text-decoration: none; font-weight: bold; }
+    a.produto-link:hover { text-decoration: underline; }
+    .thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block; margin: auto; }
+    .thumb-vazio { width: 38px; height: 38px; border-radius: 4px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #bbb; margin: auto; font-size: 16px; }
+    .componentes { font-size: 9px; color: #6f42c1; font-weight: normal; white-space: normal; margin-top: 3px; }
+
+    .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #fff; min-height: 46px; margin-bottom: 15px; }
+    .item-embalagem { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: #f8f9fa; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
+    .qtd-input { width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+
+    .modo-venda { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+    .modo-venda label.opcao { border: 2px solid #ddd; border-radius: 8px; padding: 14px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; margin: 0; text-transform: none; font-weight: normal; font-size: 12px; color: #555; }
+    .modo-venda label.opcao strong { display: block; font-size: 14px; color: #333; text-transform: uppercase; margin-bottom: 3px; }
+    .modo-venda input { margin-top: 3px; accent-color: #6f42c1; width: 18px; height: 18px; }
+    .modo-venda label.opcao.ativo { border-color: #6f42c1; background: #f5f0ff; }
+    .kit-box { background: #f5f0ff; border: 1px solid #d6c8f5; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; }
+
+    .fotos-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+    .foto-item { position: relative; }
+    .foto-item img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; }
+    .foto-item button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; padding: 0; margin: 0; font-size: 11px; background: #dc3545; }
+    .dica { font-size: 11px; color: #777; margin: 4px 0 0; text-transform: none; font-weight: normal; }
+    .edicao-banner { background: #fff3cd; border: 1px solid #ffe08a; color: #856404; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 13px; display: none; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+</style>
 </head>
 <body>
 
 <div class="container">
     <h1>SISTEMA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</h1>
-    <div class="status-cloud">☁️ MODO SUPABASE CONECTADO (TABELAS: 3DBSB, VENDAS, EMBALAGENS)</div>
+    <div class="topo">
+        <div class="status-cloud" id="statusCloud">☁️ CONECTANDO AO SUPABASE...</div>
+        <a class="btn-app" href="app.html" target="_blank">📱 ABRIR APP DE VENDAS (CÂMERA)</a>
+        <button type="button" class="btn-secondary btn-auto" style="padding:8px 14px; font-size:12px" onclick="Auth.sair()">🚪 SAIR</button>
+    </div>
+
+    <div class="edicao-banner" id="bannerEdicao">
+        <span id="bannerEdicaoTexto">✏️ EDITANDO PRODUTO</span>
+        <button type="button" class="btn-secondary btn-sm" onclick="cancelarEdicao()">CANCELAR EDIÇÃO</button>
+    </div>
 
     <!-- 1. Detalhes da Peça e Material -->
     <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
     <div class="grid-2-cols" style="margin-bottom: 15px;">
-        <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-group" style="margin:0">
             <label for="nomeProduto">NOME DO PRODUTO/PROJETO (MOLDE):</label>
-            <input type="text" id="nomeProduto" placeholder="EX: VASO GEOMÉTRICO" oninput="this.value = this.value.toUpperCase(); calcular()">
+            <input type="text" id="nomeProduto" class="calc maiuscula" placeholder="EX: VASO GEOMÉTRICO">
         </div>
-        <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-group" style="margin:0">
             <label for="linkProduto">LINK DO PRODUTO/REFERÊNCIA (URL):</label>
-            <input type="text" id="linkProduto" placeholder="COLE A URL AQUI (OPCIONAL)" oninput="calcular()">
+            <input type="text" id="linkProduto" class="calc" placeholder="COLE A URL AQUI (OPCIONAL)">
         </div>
     </div>
-    
-    <div class="grid-2-cols" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
-        <div class="form-group" style="margin-bottom:0;">
-            <label for="comprimentoFilamento" style="color: #444;">COMPRIMENTO FILAMENTO (BAMBU STUDIO):</label>
-            <div class="input-group" style="width: 150px;">
-                <input type="text" id="comprimentoFilamento" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">M</span>
-            </div>
+
+    <div class="grid-2-cols painel">
+        <div class="form-group" style="margin:0">
+            <label for="comprimentoFilamento">COMPRIMENTO FILAMENTO (BAMBU STUDIO):</label>
+            <div class="input-group" style="width:170px"><input type="text" id="comprimentoFilamento" value="0,00" class="num moeda calc"><span class="addon">M</span></div>
         </div>
-        <div class="form-group" style="margin-bottom:0;">
-            <label for="pesoPeca" style="color: #444;">PESO TOTAL DA PEÇA (BAMBU STUDIO):</label>
-            <div class="input-group" style="width: 150px;">
-                <input type="text" id="pesoPeca" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">G</span>
-            </div>
+        <div class="form-group" style="margin:0">
+            <label for="pesoPeca">PESO TOTAL DA PEÇA (BAMBU STUDIO):</label>
+            <div class="input-group" style="width:170px"><input type="text" id="pesoPeca" value="0,00" class="num moeda calc"><span class="addon">G</span></div>
         </div>
     </div>
-    
-    <div class="grid-2-cols" style="gap: 15px;">
+
+    <div class="grid-2-cols">
         <div class="form-group">
             <label for="precoKg">PREÇO DO FILAMENTO (KG):</label>
-            <div class="input-group">
-                <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="precoKg" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-            </div>
+            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="precoKg" value="0,00" class="num moeda calc padrao"></div>
         </div>
         <div class="form-group">
             <label for="tipoFilamento">TIPO DE FILAMENTO:</label>
-            <select id="tipoFilamento" onchange="calcular()">
-                <option value="PLA">PLA</option>
-                <option value="PLA SILK">PLA SILK</option>
-                <option value="PLA MATTE">PLA MATTE</option>
-                <option value="PLA WOOD">PLA WOOD (MADEIRA)</option>
-                <option value="PLA CF">PLA CF (FIBRA DE CARBONO)</option>
-                <option value="PETG">PETG</option>
-                <option value="PETG CF">PETG CF</option>
-                <option value="ABS">ABS</option>
-                <option value="ABS+">ABS+</option>
-                <option value="ASA">ASA</option>
-                <option value="TPU (FLEX)">TPU (FLEXÍVEL)</option>
-                <option value="NYLON (PA)">NYLON (PA)</option>
-                <option value="NYLON CF">NYLON CF</option>
-                <option value="PC">PC (POLICARBONATO)</option>
-                <option value="HIPS">HIPS</option>
-                <option value="PVA">PVA</option>
-                <option value="RESINA">RESINA</option>
-                <option value="OUTROS">OUTROS</option>
+            <select id="tipoFilamento" class="calc padrao" style="font-weight:bold">
+                <option value="PLA">PLA</option><option value="PLA SILK">PLA SILK</option><option value="PLA MATTE">PLA MATTE</option>
+                <option value="PLA WOOD">PLA WOOD (MADEIRA)</option><option value="PLA CF">PLA CF (FIBRA DE CARBONO)</option>
+                <option value="PETG">PETG</option><option value="PETG CF">PETG CF</option><option value="ABS">ABS</option>
+                <option value="ABS+">ABS+</option><option value="ASA">ASA</option><option value="TPU (FLEX)">TPU (FLEXÍVEL)</option>
+                <option value="NYLON (PA)">NYLON (PA)</option><option value="NYLON CF">NYLON CF</option><option value="PC">PC (POLICARBONATO)</option>
+                <option value="HIPS">HIPS</option><option value="PVA">PVA</option><option value="RESINA">RESINA</option><option value="OUTROS">OUTROS</option>
             </select>
         </div>
     </div>
@@ -155,1030 +173,1029 @@
     <div class="grid-2-cols">
         <div class="form-group">
             <label for="potenciaImpressora">POTÊNCIA:</label>
-            <div class="input-group">
-                <input type="text" id="potenciaImpressora" value="100,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">W</span>
-            </div>
+            <div class="input-group"><input type="text" id="potenciaImpressora" value="100,00" class="num moeda calc padrao"><span class="addon">W</span></div>
         </div>
         <div class="form-group">
             <label for="tarifaEnergia">TARIFA ENERGIA (BRASÍLIA):</label>
-            <div class="input-group">
-                <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="tarifaEnergia" value="0,88" class="time-input" readonly style="background-color: #eee; cursor: not-allowed;">
-                <span class="input-group-addon">KWH</span>
-            </div>
+            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="tarifaEnergia" value="0,88" class="num moeda calc padrao"><span class="addon">KWH</span></div>
         </div>
         <div class="form-group">
             <label for="tempoImpressao">TEMPO DE IMPRESSÃO (HH:MM:SS):</label>
-            <div class="input-group">
-                <input type="text" id="tempoImpressao" value="00:00:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
-                <span class="input-group-addon">H</span>
-            </div>
+            <div class="input-group"><input type="text" id="tempoImpressao" value="00:00:00" class="num hora calc"><span class="addon">H</span></div>
         </div>
         <div class="form-group">
             <label for="valorImpressora">VALOR DA MÁQUINA:</label>
-            <div class="input-group">
-                <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="valorImpressora" value="4.335,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-            </div>
+            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="valorImpressora" value="4.335,00" class="num moeda calc padrao"></div>
         </div>
         <div class="form-group">
             <label for="vidaUtil">VIDA ÚTIL ESTIMADA:</label>
-            <div class="input-group">
-                <input type="text" id="vidaUtil" value="10.000,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">H</span>
-            </div>
+            <div class="input-group"><input type="text" id="vidaUtil" value="10.000,00" class="num moeda calc padrao"><span class="addon">H</span></div>
         </div>
     </div>
 
-    <!-- 3. Mão de Obra e Margem de Falha -->
+    <!-- 3. Mão de Obra e Margem -->
     <div class="section-title">3. MÃO DE OBRA E MARGEM DE FALHA</div>
     <div class="grid-2-cols">
         <div class="form-group">
             <label for="tempoTrabalho">TEMPO TRABALHO MANUAL (HH:MM:SS):</label>
-            <div class="input-group">
-                <input type="text" id="tempoTrabalho" value="00:00:00" class="time-input" oninput="maskTime(this); calcular()" placeholder="00:00:00">
-                <span class="input-group-addon">H</span>
-            </div>
+            <div class="input-group"><input type="text" id="tempoTrabalho" value="00:00:00" class="num hora calc"><span class="addon">H</span></div>
         </div>
         <div class="form-group">
             <label for="valorHoraTrabalho">VALOR DA SUA HORA:</label>
-            <div class="input-group">
-                <span class="input-group-addon-prefix">R$</span>
-                <input type="text" id="valorHoraTrabalho" value="0,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-            </div>
+            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="valorHoraTrabalho" value="0,00" class="num moeda calc padrao"></div>
         </div>
         <div class="form-group">
             <label for="margemFalhas">MARGEM PARA FALHAS:</label>
-            <div class="input-group">
-                <input type="text" id="margemFalhas" value="10,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">%</span>
-            </div>
+            <div class="input-group"><input type="text" id="margemFalhas" value="10,00" class="num moeda calc padrao"><span class="addon">%</span></div>
         </div>
         <div class="form-group">
             <label for="margemLucro">LUCRO DESEJADO (SOBRE CUSTO):</label>
-            <div class="input-group">
-                <input type="text" id="margemLucro" value="100,00" class="time-input" oninput="maskMoeda(this); calcular()" placeholder="0,00">
-                <span class="input-group-addon">%</span>
-            </div>
+            <div class="input-group"><input type="text" id="margemLucro" value="100,00" class="num moeda calc padrao"><span class="addon">%</span></div>
         </div>
     </div>
 
-    <!-- Resultados Preliminares -->
-    <div class="results" id="resultados">
-        <h3 style="margin-top: 0; color: #007bff; border-bottom: 1px solid #ccc; padding-bottom: 10px; text-transform: uppercase; font-size:16px;">RESUMO DE CUSTOS E FORMAÇÃO DE PREÇO</h3>
-        <p><span>CUSTO SUBTOTAL:</span> <span id="resSubtotal">R$ 0,00</span></p>
-        <p><span>MARGEM PARA FALHAS:</span> <span id="resFalhas">R$ 0,00</span></p>
-        <p style="border-bottom: 1px solid #ccc; padding-bottom: 12px; margin-bottom: 12px;"><span><strong>CUSTO TOTAL DE PRODUÇÃO (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
-        <p><span>LUCRO LÍQUIDO DESEJADO:</span> <span id="resLucro" style="color: #28a745; font-weight:bold;">R$ 0,00</span></p>
-        <p style="border-top: 1px solid #ccc; padding-top: 12px; margin-top: 12px;"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
+    <!-- 4. Fotos -->
+    <div class="section-title">4. FOTOS DO PRODUTO (PARA RECONHECIMENTO NO APP)</div>
+    <div class="painel">
+        <input type="file" id="fotosNovoProduto" accept="image/*" multiple style="text-transform:none">
+        <p class="dica">Opcional. Envie de 3 a 5 fotos da peça de ângulos diferentes, de preferência sobre fundo liso. Elas são usadas pelo app do celular para reconhecer o produto pela câmera.</p>
+        <div class="fotos-grid" id="previewFotosNovo"></div>
+        <button type="button" class="btn-info btn-auto" style="margin-top:6px" onclick="buscarFotosLinkNovo()">🔗 BUSCAR FOTOS NO LINK DO PRODUTO</button>
+        <div id="seletorLinkNovo" style="display:none; margin-top:10px"></div>
     </div>
 
-    <button type="button" onclick="salvarNoHistorico()" class="btn-success" style="margin-top: 15px; font-size: 16px; padding: 15px;">SALVAR NO CATÁLOGO DE PRODUTOS</button>
+    <!-- Resultados -->
+    <div class="results">
+        <h3 style="margin-top:0; color:#007bff; border-bottom:1px solid #ccc; padding-bottom:10px; font-size:16px;">RESUMO DE CUSTOS E FORMAÇÃO DE PREÇO</h3>
+        <p><span>CUSTO SUBTOTAL:</span> <span id="resSubtotal">R$ 0,00</span></p>
+        <p class="detalhe"><span>MATERIAL / ENERGIA / DEPRECIAÇÃO / MÃO DE OBRA:</span> <span id="resDetalhe">—</span></p>
+        <p><span>MARGEM PARA FALHAS:</span> <span id="resFalhas">R$ 0,00</span></p>
+        <p style="border-bottom:1px solid #ccc; padding-bottom:12px"><span><strong>CUSTO TOTAL DE PRODUÇÃO (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
+        <p><span>LUCRO LÍQUIDO DESEJADO:</span> <span id="resLucro" style="color:#28a745; font-weight:bold">R$ 0,00</span></p>
+        <p style="border-top:1px solid #ccc; padding-top:12px"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
+        <p class="detalhe"><span>COM TAXA — MERCADO LIVRE/SHOPEE (20%) · CARTÃO (5%):</span> <span id="resPrecoPlataformas">—</span></p>
+    </div>
+
+    <button type="button" id="btnSalvarProduto" onclick="salvarProduto()" class="btn-success" style="font-size:16px; padding:15px">SALVAR NO CATÁLOGO DE PRODUTOS</button>
 
     <!-- CATÁLOGO DE PRODUTOS -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 5px;">
-        <div class="section-title" style="margin: 0; border: none; padding: 0;">CATÁLOGO DE PRODUTOS</div>
-        <button type="button" class="btn-success" style="width: auto; padding: 10px 20px; font-size: 13px; margin: 0;" onclick="abrirModalVendaMultipla()">🛒 VENDER ITENS SELECIONADOS</button>
+    <div class="section-title" style="margin-top:40px">
+        <span>CATÁLOGO DE PRODUTOS</span>
+        <button type="button" class="btn-success btn-auto" id="btnVender" onclick="abrirModalVenda()">🛒 VENDER ITENS SELECIONADOS (0)</button>
     </div>
-    
-    <div class="filter-container" style="margin-bottom: 15px;">
-        <div class="form-group" style="margin-bottom: 0; flex: 2;">
-            <label for="pesquisaHistorico" style="color: #444; font-size: 12px;">PESQUISAR NO CATÁLOGO:</label>
-            <input type="text" id="pesquisaHistorico" placeholder="🔍 DIGITE O NOME..." style="font-weight: normal; font-size: 13px;" onkeyup="renderizarHistorico()">
+
+    <div class="filter-container">
+        <div class="form-group" style="flex:2">
+            <label for="pesquisaHistorico" style="font-size:12px">PESQUISAR NO CATÁLOGO:</label>
+            <input type="text" id="pesquisaHistorico" placeholder="🔍 DIGITE O NOME..." style="font-size:13px">
         </div>
-        <div class="form-group" style="margin-bottom: 0; flex: 1;">
-            <label for="filtroEstoqueProduto" style="color: #444; font-size: 12px;">PRODUTO:</label>
-            <select id="filtroEstoqueProduto" onchange="renderizarHistorico()" style="font-size: 13px; padding: 10px;"><option value="TODOS">TODOS</option></select>
+        <div class="form-group">
+            <label for="filtroTipo" style="font-size:12px">TIPO:</label>
+            <select id="filtroTipo" style="font-size:13px"><option value="TODOS">TODOS</option><option value="PRODUTO">PRODUTOS</option><option value="KIT">KITS</option></select>
         </div>
-        <div class="form-group" style="margin-bottom: 0; flex: 1;">
-            <label for="filtroEstoqueFilamento" style="color: #444; font-size: 12px;">FILAMENTO:</label>
-            <select id="filtroEstoqueFilamento" onchange="renderizarHistorico()" style="font-size: 13px; padding: 10px;"><option value="TODOS">TODOS</option></select>
+        <div class="form-group">
+            <label for="filtroFilamento" style="font-size:12px">FILAMENTO:</label>
+            <select id="filtroFilamento" style="font-size:13px"><option value="TODOS">TODOS</option></select>
         </div>
     </div>
 
     <div class="table-responsive history-container">
-        <table id="tabelaHistorico">
-            <thead>
-                <tr>
-                    <th>PRODUTO</th>
-                    <th>DATA CADASTRO</th>
-                    <th>FILAMENTO</th>
-                    <th style="color: #dc3545;">CUSTO TOTAL</th>
-                    <th style="color: #28a745;">LUCRO TOTAL</th>
-                    <th style="color: #333;">VALOR TOTAL</th>
-                    <th>SELECIONAR<br>P/ VENDA</th>
-                    <th>EDITAR</th>
-                    <th>EXCLUIR</th>
-                </tr>
-            </thead>
-            <tbody id="corpoHistorico">
-            </tbody>
+        <table>
+            <thead><tr>
+                <th>FOTO</th><th class="esq">PRODUTO</th><th>DATA CADASTRO</th><th>FILAMENTO</th>
+                <th style="color:#dc3545">CUSTO TOTAL</th><th style="color:#28a745">LUCRO</th><th>VALOR BASE</th>
+                <th>SELECIONAR<br>P/ VENDA</th><th>AÇÕES</th>
+            </tr></thead>
+            <tbody id="corpoCatalogo"></tbody>
         </table>
     </div>
 
     <!-- CATÁLOGO DE EMBALAGENS -->
-    <div class="section-title" style="margin-top: 40px; border-bottom-color: #17a2b8;">CATÁLOGO DE EMBALAGENS</div>
-    <div style="background: #f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom: 20px;">
-        <div class="grid-2-cols" style="gap:15px; margin-bottom: 10px;">
-            <div class="form-group" style="margin-bottom:0;">
-                <label>NOME DA NOVA EMBALAGEM:</label>
-                <input type="text" id="catEmbNome" placeholder="EX: CAIXA KRAFT P">
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-                <label>VALOR UNITÁRIO:</label>
-                <div class="input-group">
-                    <span class="input-group-addon-prefix">R$</span>
-                    <input type="text" id="catEmbValor" class="time-input" oninput="maskMoeda(this)" placeholder="0,00">
-                </div>
-            </div>
+    <div class="section-title" style="margin-top:40px; border-bottom-color:#17a2b8">CATÁLOGO DE EMBALAGENS</div>
+    <div class="painel">
+        <div class="grid-2-cols" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label>NOME DA NOVA EMBALAGEM:</label><input type="text" id="catEmbNome" class="maiuscula" placeholder="EX: CAIXA KRAFT P"></div>
+            <div class="form-group" style="margin:0"><label>VALOR UNITÁRIO:</label>
+                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="catEmbValor" class="num moeda" placeholder="0,00"></div></div>
         </div>
-        <button type="button" class="btn-success" style="background-color: #17a2b8;" onclick="salvarEmbalagemCatalogo()">+ ADICIONAR EMBALAGEM</button>
+        <button type="button" class="btn-info" onclick="salvarEmbalagem()">+ ADICIONAR EMBALAGEM</button>
     </div>
-    
-    <div class="table-responsive history-container" style="max-height: 300px;">
-        <table id="tabelaCatalogoEmbalagens">
-            <thead>
-                <tr>
-                    <th style="text-align: left;">NOME DA EMBALAGEM</th>
-                    <th>VALOR UNITÁRIO</th>
-                    <th>EDITAR</th>
-                    <th>EXCLUIR</th>
-                </tr>
-            </thead>
-            <tbody id="corpoCatalogoEmbalagens">
-            </tbody>
+    <div class="table-responsive history-container" style="max-height:300px">
+        <table style="min-width:0">
+            <thead><tr><th class="esq">NOME DA EMBALAGEM</th><th>VALOR UNITÁRIO</th><th>EDITAR</th><th>EXCLUIR</th></tr></thead>
+            <tbody id="corpoEmbalagens"></tbody>
         </table>
     </div>
 
-    <!-- DASHBOARD DE PRODUTOS VENDIDOS -->
-    <div class="section-title" style="margin-top: 50px; border-bottom-color: #28a745;">DASHBOARD & RANKING DE VENDAS</div>
-    <div class="grid-3-cards">
+    <!-- DASHBOARD -->
+    <div class="section-title" style="margin-top:50px; border-bottom-color:#28a745">
+        <span>DASHBOARD & RANKING DE VENDAS</span>
+        <select id="filtroPeriodo" style="width:auto; font-size:12px; padding:6px 10px">
+            <option value="TODOS">TODO O PERÍODO</option><option value="HOJE">HOJE</option>
+            <option value="7">ÚLTIMOS 7 DIAS</option><option value="30">ÚLTIMOS 30 DIAS</option><option value="MES">ESTE MÊS</option>
+        </select>
+    </div>
+    <div class="grid-4-cards">
+        <div class="metric-card blue"><h4>FATURAMENTO</h4><p id="dashFaturamento">R$ 0,00</p></div>
         <div class="metric-card green"><h4>LUCRO LÍQUIDO OBTIDO</h4><p id="dashLucroTotal">R$ 0,00</p></div>
-        <div class="metric-card red"><h4>CUSTO TOTAL PRODUÇÃO</h4><p id="dashCustoTotal">R$ 0,00</p></div>
-        <div class="metric-card blue"><h4>ITENS VENDIDOS</h4><p id="dashQtdItens">0 UNID.</p></div>
+        <div class="metric-card red"><h4>CUSTO TOTAL</h4><p id="dashCustoTotal">R$ 0,00</p></div>
+        <div class="metric-card gray"><h4>ITENS VENDIDOS</h4><p id="dashQtdItens">0 UNID.</p></div>
     </div>
-    
-    <div class="grid-dashboard-vendas">
-        <div class="table-responsive history-container border border-slate-200 rounded-xl bg-white p-4">
-            <h4 style="margin-top:0; color:#333; text-transform:uppercase; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px;">📊 HISTÓRICO DE VENDAS RECENTES (ITEM A ITEM)</h4>
-            <table id="tabelaVendidos" style="margin-top: 10px;">
-                <thead>
-                    <tr>
-                        <th>DATA</th>
-                        <th>PRODUTO</th>
-                        <th>QTD</th>
-                        <th>PLATAFORMA</th>
-                        <th>VALOR VENDA</th>
-                        <th>CUSTO (INC. EXTRAS)</th>
-                        <th>LUCRO LÍQ.</th>
-                        <th>AÇÃO</th>
-                    </tr>
-                </thead>
-                <tbody id="corpoVendidos"></tbody>
-            </table>
-        </div>
 
-        <div class="ranking-card">
-            <h4 style="margin-top:0; color:#d39e00; text-transform:uppercase; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px;">🏆 RANKING DE MAIS VENDIDOS</h4>
-            <table id="tabelaRanking" style="margin-top: 10px;">
-                <thead>
-                    <tr style="background-color: #fff9e6;">
-                        <th style="width: 15%;">POS</th>
-                        <th style="width: 55%;">PRODUTO</th>
-                        <th style="width: 15%;">QTD</th>
-                        <th style="width: 15%;">LUCRO</th>
-                    </tr>
-                </thead>
-                <tbody id="corpoRanking">
-                </tbody>
+    <div class="grid-dashboard-vendas">
+        <div class="table-responsive history-container" style="padding:15px">
+            <h4 style="margin-top:0; color:#333; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px">📊 HISTÓRICO DE VENDAS RECENTES</h4>
+            <table>
+                <thead><tr><th>DATA</th><th class="esq">PRODUTO</th><th>TIPO</th><th>QTD</th><th>PLATAFORMA</th><th>VALOR VENDA</th><th>CUSTO (INC. EXTRAS)</th><th>LUCRO LÍQ.</th><th>AÇÃO</th></tr></thead>
+                <tbody id="corpoVendas"></tbody>
             </table>
         </div>
+        <div class="ranking-card">
+            <h4 style="margin-top:0; color:#d39e00; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px">🏆 RANKING DE MAIS VENDIDOS</h4>
+            <table>
+                <thead><tr style="background:#fff9e6"><th>POS</th><th class="esq">PRODUTO</th><th>QTD</th><th>LUCRO</th></tr></thead>
+                <tbody id="corpoRanking"></tbody>
+            </table>
+            <p class="dica">Peças vendidas dentro de kits também contam no ranking de cada produto.</p>
+        </div>
     </div>
-    
-    <button type="button" onclick="limparVendidos()" class="btn-danger" style="margin-top: 20px;">LIMPAR BANCO DE VENDAS</button>
+
+    <button type="button" onclick="limparVendas()" class="btn-danger btn-auto" style="margin-top:20px">LIMPAR BANCO DE VENDAS</button>
 </div>
 
-<!-- MODAL DE CONFIRMAÇÃO DE VENDA COM CALCULADORA FINAL -->
-<div class="modal-overlay" id="modalVendaConfirmacao">
+<!-- ===================== MODAL DE VENDA ===================== -->
+<div class="modal-overlay" id="modalVenda">
     <div class="modal-content">
-        <span class="modal-close" onclick="fecharModalVenda()" title="Fechar Pop-up">&times;</span>
-        <h3 style="margin-top:0; text-transform: uppercase; color:#28a745; border-bottom: 2px solid #28a745; padding-bottom: 8px;">
-            🛒 FINALIZAR VENDA
-        </h3>
-        
-        <!-- Lista de Produtos Selecionados -->
-        <div id="listaProdutosVenda" style="margin-bottom: 15px;"></div>
-        
-        <!-- Embalagens -->
-        <div style="background: #eef2f5; border: 1px solid #dcdcdc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h4 style="margin-top:0; font-size:14px; text-transform:uppercase; color:#007bff; border-bottom:1px solid #ccc; padding-bottom:5px;">📦 EMBALAGENS DA VENDA</h4>
-            
-            <div class="list-embalagens" id="listaEmbalagensVenda"></div>
-            
-            <div style="text-align: right; font-weight: bold; font-size: 15px; margin-bottom: 15px; color: #dc3545;">
-                TOTAL EMBALAGEM: <span id="totalEmbalagemModal">R$ 0,00</span>
-            </div>
+        <span class="modal-close" onclick="fecharModalVenda()" title="Fechar">&times;</span>
+        <h3 style="margin-top:0; color:#28a745; border-bottom:2px solid #28a745; padding-bottom:8px">🛒 FINALIZAR VENDA</h3>
 
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-size:11px;">ADICIONAR ITEM DO CATÁLOGO DE EMBALAGENS:</label>
-                <div style="display:flex; gap:10px;">
-                    <select id="selectBibliotecaEmbalagem" style="flex:1;"><option value="">-- SELECIONE --</option></select>
-                    <button type="button" class="btn-primary" style="width:auto; margin-top:0;" onclick="adicionarEmbalagemVenda()">+ ADD</button>
+        <div id="listaProdutosVenda" style="margin-bottom:15px"></div>
+
+        <div id="blocoModoVenda" style="display:none">
+            <label>MODO DE VENDA:</label>
+            <div class="modo-venda">
+                <label class="opcao" id="opcaoIndividual"><input type="radio" name="modoVenda" value="INDIVIDUAL" checked>
+                    <span><strong>VENDA PRODUTO INDIVIDUAL</strong>Cada produto é lançado separadamente no histórico, com o valor e o lucro divididos proporcionalmente ao custo.</span></label>
+                <label class="opcao" id="opcaoKit"><input type="radio" name="modoVenda" value="KIT">
+                    <span><strong>VENDA KIT</strong>Os produtos são vendidos como um conjunto. O kit é cadastrado automaticamente no catálogo com o custo total dos produtos.</span></label>
+            </div>
+            <div class="kit-box" id="kitBox" style="display:none">
+                <div class="form-group" style="margin-bottom:6px">
+                    <label for="kitNome" style="color:#6f42c1">NOME DO KIT:</label>
+                    <input type="text" id="kitNome" class="maiuscula">
                 </div>
+                <p class="dica" id="kitInfo"></p>
+            </div>
+        </div>
+
+        <div class="painel" style="background:#eef2f5">
+            <h4 style="margin-top:0; font-size:14px; color:#007bff; border-bottom:1px solid #ccc; padding-bottom:5px">📦 EMBALAGENS DA VENDA</h4>
+            <div class="list-embalagens" id="listaEmbalagensVenda"></div>
+            <div style="text-align:right; font-weight:bold; font-size:15px; margin-bottom:15px; color:#dc3545">TOTAL EMBALAGEM: <span id="totalEmbalagemModal">R$ 0,00</span></div>
+            <label style="font-size:11px">ADICIONAR ITEM DO CATÁLOGO DE EMBALAGENS:</label>
+            <div style="display:flex; gap:10px">
+                <select id="selectEmbalagemVenda" style="flex:1"></select>
+                <button type="button" class="btn-auto" onclick="adicionarEmbalagemVenda()">+ ADD</button>
             </div>
         </div>
 
         <div class="grid-2-cols">
-            <div class="form-group">
-                <label>VALOR DO FRETE:</label>
-                <div class="input-group">
-                    <span class="input-group-addon-prefix">R$</span>
-                    <input type="text" id="vendaFrete" value="0,00" oninput="maskMoeda(this); calcularModalVenda()" class="time-input">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>FORMA DE VENDA (PLATAFORMA):</label>
-                <select id="vendaPlataforma" onchange="calcularModalVenda()">
-                    <option value="0" data-name="VENDA DIRETA">VENDA DIRETA (0%)</option>
-                    <option value="20" data-name="MERCADO LIVRE">MERCADO LIVRE (20%)</option>
-                    <option value="20" data-name="SHOPEE">SHOPEE (20%)</option>
-                    <option value="5" data-name="CARTÃO">CARTÃO (5%)</option>
-                    <option value="0" id="vendaOptOutro" data-name="OUTRO">OUTRO (%)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>NOVA MARGEM DE LUCRO (%):</label>
-                <div class="input-group">
-                    <input type="text" id="vendaMargem" oninput="maskMoeda(this); calcularModalVenda()" class="time-input" value="100,00">
-                    <span class="input-group-addon">%</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>DESCONTO ADICIONAL (%):</label>
-                <div class="input-group">
-                    <input type="text" id="vendaDesconto" value="0,00" oninput="maskMoeda(this); calcularModalVenda()" class="time-input">
-                    <span class="input-group-addon">%</span>
-                </div>
-            </div>
+            <div class="form-group"><label>VALOR DO FRETE:</label>
+                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="vendaFrete" value="0,00" class="num moeda venda-calc"></div></div>
+            <div class="form-group"><label>FORMA DE VENDA (PLATAFORMA):</label>
+                <div style="display:flex; gap:8px">
+                    <select id="vendaPlataforma" class="venda-calc" style="flex:1"></select>
+                    <div class="input-group" id="grupoTaxaOutro" style="display:none; width:120px"><input type="text" id="vendaTaxaOutro" value="0,00" class="num moeda venda-calc"><span class="addon">%</span></div>
+                </div></div>
+            <div class="form-group"><label>MARGEM DE LUCRO (%):</label>
+                <div class="input-group"><input type="text" id="vendaMargem" value="100,00" class="num moeda venda-calc"><span class="addon">%</span></div>
+                <p class="dica">Pré-preenchida com a margem que está no catálogo.</p></div>
+            <div class="form-group"><label>DESCONTO ADICIONAL (%):</label>
+                <div class="input-group"><input type="text" id="vendaDesconto" value="0,00" class="num moeda venda-calc"><span class="addon">%</span></div></div>
         </div>
 
-        <div class="results" style="margin-top: 15px; background-color: #f1f8f5; padding: 20px; border-radius: 8px; border: 1px solid #c3e6cb;">
-            <h4 style="margin-top: 0; color: #155724; text-transform: uppercase; border-bottom: 1px solid #c3e6cb; padding-bottom: 8px;">RESUMO FINAL DA TRANSAÇÃO</h4>
-            <p style="margin: 8px 0; font-size:14px; display:flex; justify-content:space-between;">
-                <span>CUSTO TOTAL (PRODUÇÃO + EMB + FRETE):</span> 
-                <span id="vendaCustoTotalCalc" style="font-weight:bold; color:#444;">R$ 0,00</span>
-            </p>
-            <p style="margin: 8px 0; font-size:14px; display:flex; justify-content:space-between;">
-                <span>TAXA DEDUZIDA P/ PLATAFORMA:</span> 
-                <span id="vendaTaxaPlat" style="color: #dc3545; font-weight:bold;">R$ 0,00</span>
-            </p>
-            <p style="margin: 8px 0; font-size:15px; font-weight:bold; display:flex; justify-content:space-between; align-items: center;">
-                <span>VALOR FINAL DE VENDA:</span>
-                <span class="input-group" style="width: 200px;">
-                    <span class="input-group-addon-prefix" style="padding:6px;">R$</span>
-                    <input type="text" id="vendaValorTotal" value="0,00" class="time-input" oninput="maskMoeda(this); calcularModalVendaPorValorManual()" style="padding:6px; font-size:15px; color:#007bff; font-weight:bold;">
-                </span>
-            </p>
-            <p style="border-top: 1px dashed #c3e6cb; padding-top: 12px; margin-top: 12px; font-weight:bold; font-size:18px; display:flex; justify-content:space-between;">
-                <span>LUCRO LÍQUIDO FINAL:</span> 
-                <span>
-                    <span id="vendaLucroFinal" style="color: #28a745;">R$ 0,00</span>
-                    <span id="vendaPercLucro" style="font-size: 14px; color: #555; font-weight:normal; margin-left: 5px;">(0%)</span>
-                </span>
-            </p>
+        <div class="results" style="margin-top:5px; background:#f1f8f5; padding:20px; border-radius:8px; border:1px solid #c3e6cb">
+            <h4 style="margin-top:0; color:#155724; border-bottom:1px solid #c3e6cb; padding-bottom:8px">RESUMO FINAL DA TRANSAÇÃO</h4>
+            <p style="font-size:14px"><span>CUSTO TOTAL (PRODUÇÃO + EMB + FRETE):</span><span id="vendaCustoTotal" style="font-weight:bold; color:#444">R$ 0,00</span></p>
+            <p style="font-size:14px"><span>TAXA DEDUZIDA P/ PLATAFORMA:</span><span id="vendaTaxaPlat" style="color:#dc3545; font-weight:bold">R$ 0,00</span></p>
+            <p style="font-size:15px; font-weight:bold"><span>VALOR FINAL DE VENDA:</span>
+                <span class="input-group" style="width:200px"><span class="addon-pre" style="padding:6px">R$</span>
+                <input type="text" id="vendaValorTotal" value="0,00" class="num moeda" style="padding:6px; font-size:15px; color:#007bff"></span></p>
+            <p style="border-top:1px dashed #c3e6cb; padding-top:12px; font-weight:bold; font-size:18px"><span>LUCRO LÍQUIDO FINAL:</span>
+                <span><span id="vendaLucroFinal" style="color:#28a745">R$ 0,00</span> <span id="vendaPercLucro" style="font-size:14px; color:#555; font-weight:normal">(0%)</span></span></p>
         </div>
 
-        <div style="display:flex; gap:15px; margin-top: 25px;">
-            <button type="button" class="btn-success" onclick="confirmarVendaModal()" style="font-size: 16px; padding: 14px;">✅ FINALIZAR VENDA</button>
-            <button type="button" class="btn-danger" onclick="fecharModalVenda()" style="font-size: 16px; padding: 14px;">❌ CANCELAR</button>
+        <div style="display:flex; gap:15px; margin-top:20px">
+            <button type="button" class="btn-success" id="btnConfirmarVenda" onclick="confirmarVenda()" style="font-size:16px; padding:14px">✅ FINALIZAR VENDA</button>
+            <button type="button" class="btn-danger" onclick="fecharModalVenda()" style="font-size:16px; padding:14px">❌ CANCELAR</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL EDITAR PRODUTO ===================== -->
+<div class="modal-overlay" id="modalProduto">
+    <div class="modal-content" style="max-width:680px">
+        <span class="modal-close" onclick="fecharModalProduto()">&times;</span>
+        <h3 style="margin-top:0; color:#d39e00; border-bottom:2px solid #ffc107; padding-bottom:8px">✏️ EDITAR PRODUTO</h3>
+        <div class="form-group"><label>NOME:</label><input type="text" id="edNome" class="maiuscula"></div>
+        <div class="form-group"><label>LINK (URL):</label><input type="text" id="edLink"></div>
+        <div class="grid-2-cols">
+            <div class="form-group"><label>CUSTO TOTAL DE PRODUÇÃO:</label>
+                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="edCusto" class="num moeda"></div></div>
+            <div class="form-group"><label>PREÇO BASE (SEM TAXAS):</label>
+                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="edPreco" class="num moeda"></div></div>
+        </div>
+        <div id="edComponentes" class="kit-box" style="display:none"></div>
+
+        <label>📷 FOTOS DE REFERÊNCIA (RECONHECIMENTO):</label>
+        <div class="fotos-grid" id="edFotos"></div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+            <input type="file" id="edNovasFotos" accept="image/*" multiple style="text-transform:none; flex:1; min-width:200px">
+            <button type="button" class="btn-info btn-auto" id="btnFotosLink" onclick="buscarFotosLinkProduto()">🔗 BUSCAR FOTOS NO LINK DO PRODUTO</button>
+        </div>
+        <div id="edSeletorLink" style="display:none; margin-top:10px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:10px"></div>
+        <p class="dica">Quanto mais fotos (ângulos, luz e fundos diferentes), melhor o app reconhece a peça. Fotos são salvas na hora.</p>
+
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap">
+            <button type="button" class="btn-success" style="flex:2" onclick="salvarEdicaoProduto()">💾 SALVAR ALTERAÇÕES</button>
+            <button type="button" class="btn-secondary" id="btnRecalcular" style="flex:1" onclick="carregarNaCalculadora()">🧮 RECALCULAR</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Configuração Supabase
-    const SUPABASE_URL = "https://pmqrnodfjwhldkkkgeqy.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_SawajxYBUmg_M0u_IHG_MQ_r-j_Cvsl";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ======================= ESTADO ======================= */
+let produtos = [];
+let vendas = [];
+let embalagens = [];
+let fotosResumo = {};
+const selecionados = new Set();
+let editandoId = null;          // produto carregado na calculadora para atualização
+let produtoModalId = null;      // produto aberto no modal de edição
+let fotosNovoProduto = [];      // fotos processadas antes de salvar um produto novo
+let ultimoCalculo = null;
 
-    let historicoProdutos = [];
-    let produtosVendidos = [];
-    let bibliotecaEmbalagens = [];
-    let ultimoCalculo = null;
-    
-    let itensVendaSelecionados = [];
-    let embalagensVendaAtual = [];
-    let alterandoValorManualmente = false;
+const venda = { itens: [], embalagens: [], valorManual: false, modo: "INDIVIDUAL", resultado: null };
 
-    function maskMoeda(input) {
-        let v = input.value.replace(/\D/g, ''); 
-        if (v === '') { input.value = ''; return; }
-        let num = parseInt(v, 10);
-        if (isNaN(num)) num = 0;
-        v = (num / 100).toFixed(2);
-        v = v.replace('.', ','); 
-        v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); 
-        input.value = v;
+const $ = id => document.getElementById(id);
+const CAMPOS_CALC = ["nomeProduto","linkProduto","comprimentoFilamento","pesoPeca","precoKg","tipoFilamento","potenciaImpressora",
+    "tarifaEnergia","tempoImpressao","valorImpressora","vidaUtil","tempoTrabalho","valorHoraTrabalho","margemFalhas","margemLucro"];
+const CHAVE_PADROES = "calc3d_padroes_v2";
+
+/* ======================= EVENTOS GLOBAIS ======================= */
+document.addEventListener("input", e => {
+    const el = e.target;
+    if (el.classList.contains("moeda")) Fmt.mascaraMoeda(el);
+    if (el.classList.contains("hora")) Fmt.mascaraHora(el);
+    if (el.classList.contains("maiuscula")) { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); }
+    if (el.classList.contains("calc")) calcular();
+    if (el.classList.contains("padrao")) salvarPadroes();
+    if (el.classList.contains("venda-calc")) { venda.valorManual = false; calcularVenda(); }
+    if (el.id === "vendaValorTotal") { venda.valorManual = true; calcularVenda(); }
+    if (el.id === "pesquisaHistorico") renderizarCatalogo();
+    if (el.id === "kitNome") atualizarInfoKit();
+});
+document.addEventListener("change", e => {
+    const el = e.target;
+    if (el.tagName === "SELECT" && el.classList.contains("calc")) calcular();
+    if (el.tagName === "SELECT" && el.classList.contains("padrao")) salvarPadroes();
+    if (el.id === "vendaPlataforma") { $("grupoTaxaOutro").style.display = el.value === "OUTRO" ? "flex" : "none"; venda.valorManual = false; calcularVenda(); }
+    if (["filtroTipo","filtroFilamento"].includes(el.id)) renderizarCatalogo();
+    if (el.id === "filtroPeriodo") renderizarDashboard();
+    if (el.name === "modoVenda") definirModoVenda(el.value);
+    if (el.classList.contains("chk")) {
+        const id = Number(el.dataset.id);
+        el.checked ? selecionados.add(id) : selecionados.delete(id);
+        el.closest("tr").classList.toggle("selecionado", el.checked);
+        atualizarBotaoVender();
+    }
+    if (el.id === "fotosNovoProduto") processarFotosNovoProduto(el.files);
+    if (el.id === "edNovasFotos") adicionarFotosProduto(el.files);
+});
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { fecharModalVenda(); fecharModalProduto(); }
+});
+
+/* ======================= CALCULADORA ======================= */
+function lerParametros() {
+    const v = id => $(id).value;
+    return {
+        peso: Fmt.parse(v("pesoPeca")), precoKg: Fmt.parse(v("precoKg")), potencia: Fmt.parse(v("potenciaImpressora")),
+        horasImpressao: Fmt.hhmmssParaHoras(v("tempoImpressao")), tarifa: Fmt.parse(v("tarifaEnergia")),
+        valorMaquina: Fmt.parse(v("valorImpressora")), vidaUtil: Fmt.parse(v("vidaUtil")),
+        horasTrabalho: Fmt.hhmmssParaHoras(v("tempoTrabalho")), valorHora: Fmt.parse(v("valorHoraTrabalho")),
+        percFalhas: Fmt.parse(v("margemFalhas")), percLucro: Fmt.parse(v("margemLucro"))
+    };
+}
+
+function calcular() {
+    const r = Calc.producao(lerParametros());
+    $("resSubtotal").textContent = Fmt.brl(r.subtotal);
+    $("resDetalhe").textContent = [r.material, r.energia, r.depreciacao, r.maoDeObra].map(Fmt.brl).join(" / ");
+    $("resFalhas").textContent = Fmt.brl(r.falhas);
+    $("resCustoTotal").textContent = Fmt.brl(r.custoTotal);
+    $("resLucro").textContent = Fmt.brl(r.lucro);
+    $("resPrecoSemTaxa").textContent = Fmt.brl(r.preco);
+    $("resPrecoPlataformas").textContent = `${Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 20 }))} · ${Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 5 }))}`;
+    ultimoCalculo = r;
+}
+
+function salvarPadroes() {
+    const padroes = {};
+    document.querySelectorAll(".padrao").forEach(el => padroes[el.id] = el.value);
+    try { localStorage.setItem(CHAVE_PADROES, JSON.stringify(padroes)); } catch (e) {}
+}
+function carregarPadroes() {
+    try {
+        const p = JSON.parse(localStorage.getItem(CHAVE_PADROES) || "{}");
+        Object.entries(p).forEach(([id, val]) => { if ($(id)) $(id).value = val; });
+    } catch (e) {}
+}
+
+function snapshotCampos() {
+    const s = {};
+    CAMPOS_CALC.forEach(id => s[id] = $(id).value);
+    return s;
+}
+
+function limparCamposProduto() {
+    ["nomeProduto", "linkProduto"].forEach(id => $(id).value = "");
+    ["comprimentoFilamento", "pesoPeca"].forEach(id => $(id).value = "0,00");
+    ["tempoImpressao", "tempoTrabalho"].forEach(id => $(id).value = "00:00:00");
+    fotosNovoProduto = [];
+    $("fotosNovoProduto").value = "";
+    $("seletorLinkNovo").style.display = "none";
+    renderizarPreviewFotosNovo();
+    calcular();
+}
+
+async function salvarProduto() {
+    calcular();
+    const nome = $("nomeProduto").value.trim().toUpperCase() || "PRODUTO SEM NOME";
+    if (ultimoCalculo.custoTotal <= 0 && !confirm("O CUSTO ESTÁ ZERADO. SALVAR MESMO ASSIM?")) return;
+
+    const reg = {
+        nome, link: $("linkProduto").value.trim(), tipo_filamento: $("tipoFilamento").value,
+        custo_producao_base: +ultimoCalculo.custoTotal.toFixed(4), preco_base: +ultimoCalculo.preco.toFixed(4),
+        parametros: snapshotCampos()
+    };
+
+    if (!editandoId) {
+        const duplicado = produtos.find(p => p.nome === nome && p.tipo !== "KIT");
+        if (duplicado && confirm(`JÁ EXISTE "${nome}" NO CATÁLOGO.\n\nOK = ATUALIZAR O EXISTENTE\nCANCELAR = CRIAR UM NOVO`)) editandoId = duplicado.id;
     }
 
-    function maskTime(input) {
-        let v = input.value.replace(/\D/g, ''); 
-        if (v === '') { input.value = ''; return; }
-        let num = parseInt(v, 10);
-        if (isNaN(num)) num = 0;
-        v = num.toString().padStart(6, '0').slice(-6); 
-        input.value = `${v.slice(0,2)}:${v.slice(2,4)}:${v.slice(4,6)}`;
-    }
-
-    function converterStringParaFloat(str) {
-        if (!str) return 0;
-        if (typeof str === 'number') return str;
-        str = str.replace(/\./g, '').replace(',', '.');
-        const num = parseFloat(str);
-        return isNaN(num) ? 0 : num;
-    }
-
-    function converterHHMMSSToHoras(timeStr) {
-        if (!timeStr) return 0;
-        const partes = timeStr.split(':');
-        let horas = 0;
-        if (partes.length === 3) horas = parseInt(partes[0] || 0) + (parseInt(partes[1] || 0) / 60) + (parseInt(partes[2] || 0) / 3600);
-        else if (partes.length === 2) horas = parseInt(partes[0] || 0) + (parseInt(partes[1] || 0) / 60);
-        return isNaN(horas) ? 0 : horas;
-    }
-
-    function calcular() {
-        try {
-            const peso = converterStringParaFloat(document.getElementById('pesoPeca').value);
-            const precoKg = converterStringParaFloat(document.getElementById('precoKg').value);
-            const potenciaW = converterStringParaFloat(document.getElementById('potenciaImpressora').value);
-            const horasImpressao = converterHHMMSSToHoras(document.getElementById('tempoImpressao').value);
-            const tarifaEnergia = converterStringParaFloat(document.getElementById('tarifaEnergia').value);
-            const valorImp = converterStringParaFloat(document.getElementById('valorImpressora').value);
-            const vidaUtilBruta = converterStringParaFloat(document.getElementById('vidaUtil').value);
-            const vidaUtil = vidaUtilBruta > 0 ? vidaUtilBruta : 1; 
-            const horasTrabalho = converterHHMMSSToHoras(document.getElementById('tempoTrabalho').value);
-            const valorHora = converterStringParaFloat(document.getElementById('valorHoraTrabalho').value);
-            const percFalhas = converterStringParaFloat(document.getElementById('margemFalhas').value);
-            const percLucro = converterStringParaFloat(document.getElementById('margemLucro').value);
-            
-            const subtotal = ((peso / 1000) * precoKg) + ((potenciaW / 1000) * horasImpressao * tarifaEnergia) + ((valorImp / vidaUtil) * horasImpressao) + (horasTrabalho * valorHora);
-            const custoFalhas = subtotal * (percFalhas / 100);
-            const custoTotalBase = subtotal + custoFalhas; 
-            const lucroBase = custoTotalBase * (percLucro / 100);
-            const precoSemTaxa = custoTotalBase + lucroBase;
-
-            const formatBRL = (valor) => isNaN(valor) ? "R$ 0,00" : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-            document.getElementById('resSubtotal').innerText = formatBRL(subtotal);
-            document.getElementById('resFalhas').innerText = formatBRL(custoFalhas);
-            document.getElementById('resCustoTotal').innerText = formatBRL(custoTotalBase);
-            document.getElementById('resLucro').innerText = formatBRL(lucroBase);
-            document.getElementById('resPrecoSemTaxa').innerText = formatBRL(precoSemTaxa);
-            
-            ultimoCalculo = {
-                nome: (document.getElementById('nomeProduto').value || 'PRODUTO SEM NOME').toUpperCase(),
-                link: document.getElementById('linkProduto').value.trim(),
-                tipoFilamento: document.getElementById('tipoFilamento').value.toUpperCase(),
-                custoProducaoBase: custoTotalBase,
-                precoBase: precoSemTaxa,
-                data: new Date().toLocaleDateString('pt-BR')
-            };
-        } catch (e) { console.error("Erro interno ao calcular:", e); }
-    }
-
-    // ==== CARREGAMENTO DE DADOS ====
-    async function carregarDadosSupabase() {
-        try {
-            const { data, error } = await supabaseClient.from('3dbsb').select('*');
-            if (error) throw error;
-            if (data) {
-                historicoProdutos = data.map(item => ({
-                    id: item.id,
-                    nome: item.nome || '',
-                    link: item.link || '',
-                    data: item.data || new Date().toLocaleDateString('pt-BR'),
-                    tipoFilamento: item.tipo_filamento || 'PLA',
-                    custoProducaoBase: item.custo_producao_base || 0,
-                    precoBase: item.preco_base || 0
-                }));
-
-                renderizarHistorico();
-                atualizarOpcoesFiltro();
-            }
-        } catch (err) {
-            console.error("Erro ao carregar do Supabase (Catálogo):", err.message);
-        }
-    }
-
-    async function carregarVendasSupabase() {
-        try {
-            const { data, error } = await supabaseClient.from('vendas').select('*');
-            if (!error && data) {
-                produtosVendidos = data;
-                renderizarDashboardVendidos();
-            }
-        } catch (err) {
-            console.error("Erro ao carregar vendas:", err.message);
-        }
-    }
-
-    async function carregarEmbalagensSupabase() {
-        try {
-            const { data, error } = await supabaseClient.from('embalagens').select('*');
-            if (error || !data || data.length === 0) {
-                bibliotecaEmbalagens = [
-                    { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
-                    { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
-                ];
-            } else {
-                bibliotecaEmbalagens = data;
-            }
-            renderizarCatalogoEmbalagens();
-            renderizarSelectBiblioteca();
-        } catch (err) {
-            bibliotecaEmbalagens = [
-                { id: "1", nome: "CAIXA PAPELÃO P", valor: 2.50 },
-                { id: "2", nome: "PLASTICO BOLHA", valor: 1.00 }
-            ];
-            renderizarCatalogoEmbalagens();
-            renderizarSelectBiblioteca();
-        }
-    }
-
-    // ==== CATÁLOGO DE EMBALAGENS (TELA INICIAL) ====
-    function renderizarCatalogoEmbalagens() {
-        // Ordena embalagens em ordem alfabética antes de renderizar
-        bibliotecaEmbalagens.sort((a, b) => a.nome.localeCompare(b.nome));
-
-        const tbody = document.getElementById('corpoCatalogoEmbalagens');
-        tbody.innerHTML = '';
-        if (bibliotecaEmbalagens.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">NENHUMA EMBALAGEM CADASTRADA.</td></tr>';
-            return;
-        }
-
-        bibliotecaEmbalagens.forEach(emb => {
-            const val = isNaN(emb.valor) ? 0 : emb.valor;
-            const valFormatado = val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-weight:bold; text-align:left; font-size:11px;">${emb.nome}</td>
-                    <td style="font-weight:bold; color:#007bff;">${valFormatado}</td>
-                    <td><button type="button" onclick="editarEmbalagemCatalogo('${emb.id}')" class="btn-warning">✏️</button></td>
-                    <td><button type="button" onclick="excluirEmbalagemCatalogo('${emb.id}')" class="btn-danger" style="padding:6px 10px;">X</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    async function salvarEmbalagemCatalogo() {
-        const nome = document.getElementById('catEmbNome').value.trim().toUpperCase();
-        const valor = converterStringParaFloat(document.getElementById('catEmbValor').value);
-        if(!nome || valor <= 0) { alert("PREENCHA O NOME E UM VALOR VÁLIDO PARA A EMBALAGEM."); return; }
-
-        const novoItem = { nome: nome, valor: valor };
-        const { data, error } = await supabaseClient.from('embalagens').insert([novoItem]).select();
-        
-        if (error) {
-            novoItem.id = Date.now().toString();
-            bibliotecaEmbalagens.push(novoItem);
-            alert("⚠️ Salvo localmente (Erro ao sincronizar com Supabase: " + error.message + ")");
-        } else if (data && data.length > 0) {
-            bibliotecaEmbalagens.push(data[0]);
-        }
-
-        document.getElementById('catEmbNome').value = "";
-        document.getElementById('catEmbValor').value = "";
-        renderizarCatalogoEmbalagens();
-        renderizarSelectBiblioteca();
-    }
-
-    async function editarEmbalagemCatalogo(id) {
-        const emb = bibliotecaEmbalagens.find(e => e.id == id);
-        if(!emb) return;
-
-        const novoNome = prompt("Digite o novo nome da embalagem:", emb.nome);
-        if(novoNome === null) return; 
-
-        let novoValorStr = prompt("Digite o novo valor unitário (Ex: 2,50):", parseFloat(emb.valor).toFixed(2).replace('.', ','));
-        if(novoValorStr === null) return;
-
-        const novoValor = converterStringParaFloat(novoValorStr);
-
-        const { error } = await supabaseClient.from('embalagens').update({ nome: novoNome.toUpperCase(), valor: novoValor }).eq('id', id);
-        if(!error) {
-            emb.nome = novoNome.toUpperCase();
-            emb.valor = novoValor;
-            renderizarCatalogoEmbalagens();
-            renderizarSelectBiblioteca();
+    const btn = $("btnSalvarProduto");
+    btn.disabled = true;
+    try {
+        let salvo;
+        if (editandoId) {
+            salvo = await DB.atualizarProduto(editandoId, reg);
+            produtos = produtos.map(p => p.id === editandoId ? salvo : p);
         } else {
-            alert("Erro ao atualizar: " + error.message);
+            salvo = await DB.inserirProduto({ ...reg, data: Fmt.hoje(), quantidade: 1, vendido: false, tipo: "PRODUTO" });
+            produtos.push(salvo);
         }
+        if (fotosNovoProduto.length) await gravarFotos(salvo.id, fotosNovoProduto);
+        UI.toast(editandoId ? "✅ PRODUTO ATUALIZADO!" : "✅ PRODUTO SALVO NO CATÁLOGO!");
+        cancelarEdicao(true);
+        limparCamposProduto();
+        atualizarFiltros();
+        renderizarCatalogo();
+    } catch (e) { UI.erro("Erro ao salvar produto", e); }
+    finally { btn.disabled = false; }
+}
+
+function cancelarEdicao(silencioso) {
+    editandoId = null;
+    $("bannerEdicao").style.display = "none";
+    $("btnSalvarProduto").textContent = "SALVAR NO CATÁLOGO DE PRODUTOS";
+    if (silencioso !== true) limparCamposProduto();
+}
+
+/* ======================= FOTOS ======================= */
+async function processarArquivos(files) {
+    const lista = [...files].filter(f => f.type.startsWith("image/"));
+    if (!lista.length) return [];
+    UI.toast("🧠 PROCESSANDO FOTOS (A 1ª VEZ BAIXA O MODELO DE IA)...", "info", 4000);
+    const saida = [];
+    for (const f of lista) saida.push(await Visao.processarArquivo(f));
+    return saida;
+}
+
+async function processarFotosNovoProduto(files) {
+    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
+    try {
+        fotosNovoProduto.push(...await processarArquivos(files));
+        renderizarPreviewFotosNovo();
+    } catch (e) { UI.erro("Erro ao processar fotos", e); }
+    $("fotosNovoProduto").value = "";
+}
+
+function renderizarPreviewFotosNovo() {
+    $("previewFotosNovo").innerHTML = fotosNovoProduto.map((f, i) =>
+        `<div class="foto-item"><img src="${f.thumb}"><button type="button" onclick="fotosNovoProduto.splice(${i},1); renderizarPreviewFotosNovo()">✕</button></div>`).join("");
+}
+
+async function gravarFotos(produtoId, fotos) {
+    for (const f of fotos) await DB.inserirFoto(produtoId, f.thumb, f.emb);
+    fotosResumo = await DB.resumoFotos();
+}
+
+/* ======================= CATÁLOGO ======================= */
+async function carregarProdutos() {
+    try {
+        produtos = await DB.listarProdutos();
+        fotosResumo = await DB.resumoFotos().catch(() => ({}));
+        atualizarFiltros();
+        renderizarCatalogo();
+    } catch (e) { UI.erro("Erro ao carregar catálogo", e); }
+}
+
+function atualizarFiltros() {
+    const sel = $("filtroFilamento"), atual = sel.value;
+    const fils = [...new Set(produtos.map(p => p.tipoFilamento))].sort();
+    sel.innerHTML = '<option value="TODOS">TODOS</option>' + fils.map(f => `<option value="${Fmt.esc(f)}">${Fmt.esc(f)}</option>`).join("");
+    if (fils.includes(atual)) sel.value = atual;
+}
+
+function nomeComLink(nome, link) {
+    const url = Fmt.linkSeguro(link);
+    return url ? `<a href="${Fmt.esc(url)}" target="_blank" rel="noopener" class="produto-link">${Fmt.esc(nome)}</a>` : Fmt.esc(nome);
+}
+
+function textoComponentes(comp) {
+    return (comp || []).map(c => `${c.qtd}X ${c.nome}`).join(" + ");
+}
+
+function renderizarCatalogo() {
+    const termo = $("pesquisaHistorico").value.toUpperCase().trim();
+    const fTipo = $("filtroTipo").value, fFil = $("filtroFilamento").value;
+    const lista = produtos
+        .filter(p => !termo || p.nome.includes(termo))
+        .filter(p => fTipo === "TODOS" || p.tipo === fTipo)
+        .filter(p => fFil === "TODOS" || p.tipoFilamento === fFil)
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+
+    if (!lista.length) {
+        $("corpoCatalogo").innerHTML = '<tr><td colspan="9" style="color:#777">NENHUM PRODUTO ENCONTRADO.</td></tr>';
+        return;
     }
+    $("corpoCatalogo").innerHTML = lista.map(p => {
+        const f = fotosResumo[p.id];
+        const foto = f ? `<img class="thumb" src="${f.thumb}" title="${f.qtd} foto(s)">` : `<div class="thumb-vazio" title="Sem fotos">📷</div>`;
+        const kit = p.tipo === "KIT";
+        const sel = selecionados.has(p.id);
+        return `<tr class="${sel ? "selecionado" : ""}">
+            <td>${foto}</td>
+            <td class="esq" style="font-weight:bold; white-space:normal; max-width:320px">
+                ${kit ? '<span class="badge kit">KIT</span> ' : ""}${nomeComLink(p.nome, p.link)}
+                ${kit && p.componentes ? `<div class="componentes">${Fmt.esc(textoComponentes(p.componentes))}</div>` : ""}
+            </td>
+            <td style="font-size:10px">${Fmt.esc(p.data)}</td>
+            <td><span class="badge">${Fmt.esc(p.tipoFilamento)}</span></td>
+            <td style="color:#dc3545; font-weight:bold">${Fmt.brl(p.custoProducaoBase)}</td>
+            <td style="color:#28a745; font-weight:bold">${Fmt.brl(p.precoBase - p.custoProducaoBase)}</td>
+            <td style="font-weight:bold; background:#e9ecef">${Fmt.brl(p.precoBase)}</td>
+            <td><input type="checkbox" class="chk" data-id="${p.id}" ${sel ? "checked" : ""}></td>
+            <td style="white-space:nowrap">
+                <button type="button" class="btn-warning btn-sm" title="Editar / fotos" onclick="abrirModalProduto(${p.id})">✏️${f ? ` <span class="badge foto">${f.qtd}📷</span>` : ""}</button>
+                <button type="button" class="btn-danger btn-sm" title="Excluir" onclick="excluirProduto(${p.id})">X</button>
+            </td></tr>`;
+    }).join("");
+}
 
-    async function excluirEmbalagemCatalogo(id) {
-        if(confirm("EXCLUIR ESTA EMBALAGEM DO CATÁLOGO?")) {
-            await supabaseClient.from('embalagens').delete().eq('id', id);
-            bibliotecaEmbalagens = bibliotecaEmbalagens.filter(e => e.id != id);
-            renderizarCatalogoEmbalagens();
-            renderizarSelectBiblioteca();
-        }
-    }
+function atualizarBotaoVender() {
+    $("btnVender").textContent = `🛒 VENDER ITENS SELECIONADOS (${selecionados.size})`;
+}
 
+async function excluirProduto(id) {
+    const p = produtos.find(x => x.id === id);
+    if (!p || !confirm(`EXCLUIR "${p.nome}" DEFINITIVAMENTE DO CATÁLOGO?\n(As vendas já lançadas são mantidas.)`)) return;
+    try {
+        await DB.excluirProduto(id);
+        produtos = produtos.filter(x => x.id !== id);
+        selecionados.delete(id);
+        delete fotosResumo[id];
+        atualizarFiltros(); renderizarCatalogo(); atualizarBotaoVender();
+        UI.toast("PRODUTO EXCLUÍDO.");
+    } catch (e) { UI.erro("Erro ao excluir", e); }
+}
 
-    // ==== CATÁLOGO DE PRODUTOS ====
-    async function salvarNoHistorico() {
-        if (!ultimoCalculo) { 
-            alert("⚠️ PREENCHA OS DADOS PRIMEIRO."); 
-            return; 
-        }
-        
-        const nomeFinal = document.getElementById('nomeProduto').value.trim().toUpperCase() || 'PRODUTO SEM NOME';
-        const linkFinal = document.getElementById('linkProduto').value.trim();
+/* ---------- Modal editar produto ---------- */
+async function abrirModalProduto(id) {
+    const p = produtos.find(x => x.id === id);
+    if (!p) return;
+    produtoModalId = id;
+    $("edNome").value = p.nome;
+    $("edLink").value = p.link;
+    $("edCusto").value = Fmt.num(p.custoProducaoBase);
+    $("edPreco").value = Fmt.num(p.precoBase);
+    $("btnRecalcular").style.display = p.parametros ? "" : "none";
+    const comp = $("edComponentes");
+    if (p.tipo === "KIT" && p.componentes) {
+        comp.style.display = "block";
+        comp.innerHTML = `<strong style="color:#6f42c1; font-size:12px">COMPOSIÇÃO DO KIT:</strong><br><span style="font-size:12px">${Fmt.esc(textoComponentes(p.componentes))}</span>`;
+    } else comp.style.display = "none";
+    $("edSeletorLink").style.display = "none";
+    $("edSeletorLink").innerHTML = "";
+    $("modalProduto").classList.add("aberto");
+    await renderizarFotosModal();
+}
 
-        const novoRegistro = {
-            nome: nomeFinal,
-            link: linkFinal,
-            data: ultimoCalculo.data,
-            quantidade: 1, 
-            tipo_filamento: ultimoCalculo.tipoFilamento,
-            custo_producao_base: ultimoCalculo.custoProducaoBase,
-            preco_base: ultimoCalculo.precoBase,
-            vendido: false
-        };
+async function renderizarFotosModal() {
+    const box = $("edFotos");
+    if (!DB.schemaNovo) { box.innerHTML = '<span class="dica">Execute sql/migracao.sql no Supabase para habilitar fotos.</span>'; return; }
+    box.innerHTML = '<span class="dica">Carregando fotos...</span>';
+    try {
+        const fotos = await DB.listarFotosProduto(produtoModalId);
+        box.innerHTML = fotos.length ? fotos.map(f =>
+            `<div class="foto-item"><img src="${f.thumb}"><button type="button" title="Remover" onclick="removerFoto(${f.id})">✕</button></div>`).join("")
+            : '<span class="dica">Nenhuma foto. Adicione abaixo.</span>';
+    } catch (e) { box.innerHTML = ""; UI.erro("Erro ao carregar fotos", e); }
+}
 
-        const { data, error } = await supabaseClient.from('3dbsb').insert([novoRegistro]).select();
-        if (error) {
-            alert("Erro ao salvar no Supabase: " + error.message);
-            return;
-        }
+async function adicionarFotosProduto(files) {
+    if (!produtoModalId) return;
+    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
+    try {
+        const fotos = await processarArquivos(files);
+        await gravarFotos(produtoModalId, fotos);
+        UI.toast(`📷 ${fotos.length} FOTO(S) ADICIONADA(S)`);
+        await renderizarFotosModal();
+        renderizarCatalogo();
+    } catch (e) { UI.erro("Erro ao salvar fotos", e); }
+    $("edNovasFotos").value = "";
+}
 
-        if (data && data.length > 0) {
-            const itemSalvo = data[0];
-            historicoProdutos.push({
-                id: itemSalvo.id,
-                nome: itemSalvo.nome,
-                link: itemSalvo.link,
-                data: itemSalvo.data,
-                tipoFilamento: itemSalvo.tipo_filamento,
-                custoProducaoBase: itemSalvo.custo_producao_base,
-                precoBase: itemSalvo.preco_base
-            });
-            renderizarHistorico();
-            atualizarOpcoesFiltro();
-            alert("✅ PRODUTO SALVO NO CATÁLOGO COM SUCESSO!");
-        }
-    }
-
-    async function editarProduto(id) {
-        const prod = historicoProdutos.find(p => p.id === id);
-        if(!prod) return;
-
-        const novoNome = prompt("Digite o novo nome do produto:", prod.nome);
-        if (novoNome === null) return;
-        
-        const novoLink = prompt("Digite o novo link de referência (opcional):", prod.link || "");
-        if (novoLink === null) return;
-
-        const { error } = await supabaseClient.from('3dbsb').update({ nome: novoNome.toUpperCase(), link: novoLink }).eq('id', id);
-        
-        if (!error) {
-            prod.nome = novoNome.toUpperCase();
-            prod.link = novoLink;
-            renderizarHistorico();
-            atualizarOpcoesFiltro();
-        } else {
-            alert("Erro ao atualizar o produto: " + error.message);
-        }
-    }
-
-    async function excluirDoHistorico(idNum) {
-        if(confirm("EXCLUIR ESTE REGISTRO DEFINITIVAMENTE DO CATÁLOGO?")) {
-            await supabaseClient.from('3dbsb').delete().eq('id', idNum);
-            historicoProdutos = historicoProdutos.filter(p => p.id !== idNum);
-            renderizarHistorico();
-            atualizarOpcoesFiltro();
-        }
-    }
-
-    function atualizarOpcoesFiltro() {
-        const selectProd = document.getElementById('filtroEstoqueProduto');
-        const selectFil = document.getElementById('filtroEstoqueFilamento');
-        const prods = [...new Set(historicoProdutos.map(p => p.nome))].sort();
-        const fils = [...new Set(historicoProdutos.map(p => p.tipoFilamento))].sort();
-        selectProd.innerHTML = '<option value="TODOS">TODOS</option>';
-        prods.forEach(p => selectProd.innerHTML += `<option value="${p}">${p}</option>`);
-        selectFil.innerHTML = '<option value="TODOS">TODOS</option>';
-        fils.forEach(f => selectFil.innerHTML += `<option value="${f}">${f}</option>`);
-    }
-
-    function renderizarHistorico() {
-        const tbody = document.getElementById('corpoHistorico');
-        tbody.innerHTML = '';
-        const termoBusca = document.getElementById('pesquisaHistorico').value.toUpperCase();
-        const fProd = document.getElementById('filtroEstoqueProduto').value;
-        const fFil = document.getElementById('filtroEstoqueFilamento').value;
-
-        let prods = [...historicoProdutos].filter(p => p.nome.includes(termoBusca));
-        if(fProd !== 'TODOS') prods = prods.filter(p => p.nome === fProd);
-        if(fFil !== 'TODOS') prods = prods.filter(p => p.tipoFilamento === fFil);
-
-        // Ordena produtos em ordem alfabética antes de renderizar
-        prods.sort((a, b) => a.nome.localeCompare(b.nome));
-
-        if (prods.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#777;">NENHUM PRODUTO SALVO NO CATÁLOGO.</td></tr>'; return; }
-
-        prods.forEach((prod) => {
-            const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            
-            const custoBase = prod.custoProducaoBase;
-            const pBaseTotal = prod.precoBase;
-            const lucroTotalFinal = pBaseTotal - custoBase;
-
-            let nomeHtml = prod.nome;
-            if (prod.link && prod.link.startsWith('http')) {
-                nomeHtml = `<a href="${prod.link}" target="_blank" class="produto-link" title="Abrir link do produto">${prod.nome}</a>`;
-            }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-size: 11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
-                    <td style="font-size: 10px;">${prod.data}</td>
-                    <td><span class="badge-filamento">${prod.tipoFilamento}</span></td>
-                    <td style="color: #dc3545; font-weight:bold;">${formatBRL(custoBase)}</td>
-                    <td style="color: #28a745; font-weight:bold;">${formatBRL(lucroTotalFinal)}</td>
-                    <td style="font-weight:bold; background:#e9ecef;">${formatBRL(pBaseTotal)}</td>
-                    <td style="text-align: center;"><input type="checkbox" class="checkbox-vendido" data-id="${prod.id}"></td>
-                    <td><button type="button" onclick="editarProduto(${prod.id})" class="btn-warning">✏️</button></td>
-                    <td><button type="button" onclick="excluirDoHistorico(${prod.id})" class="btn-danger" style="padding:6px 10px;">X</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    // ==== LÓGICA DO POP-UP (MODAL DE VENDAS) ====
-
-    function abrirModalVendaMultipla() {
-        const checkboxes = document.querySelectorAll('.checkbox-vendido:checked');
-        if (checkboxes.length === 0) {
-            alert("⚠️ Selecione pelo menos um produto na lista para vender.");
-            return;
-        }
-
-        itensVendaSelecionados = [];
-        checkboxes.forEach(cb => {
-            const id = cb.getAttribute('data-id');
-            const prod = historicoProdutos.find(p => p.id == id);
-            if (prod) {
-                itensVendaSelecionados.push({
-                    ...prod,
-                    qtdVenda: 1
-                });
-            }
-        });
-
-        embalagensVendaAtual = [];
-        document.getElementById('vendaFrete').value = "0,00";
-        document.getElementById('vendaMargem').value = "100,00";
-        document.getElementById('vendaDesconto').value = "0,00";
-        document.getElementById('vendaPlataforma').value = "0";
-        alterandoValorManualmente = false;
-
-        renderizarListaProdutosVenda();
-        renderizarListaEmbalagensVenda();
-        calcularModalVenda();
-
-        document.getElementById('modalVendaConfirmacao').style.display = 'flex';
-    }
-
-    function fecharModalVenda() {
-        document.getElementById('modalVendaConfirmacao').style.display = 'none';
-        const checkboxes = document.querySelectorAll('.checkbox-vendido');
-        checkboxes.forEach(cb => cb.checked = false); 
-        itensVendaSelecionados = [];
-        embalagensVendaAtual = [];
-        alterandoValorManualmente = false;
-    }
-
-    function renderizarListaProdutosVenda() {
-        const div = document.getElementById('listaProdutosVenda');
-        let html = `
-            <table style="width:100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px;">
-                <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="text-align: left; padding: 8px; border: 1px solid #ddd;">PRODUTO</th>
-                        <th style="width: 80px; padding: 8px; border: 1px solid #ddd;">QTD</th>
-                        <th style="width: 140px; padding: 8px; border: 1px solid #ddd;">CUSTO TOTAL (PRODUÇÃO)</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        itensVendaSelecionados.forEach((item, index) => {
-            const custoTotalItem = item.custoProducaoBase * item.qtdVenda;
-            const formatedCusto = custoTotalItem.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            
-            html += `
-                <tr>
-                    <td style="text-align: left; padding: 8px; border: 1px solid #ddd; font-weight:bold;">${item.nome}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align:center;">
-                        <input type="number" min="1" value="${item.qtdVenda}" onchange="atualizarQtdVenda(${index}, this.value)" style="width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px;">
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align:center; color:#dc3545; font-weight:bold;">${formatedCusto}</td>
-                </tr>
-            `;
-        });
-        html += '</tbody></table>';
-        div.innerHTML = html;
-    }
-
-    function atualizarQtdVenda(index, value) {
-        let val = parseInt(value);
-        if(isNaN(val) || val < 1) val = 1;
-        itensVendaSelecionados[index].qtdVenda = val;
-        alterandoValorManualmente = false;
-        renderizarListaProdutosVenda();
-        calcularModalVenda();
-    }
-
-    function renderizarSelectBiblioteca() {
-        // Ordena antes de criar as opções do pop-up
-        bibliotecaEmbalagens.sort((a, b) => a.nome.localeCompare(b.nome));
-
-        const select = document.getElementById('selectBibliotecaEmbalagem');
-        select.innerHTML = '<option value="">-- SELECIONE --</option>';
-        bibliotecaEmbalagens.forEach(emb => {
-            select.innerHTML += `<option value="${emb.id}">${emb.nome.toUpperCase()} - R$ ${parseFloat(emb.valor).toFixed(2).replace('.',',')}</option>`;
-        });
-    }
-
-    function adicionarEmbalagemVenda() {
-        const select = document.getElementById('selectBibliotecaEmbalagem');
-        const embBiblio = bibliotecaEmbalagens.find(e => e.id == select.value);
-        if(embBiblio) {
-            embalagensVendaAtual.push({ instanceId: Date.now(), nome: embBiblio.nome, valor: parseFloat(embBiblio.valor), qtd: 1 });
-            alterandoValorManualmente = false;
-            renderizarListaEmbalagensVenda();
-            calcularModalVenda();
-        }
-        select.value = "";
-    }
-
-    function atualizarQtdEmbalagem(instanceId, novaQtd) {
-        let val = parseInt(novaQtd);
-        if(isNaN(val) || val < 1) val = 1;
-        const emb = embalagensVendaAtual.find(e => e.instanceId === instanceId);
-        if(emb) {
-            emb.qtd = val;
-            alterandoValorManualmente = false;
-            renderizarListaEmbalagensVenda();
-            calcularModalVenda();
-        }
-    }
-
-    function removerEmbalagemVenda(instanceId) {
-        embalagensVendaAtual = embalagensVendaAtual.filter(e => e.instanceId !== instanceId);
-        alterandoValorManualmente = false;
-        renderizarListaEmbalagensVenda();
-        calcularModalVenda();
-    }
-
-    function renderizarListaEmbalagensVenda() {
-        const listDiv = document.getElementById('listaEmbalagensVenda');
-        listDiv.innerHTML = '';
-        let total = 0;
-        if(embalagensVendaAtual.length === 0) {
-            listDiv.innerHTML = '<span style="color:#777; font-size:12px;">Nenhuma embalagem selecionada.</span>';
-        } else {
-            embalagensVendaAtual.forEach((emb) => {
-                const qtd = emb.qtd || 1;
-                const subtotalEmb = emb.valor * qtd;
-                total += subtotalEmb;
-                listDiv.innerHTML += `
-                    <div class="item-embalagem" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                        <span style="font-size:12px; font-weight:bold; flex:1;">${emb.nome} (R$ ${emb.valor.toFixed(2).replace('.',',')} un.)</span>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <label style="font-size:11px; font-weight:bold; margin:0;">QTD:</label>
-                            <input type="number" min="1" value="${qtd}" onchange="atualizarQtdEmbalagem(${emb.instanceId}, this.value)" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
-                            <span style="font-size:13px; font-weight:bold; color:#d39e00; width:90px; text-align:right;">R$ ${subtotalEmb.toFixed(2).replace('.',',')}</span>
-                            <button type="button" class="btn-danger" style="padding:4px 8px; margin:0;" onclick="removerEmbalagemVenda(${emb.instanceId})">X</button>
-                        </div>
-                    </div>`;
-            });
-        }
-        document.getElementById('totalEmbalagemModal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
-    }
-
-    function calcularModalVenda() {
-        if(itensVendaSelecionados.length === 0) return;
-
-        const taxaPlataforma = converterStringParaFloat(document.getElementById('vendaPlataforma').value) / 100;
-        const margem = converterStringParaFloat(document.getElementById('vendaMargem').value) / 100;
-        const descontoPerc = converterStringParaFloat(document.getElementById('vendaDesconto').value) / 100;
-        const frete = converterStringParaFloat(document.getElementById('vendaFrete').value);
-
-        let custoProducaoTotal = 0;
-        itensVendaSelecionados.forEach(item => {
-            custoProducaoTotal += item.custoProducaoBase * item.qtdVenda;
-        });
-
-        let custoEmbalagens = 0;
-        embalagensVendaAtual.forEach(emb => {
-            custoEmbalagens += emb.valor * (emb.qtd || 1);
-        });
-
-        const custoTotal = custoProducaoTotal + custoEmbalagens + frete;
-        
-        let valorTotalFinal = 0;
-
-        if (!alterandoValorManualmente) {
-            const precoAlvo = custoTotal * (1 + margem);
-            let precoPlat = precoAlvo;
-            if (taxaPlataforma < 1 && taxaPlataforma > 0) {
-                precoPlat = precoAlvo / (1 - taxaPlataforma);
-            }
-            let valorDescontoCalc = precoPlat * descontoPerc;
-            valorTotalFinal = Math.max(0, precoPlat - valorDescontoCalc);
-            
-            let vStr = valorTotalFinal.toFixed(2).replace('.', ',');
-            vStr = vStr.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            document.getElementById('vendaValorTotal').value = vStr;
-        } else {
-            valorTotalFinal = converterStringParaFloat(document.getElementById('vendaValorTotal').value);
-        }
-
-        let valorTaxa = valorTotalFinal * taxaPlataforma;
-        let lucroLiquido = valorTotalFinal - valorTaxa - custoTotal;
-        let percLucro = custoTotal > 0 ? (lucroLiquido / custoTotal) * 100 : 0;
-
-        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        document.getElementById('vendaCustoTotalCalc').innerText = formatBRL(custoTotal);
-        document.getElementById('vendaTaxaPlat').innerText = formatBRL(valorTaxa);
-        document.getElementById('vendaLucroFinal').innerText = formatBRL(lucroLiquido);
-        document.getElementById('vendaPercLucro').innerText = `(${percLucro.toFixed(2)}%)`;
-        
-        document.getElementById('vendaPercLucro').style.color = lucroLiquido >= 0 ? "#555" : "#dc3545";
-        document.getElementById('vendaLucroFinal').style.color = lucroLiquido >= 0 ? "#28a745" : "#dc3545";
-    }
-
-    function calcularModalVendaPorValorManual() {
-        alterandoValorManualmente = true;
-        calcularModalVenda();
-    }
-
-    async function confirmarVendaModal() {
-        if(itensVendaSelecionados.length === 0) return;
-        
-        const selectPlat = document.getElementById('vendaPlataforma');
-        const nomePlataforma = selectPlat.options[selectPlat.selectedIndex].getAttribute('data-name');
-        
-        const custoTotalGlobal = converterStringParaFloat(document.getElementById('vendaCustoTotalCalc').innerText.replace('R$', '').trim());
-        const valorVendaGlobal = converterStringParaFloat(document.getElementById('vendaValorTotal').value);
-        const lucroLiquidoGlobal = converterStringParaFloat(document.getElementById('vendaLucroFinal').innerText.replace('R$', '').trim());
-        
-        let custoProducaoTotalBase = 0;
-        itensVendaSelecionados.forEach(item => { custoProducaoTotalBase += item.custoProducaoBase * item.qtdVenda; });
-
-        const novasVendas = [];
-
-        for (const item of itensVendaSelecionados) {
-            const custoBaseItem = item.custoProducaoBase * item.qtdVenda;
-            const proporcao = custoProducaoTotalBase > 0 ? (custoBaseItem / custoProducaoTotalBase) : (1 / itensVendaSelecionados.length);
-
-            const itemValorVenda = valorVendaGlobal * proporcao;
-            const itemCustoTotal = custoTotalGlobal * proporcao;
-            const itemLucro = lucroLiquidoGlobal * proporcao;
-
-            novasVendas.push({
-                nome: item.nome,
-                link: item.link || '',
-                quantidade: item.qtdVenda,
-                plataforma: nomePlataforma,
-                valor_venda: itemValorVenda,
-                custo: itemCustoTotal,
-                lucro: itemLucro,
-                data_venda: new Date().toLocaleDateString('pt-BR')
-            });
-        }
-        
-        const { data, error } = await supabaseClient.from('vendas').insert(novasVendas).select();
-        
-        if (error) {
-            alert("⚠️ Erro ao salvar vendas. Crie a tabela 'vendas' no Supabase conforme as instruções.");
-            novasVendas.forEach(d => { d.id = Date.now() + Math.random(); produtosVendidos.push(d); });
-        } else if (data) {
-            data.forEach(d => produtosVendidos.push(d));
-        }
-
-        fecharModalVenda();
-        renderizarDashboardVendidos();
-        alert("✅ Venda(s) salva(s) com sucesso! Os produtos continuam no catálogo.");
-    }
-
-    function renderizarDashboardVendidos() {
-        const tbody = document.getElementById('corpoVendidos');
-        tbody.innerHTML = '';
-        let tLucro = 0, tCusto = 0, tItens = 0;
-        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        [...produtosVendidos].reverse().forEach((item) => {
-            const lucroTotalSafe = item.lucro || item.lucro_total || 0;
-            const custoTotalSafe = item.custo || item.custo_total || 0;
-            const vendaTotalSafe = item.valor_venda || item.venda_total || 0;
-            const plat = item.plataforma || "N/A";
-
-            tLucro += lucroTotalSafe; 
-            tCusto += custoTotalSafe; 
-            tItens += item.quantidade || 1;
-            
-            let nomeHtml = item.nome;
-            if (item.link && item.link.startsWith('http')) {
-                nomeHtml = `<a href="${item.link}" target="_blank" class="produto-link">${item.nome}</a>`;
-            }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-family:monospace; font-size:10px; color:#666;">${item.data_venda || item.data}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
-                    <td style="text-align:center; font-weight:bold;">${item.quantidade || 1}</td>
-                    <td style="font-size:10px; font-weight:bold; color:#004085;">${plat}</td>
-                    <td style="color:#007bff; font-weight:bold;">${formatBRL(vendaTotalSafe)}</td>
-                    <td style="color:#dc3545; font-weight:bold;">${formatBRL(custoTotalSafe)}</td>
-                    <td style="color:#28a745; font-weight:bold;">${formatBRL(lucroTotalSafe)}</td>
-                    <td><button onclick="excluirDoVendidos(${item.id})" class="btn-danger">X</button></td>
-                </tr>`;
-        });
-        document.getElementById('dashLucroTotal').innerText = formatBRL(tLucro);
-        document.getElementById('dashCustoTotal').innerText = formatBRL(tCusto);
-        document.getElementById('dashQtdItens').innerText = `${tItens} UNID.`;
-        renderizarRanking();
-    }
-
-    function renderizarRanking() {
-        const tbody = document.getElementById('corpoRanking');
-        tbody.innerHTML = '';
-        if (produtosVendidos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">SEM DADOS DE VENDA</td></tr>'; return; }
-
-        const map = {};
-        produtosVendidos.forEach(i => {
-            if(!i.nome) return;
-            const nomeStr = i.nome;
-            if (!map[nomeStr]) map[nomeStr] = { nome: nomeStr, link: i.link, qtd: 0, lucro: 0 };
-            map[nomeStr].qtd += (i.quantidade || 1); 
-            map[nomeStr].lucro += (i.lucro || i.lucro_total || 0);
-        });
-
-        const arr = Object.values(map).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
-        const formatBRL = (v) => isNaN(v) ? "R$ 0,00" : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        arr.forEach((r, idx) => {
-            let m = `#${idx + 1}`;
-            if(idx === 0) m = '🥇 1º'; else if(idx === 1) m = '🥈 2º'; else if(idx === 2) m = '🥉 3º';
-            
-            let nomeHtml = r.nome;
-            if (r.link && r.link.startsWith('http')) {
-                nomeHtml = `<a href="${r.link}" target="_blank" class="produto-link" title="Acessar produto">${r.nome}</a>`;
-            }
-
-            tbody.innerHTML += `
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="font-weight:bold; color:#555;">${m}</td>
-                    <td style="font-size:11px; text-align:left; font-weight:bold;">${nomeHtml}</td>
-                    <td style="text-align:center; font-weight:bold; color:#333;">${r.qtd}</td>
-                    <td style="color:#28a745; font-weight:bold; text-align:right;">${formatBRL(r.lucro)}</td>
-                </tr>`;
-        });
-    }
-
-    async function excluirDoVendidos(idNum) {
-        if(confirm("EXCLUIR ESTA VENDA?")) {
-            await supabaseClient.from('vendas').delete().eq('id', idNum);
-            produtosVendidos = produtosVendidos.filter(p => p.id !== idNum);
-            renderizarDashboardVendidos();
-        }
-    }
-
-    async function limparVendidos() {
-        if(confirm("APAGAR TODO O HISTÓRICO DE VENDAS?")) {
-            const idsParaDeletar = produtosVendidos.map(p => p.id);
-            if (idsParaDeletar.length > 0) {
-                await supabaseClient.from('vendas').delete().in('id', idsParaDeletar);
-            }
-            produtosVendidos = [];
-            renderizarDashboardVendidos();
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        calcular();
-        carregarEmbalagensSupabase();
-        carregarDadosSupabase();
-        carregarVendasSupabase();
+/* Fotos de referência a partir do link cadastrado (MakerWorld etc.) */
+function buscarFotosLinkProduto() {
+    if (!produtoModalId) return;
+    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
+    const id = produtoModalId;
+    Importar.seletor($("edSeletorLink"), $("edLink").value.trim(), async blobs => {
+        const fotos = await processarArquivos(blobs);
+        await gravarFotos(id, fotos);
+        UI.toast(`📷 ${fotos.length} FOTO(S) DO LINK ADICIONADA(S)`);
+        if (produtoModalId === id) await renderizarFotosModal();
+        renderizarCatalogo();
     });
-</script>
+}
 
+function buscarFotosLinkNovo() {
+    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
+    const url = $("linkProduto").value.trim();
+    if (!Fmt.linkSeguro(url)) { UI.toast("PREENCHA O LINK DO PRODUTO (URL) NA SEÇÃO 1.", "aviso"); return; }
+    Importar.seletor($("seletorLinkNovo"), url, async blobs => {
+        fotosNovoProduto.push(...await processarArquivos(blobs));
+        renderizarPreviewFotosNovo();
+        UI.toast("📷 FOTOS PRONTAS — ELAS SERÃO SALVAS JUNTO COM O PRODUTO.");
+    });
+}
+
+async function removerFoto(fotoId) {
+    if (!confirm("REMOVER ESTA FOTO?")) return;
+    try {
+        await DB.excluirFoto(fotoId);
+        fotosResumo = await DB.resumoFotos();
+        await renderizarFotosModal();
+        renderizarCatalogo();
+    } catch (e) { UI.erro("Erro ao remover foto", e); }
+}
+
+async function salvarEdicaoProduto() {
+    const campos = {
+        nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME",
+        link: $("edLink").value.trim(),
+        custo_producao_base: Fmt.parse($("edCusto").value),
+        preco_base: Fmt.parse($("edPreco").value)
+    };
+    try {
+        const salvo = await DB.atualizarProduto(produtoModalId, campos);
+        produtos = produtos.map(p => p.id === produtoModalId ? (salvo || { ...p, ...campos }) : p);
+        fecharModalProduto();
+        atualizarFiltros(); renderizarCatalogo();
+        UI.toast("✅ PRODUTO ATUALIZADO!");
+    } catch (e) { UI.erro("Erro ao atualizar", e); }
+}
+
+function carregarNaCalculadora() {
+    const p = produtos.find(x => x.id === produtoModalId);
+    if (!p || !p.parametros) return;
+    Object.entries(p.parametros).forEach(([id, val]) => { if ($(id)) $(id).value = val; });
+    editandoId = p.id;
+    $("bannerEdicaoTexto").textContent = `✏️ EDITANDO "${p.nome}" — ALTERE OS VALORES E CLIQUE EM ATUALIZAR`;
+    $("bannerEdicao").style.display = "flex";
+    $("btnSalvarProduto").textContent = "ATUALIZAR PRODUTO NO CATÁLOGO";
+    fecharModalProduto();
+    calcular();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function fecharModalProduto() {
+    $("modalProduto").classList.remove("aberto");
+    produtoModalId = null;
+}
+
+/* ======================= EMBALAGENS ======================= */
+async function carregarEmbalagens() {
+    try { embalagens = await DB.listarEmbalagens(); }
+    catch (e) { UI.erro("Erro ao carregar embalagens", e); embalagens = []; }
+    renderizarEmbalagens();
+}
+
+function renderizarEmbalagens() {
+    embalagens.sort((a, b) => a.nome.localeCompare(b.nome));
+    $("corpoEmbalagens").innerHTML = embalagens.length ? embalagens.map(e => `
+        <tr><td class="esq" style="font-weight:bold">${Fmt.esc(e.nome)}</td>
+            <td style="font-weight:bold; color:#007bff">${Fmt.brl(e.valor)}</td>
+            <td><button type="button" class="btn-warning btn-sm" onclick="editarEmbalagem(${e.id})">✏️</button></td>
+            <td><button type="button" class="btn-danger btn-sm" onclick="excluirEmbalagem(${e.id})">X</button></td></tr>`).join("")
+        : '<tr><td colspan="4" style="color:#777">NENHUMA EMBALAGEM CADASTRADA.</td></tr>';
+    $("selectEmbalagemVenda").innerHTML = '<option value="">-- SELECIONE --</option>' +
+        embalagens.map(e => `<option value="${e.id}">${Fmt.esc(e.nome)} - ${Fmt.brl(e.valor)}</option>`).join("");
+}
+
+async function salvarEmbalagem() {
+    const nome = $("catEmbNome").value.trim().toUpperCase();
+    const valor = Fmt.parse($("catEmbValor").value);
+    if (!nome || valor <= 0) { UI.toast("PREENCHA O NOME E UM VALOR VÁLIDO.", "aviso"); return; }
+    try {
+        embalagens.push(await DB.inserirEmbalagem({ nome, valor }));
+        $("catEmbNome").value = ""; $("catEmbValor").value = "";
+        renderizarEmbalagens();
+        UI.toast("✅ EMBALAGEM ADICIONADA");
+    } catch (e) { UI.erro("Erro ao salvar embalagem", e); }
+}
+
+async function editarEmbalagem(id) {
+    const emb = embalagens.find(e => e.id === id);
+    if (!emb) return;
+    const nome = prompt("Novo nome da embalagem:", emb.nome);
+    if (nome === null) return;
+    const valorStr = prompt("Novo valor unitário (ex: 2,50):", Fmt.num(emb.valor));
+    if (valorStr === null) return;
+    const campos = { nome: nome.trim().toUpperCase() || emb.nome, valor: Fmt.parse(valorStr) };
+    try { await DB.atualizarEmbalagem(id, campos); Object.assign(emb, campos); renderizarEmbalagens(); }
+    catch (e) { UI.erro("Erro ao atualizar", e); }
+}
+
+async function excluirEmbalagem(id) {
+    if (!confirm("EXCLUIR ESTA EMBALAGEM DO CATÁLOGO?")) return;
+    try { await DB.excluirEmbalagem(id); embalagens = embalagens.filter(e => e.id !== id); renderizarEmbalagens(); }
+    catch (e) { UI.erro("Erro ao excluir", e); }
+}
+
+/* ======================= MODAL DE VENDA ======================= */
+function totalUnidades() { return venda.itens.reduce((s, i) => s + i.qtd, 0); }
+function podeSerKit() { return totalUnidades() > 1; }
+
+function abrirModalVenda() {
+    if (!selecionados.size) { UI.toast("⚠️ SELECIONE PELO MENOS UM PRODUTO NO CATÁLOGO.", "aviso"); return; }
+    venda.itens = [...selecionados].map(id => produtos.find(p => p.id === id)).filter(Boolean).map(p => ({ ...p, qtd: 1 }));
+    venda.embalagens = [];
+    venda.valorManual = false;
+    $("vendaFrete").value = "0,00";
+    $("vendaDesconto").value = "0,00";
+    $("vendaTaxaOutro").value = "0,00";
+    $("vendaPlataforma").value = "DIRETA";
+    $("grupoTaxaOutro").style.display = "none";
+    $("kitNome").value = "";
+    document.querySelector('input[name="modoVenda"][value="INDIVIDUAL"]').checked = true;
+    definirModoVenda("INDIVIDUAL", true);
+    definirMargemPadrao();
+    renderizarItensVenda();
+    renderizarEmbalagensVenda();
+    calcularVenda();
+    $("modalVenda").classList.add("aberto");
+}
+
+function fecharModalVenda() {
+    $("modalVenda").classList.remove("aberto");
+    venda.itens = []; venda.embalagens = []; venda.valorManual = false;
+}
+
+function definirMargemPadrao() {
+    const custo = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0);
+    const preco = venda.itens.reduce((s, i) => s + i.precoBase * i.qtd, 0);
+    $("vendaMargem").value = Fmt.num(Calc.margemImplicita(custo, preco));
+}
+
+function nomeKitPadrao() {
+    return "KIT " + venda.itens.map(i => {
+        const nome = i.tipo === "KIT" ? `(${i.nome.replace(/^KIT\s+/, "")})` : i.nome;
+        return (i.qtd > 1 ? `${i.qtd}X ` : "") + nome;
+    }).join(" + ");
+}
+
+function nomeKitSugerido() {
+    const existe = kitExistente();
+    return existe ? existe.nome : nomeKitPadrao();
+}
+
+function definirModoVenda(modo, semRecalculo) {
+    venda.modo = modo;
+    $("opcaoIndividual").classList.toggle("ativo", modo === "INDIVIDUAL");
+    $("opcaoKit").classList.toggle("ativo", modo === "KIT");
+    $("kitBox").style.display = modo === "KIT" ? "block" : "none";
+    if (modo === "KIT" && !$("kitNome").value.trim()) $("kitNome").value = nomeKitSugerido();
+    atualizarInfoKit();
+    if (!semRecalculo) calcularVenda();
+}
+
+function assinaturaKit(componentes) {
+    return componentes.map(c => `${c.id}:${c.qtd}`).sort().join("|");
+}
+
+function componentesVenda() {
+    return venda.itens.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd, custo: +i.custoProducaoBase.toFixed(4) }));
+}
+
+function kitExistente() {
+    const sig = assinaturaKit(componentesVenda());
+    return produtos.find(p => p.tipo === "KIT" && Array.isArray(p.componentes) && assinaturaKit(p.componentes) === sig);
+}
+
+function atualizarInfoKit() {
+    if (venda.modo !== "KIT") return;
+    const custo = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0);
+    const existe = kitExistente();
+    $("kitInfo").innerHTML = existe
+        ? `ℹ️ Este kit já existe no catálogo como <b>${Fmt.esc(existe.nome)}</b> — a venda será lançada nele e o custo será atualizado para <b>${Fmt.brl(custo)}</b>.`
+        : `➕ Ao finalizar, este kit entra automaticamente no catálogo com custo total de <b>${Fmt.brl(custo)}</b> (soma dos produtos).`;
+}
+
+function renderizarItensVenda() {
+    $("listaProdutosVenda").innerHTML = `
+        <div class="table-responsive"><table style="min-width:0; font-size:12px">
+            <thead><tr><th class="esq">PRODUTO</th><th style="width:80px">QTD</th><th style="width:150px">CUSTO PRODUÇÃO</th><th style="width:150px">PREÇO BASE</th><th style="width:50px"></th></tr></thead>
+            <tbody>${venda.itens.map((i, idx) => `
+                <tr><td class="esq" style="font-weight:bold; white-space:normal">${i.tipo === "KIT" ? '<span class="badge kit">KIT</span> ' : ""}${Fmt.esc(i.nome)}</td>
+                    <td><input type="number" min="1" value="${i.qtd}" class="qtd-input" onchange="alterarQtdItem(${idx}, this.value)"></td>
+                    <td style="color:#dc3545; font-weight:bold">${Fmt.brl(i.custoProducaoBase * i.qtd)}</td>
+                    <td style="font-weight:bold">${Fmt.brl(i.precoBase * i.qtd)}</td>
+                    <td><button type="button" class="btn-danger btn-sm" title="Remover da venda" onclick="removerItemVenda(${idx})">X</button></td></tr>`).join("")}
+            </tbody></table></div>`;
+    $("blocoModoVenda").style.display = podeSerKit() ? "block" : "none";
+    if (!podeSerKit() && venda.modo === "KIT") {
+        document.querySelector('input[name="modoVenda"][value="INDIVIDUAL"]').checked = true;
+        definirModoVenda("INDIVIDUAL", true);
+    }
+}
+
+function alterarQtdItem(idx, valor) {
+    venda.itens[idx].qtd = Math.max(1, parseInt(valor, 10) || 1);
+    venda.valorManual = false;
+    if (venda.modo === "KIT") $("kitNome").value = nomeKitSugerido();
+    renderizarItensVenda(); definirMargemPadrao(); atualizarInfoKit(); calcularVenda();
+}
+
+function removerItemVenda(idx) {
+    const [item] = venda.itens.splice(idx, 1);
+    selecionados.delete(item.id);
+    atualizarBotaoVender(); renderizarCatalogo();
+    if (!venda.itens.length) { fecharModalVenda(); return; }
+    venda.valorManual = false;
+    if (venda.modo === "KIT") $("kitNome").value = nomeKitSugerido();
+    renderizarItensVenda(); definirMargemPadrao(); atualizarInfoKit(); calcularVenda();
+}
+
+function adicionarEmbalagemVenda() {
+    const emb = embalagens.find(e => String(e.id) === $("selectEmbalagemVenda").value);
+    if (!emb) return;
+    const existente = venda.embalagens.find(e => e.id === emb.id);
+    existente ? existente.qtd++ : venda.embalagens.push({ id: emb.id, nome: emb.nome, valor: emb.valor, qtd: 1 });
+    $("selectEmbalagemVenda").value = "";
+    venda.valorManual = false;
+    renderizarEmbalagensVenda(); calcularVenda();
+}
+
+function alterarQtdEmbalagem(idx, valor) {
+    venda.embalagens[idx].qtd = Math.max(1, parseInt(valor, 10) || 1);
+    venda.valorManual = false;
+    renderizarEmbalagensVenda(); calcularVenda();
+}
+
+function removerEmbalagemVenda(idx) {
+    venda.embalagens.splice(idx, 1);
+    venda.valorManual = false;
+    renderizarEmbalagensVenda(); calcularVenda();
+}
+
+function renderizarEmbalagensVenda() {
+    const total = venda.embalagens.reduce((s, e) => s + e.valor * e.qtd, 0);
+    $("listaEmbalagensVenda").innerHTML = venda.embalagens.length ? venda.embalagens.map((e, i) => `
+        <div class="item-embalagem">
+            <span style="font-size:12px; font-weight:bold; flex:1">${Fmt.esc(e.nome)} (${Fmt.brl(e.valor)} un.)</span>
+            <div style="display:flex; align-items:center; gap:10px">
+                <label style="font-size:11px; margin:0">QTD:</label>
+                <input type="number" min="1" value="${e.qtd}" class="qtd-input" style="width:50px" onchange="alterarQtdEmbalagem(${i}, this.value)">
+                <span style="font-size:13px; font-weight:bold; color:#d39e00; width:90px; text-align:right">${Fmt.brl(e.valor * e.qtd)}</span>
+                <button type="button" class="btn-danger btn-sm" onclick="removerEmbalagemVenda(${i})">X</button>
+            </div></div>`).join("")
+        : '<span style="color:#777; font-size:12px">Nenhuma embalagem selecionada.</span>';
+    $("totalEmbalagemModal").textContent = Fmt.brl(total);
+}
+
+function calcularVenda() {
+    if (!venda.itens.length) return null;
+    const taxaPerc = UI.taxaPlataforma($("vendaPlataforma").value, $("vendaTaxaOutro"));
+    const custoProducao = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0);
+    const custoEmbalagens = venda.embalagens.reduce((s, e) => s + e.valor * e.qtd, 0);
+    const frete = Fmt.parse($("vendaFrete").value);
+    const custoTotal = custoProducao + custoEmbalagens + frete;
+
+    let valor;
+    if (venda.valorManual) valor = Fmt.parse($("vendaValorTotal").value);
+    else {
+        valor = Calc.precoVenda({ custo: custoTotal, margemPerc: Fmt.parse($("vendaMargem").value), taxaPerc, descontoPerc: Fmt.parse($("vendaDesconto").value) });
+        $("vendaValorTotal").value = Fmt.num(valor);
+    }
+    const r = Calc.resultado({ valor, custo: custoTotal, taxaPerc });
+    $("vendaCustoTotal").textContent = Fmt.brl(custoTotal);
+    $("vendaTaxaPlat").textContent = Fmt.brl(r.taxa);
+    $("vendaLucroFinal").textContent = Fmt.brl(r.lucro);
+    $("vendaPercLucro").textContent = `(${Fmt.num(r.percSobreCusto)}%)`;
+    const cor = r.lucro >= 0 ? "#28a745" : "#dc3545";
+    $("vendaLucroFinal").style.color = cor;
+    $("vendaPercLucro").style.color = r.lucro >= 0 ? "#555" : "#dc3545";
+
+    venda.resultado = { taxaPerc, custoProducao, custoEmbalagens, frete, custoTotal, valor, taxa: r.taxa, lucro: r.lucro,
+        plataforma: UI.nomePlataforma($("vendaPlataforma").value, $("vendaTaxaOutro")) };
+    return venda.resultado;
+}
+
+/** Busca o kit com a mesma composição ou cria um novo no catálogo */
+async function obterOuCriarKit(r) {
+    const componentes = componentesVenda();
+    let nome = ($("kitNome").value.trim().toUpperCase() || nomeKitPadrao());
+    if (!nome.startsWith("KIT")) nome = "KIT " + nome;
+    const custo = +r.custoProducao.toFixed(4);
+    const precoBase = +(custo * (1 + Fmt.parse($("vendaMargem").value) / 100)).toFixed(4);
+    const filamentos = [...new Set(venda.itens.map(i => i.tipoFilamento))].join(" + ");
+
+    // Sem a migração não há composição salva: reaproveita kit com o mesmo nome
+    const existente = kitExistente() || (!DB.schemaNovo && produtos.find(p => p.tipo === "KIT" && p.nome === nome));
+    if (existente) {
+        const atualizado = await DB.atualizarProduto(existente.id, { nome, custo_producao_base: custo, preco_base: precoBase, componentes });
+        const kit = atualizado || { ...existente, nome, custoProducaoBase: custo, precoBase, componentes };
+        produtos = produtos.map(p => p.id === kit.id ? kit : p);
+        return { kit, novo: false };
+    }
+    const kit = await DB.inserirProduto({
+        nome, link: "", data: Fmt.hoje(), quantidade: 1, tipo_filamento: filamentos, vendido: false,
+        custo_producao_base: custo, preco_base: precoBase, tipo: "KIT", componentes
+    });
+    produtos.push(kit);
+    return { kit, novo: true };
+}
+
+async function confirmarVenda() {
+    const r = calcularVenda();
+    if (!r) return;
+    if (r.valor <= 0 && !confirm("O VALOR DE VENDA ESTÁ ZERADO. CONFIRMAR?")) return;
+    if (r.lucro < 0 && !confirm(`ATENÇÃO: ESTA VENDA DÁ PREJUÍZO DE ${Fmt.brl(-r.lucro)}. CONFIRMAR?`)) return;
+
+    const btn = $("btnConfirmarVenda");
+    btn.disabled = true;
+    const data = Fmt.hoje();
+    try {
+        let registros, mensagem;
+        if (venda.modo === "KIT" && podeSerKit()) {
+            const { kit, novo } = await obterOuCriarKit(r);
+            registros = [{
+                nome: kit.nome, link: "", quantidade: 1, plataforma: r.plataforma,
+                valor_venda: +r.valor.toFixed(2), custo: +r.custoTotal.toFixed(2), lucro: +r.lucro.toFixed(2), data_venda: data,
+                produto_id: kit.id, tipo_venda: "KIT", itens: componentesVenda()
+            }];
+            mensagem = novo ? `✅ KIT VENDIDO E CADASTRADO NO CATÁLOGO: ${kit.nome}` : `✅ VENDA DO KIT ${kit.nome} LANÇADA`;
+        } else {
+            const pesos = venda.itens.map(i => i.custoProducaoBase * i.qtd);
+            const valores = Calc.ratear(r.valor, pesos);
+            const custos = Calc.ratear(r.custoTotal, pesos);
+            const taxas = Calc.ratear(r.taxa, pesos);
+            registros = venda.itens.map((i, k) => ({
+                nome: i.nome, link: i.link || "", quantidade: i.qtd, plataforma: r.plataforma,
+                valor_venda: valores[k], custo: custos[k], lucro: +(valores[k] - taxas[k] - custos[k]).toFixed(2), data_venda: data,
+                produto_id: i.id, tipo_venda: "INDIVIDUAL", itens: i.tipo === "KIT" ? i.componentes : null
+            }));
+            mensagem = "✅ VENDA(S) LANÇADA(S) COM SUCESSO!";
+        }
+        const salvas = await DB.inserirVendas(registros);
+        vendas.push(...salvas);
+        selecionados.clear();
+        fecharModalVenda();
+        atualizarBotaoVender(); atualizarFiltros(); renderizarCatalogo(); renderizarDashboard();
+        UI.toast(mensagem, "ok", 4500);
+    } catch (e) { UI.erro("Erro ao lançar venda", e); }
+    finally { btn.disabled = false; }
+}
+
+/* ======================= DASHBOARD ======================= */
+async function carregarVendas() {
+    try { vendas = await DB.listarVendas(); }
+    catch (e) { UI.erro("Erro ao carregar vendas", e); vendas = []; }
+    renderizarDashboard();
+}
+
+function vendasNoPeriodo() {
+    const f = $("filtroPeriodo").value;
+    if (f === "TODOS") return vendas;
+    const agora = new Date();
+    const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+    let inicio;
+    if (f === "HOJE") inicio = inicioHoje;
+    else if (f === "MES") inicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    else inicio = new Date(inicioHoje.getTime() - (Number(f) - 1) * 86400000);
+    return vendas.filter(v => Fmt.dataVenda(v) >= inicio);
+}
+
+function renderizarDashboard() {
+    const lista = vendasNoPeriodo();
+    let fat = 0, lucro = 0, custo = 0, itens = 0;
+    lista.forEach(v => {
+        fat += Number(v.valor_venda) || 0; lucro += Number(v.lucro) || 0; custo += Number(v.custo) || 0;
+        itens += Array.isArray(v.itens) && v.tipo_venda === "KIT" ? v.itens.reduce((s, c) => s + (c.qtd || 1), 0) : (Number(v.quantidade) || 1);
+    });
+    $("dashFaturamento").textContent = Fmt.brl(fat);
+    $("dashLucroTotal").textContent = Fmt.brl(lucro);
+    $("dashCustoTotal").textContent = Fmt.brl(custo);
+    $("dashQtdItens").textContent = `${itens} UNID.`;
+
+    $("corpoVendas").innerHTML = lista.length ? [...lista].reverse().map(v => {
+        const kit = v.tipo_venda === "KIT" || String(v.nome).startsWith("KIT");
+        const comp = Array.isArray(v.itens) ? `<div class="componentes">${Fmt.esc(textoComponentes(v.itens))}</div>` : "";
+        return `<tr>
+            <td style="font-family:monospace; font-size:10px; color:#666">${Fmt.esc(v.data_venda || v.data || "")}</td>
+            <td class="esq" style="font-weight:bold; white-space:normal; max-width:260px">${nomeComLink(v.nome, v.link)}${comp}</td>
+            <td>${kit ? '<span class="badge kit">KIT</span>' : '<span class="badge">INDIV.</span>'}</td>
+            <td style="font-weight:bold">${Number(v.quantidade) || 1}</td>
+            <td style="font-size:10px; font-weight:bold; color:#004085">${Fmt.esc(v.plataforma || "N/A")}</td>
+            <td style="color:#007bff; font-weight:bold">${Fmt.brl(v.valor_venda)}</td>
+            <td style="color:#dc3545; font-weight:bold">${Fmt.brl(v.custo)}</td>
+            <td style="color:${(Number(v.lucro) || 0) >= 0 ? "#28a745" : "#dc3545"}; font-weight:bold">${Fmt.brl(v.lucro)}</td>
+            <td><button type="button" class="btn-danger btn-sm" onclick="excluirVenda(${v.id})">X</button></td></tr>`;
+    }).join("") : '<tr><td colspan="9" style="color:#777">NENHUMA VENDA NO PERÍODO.</td></tr>';
+
+    renderizarRanking(lista);
+}
+
+function renderizarRanking(lista) {
+    const mapa = {};
+    const somar = (nome, link, qtd, lucro) => {
+        const m = mapa[nome] || (mapa[nome] = { nome, link, qtd: 0, lucro: 0 });
+        m.qtd += qtd; m.lucro += lucro;
+    };
+    lista.forEach(v => {
+        const lucro = Number(v.lucro) || 0;
+        if (v.tipo_venda === "KIT" && Array.isArray(v.itens) && v.itens.length) {
+            // Distribui o lucro do kit entre as peças, proporcional ao custo
+            const pesos = v.itens.map(c => (c.custo || 0) * (c.qtd || 1));
+            const partes = Calc.ratear(lucro, pesos);
+            v.itens.forEach((c, k) => somar(c.nome, "", c.qtd || 1, partes[k]));
+        } else if (v.nome) somar(v.nome, v.link, Number(v.quantidade) || 1, lucro);
+    });
+    const arr = Object.values(mapa).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
+    const medalha = i => ["🥇 1º", "🥈 2º", "🥉 3º"][i] || `#${i + 1}`;
+    $("corpoRanking").innerHTML = arr.length ? arr.map((r, i) => `
+        <tr><td style="font-weight:bold; color:#555">${medalha(i)}</td>
+            <td class="esq" style="font-weight:bold; white-space:normal">${nomeComLink(r.nome, r.link)}</td>
+            <td style="font-weight:bold">${r.qtd}</td>
+            <td style="color:#28a745; font-weight:bold; text-align:right">${Fmt.brl(r.lucro)}</td></tr>`).join("")
+        : '<tr><td colspan="4">SEM DADOS DE VENDA</td></tr>';
+}
+
+async function excluirVenda(id) {
+    if (!confirm("EXCLUIR ESTA VENDA?")) return;
+    try { await DB.excluirVenda(id); vendas = vendas.filter(v => v.id !== id); renderizarDashboard(); }
+    catch (e) { UI.erro("Erro ao excluir venda", e); }
+}
+
+async function limparVendas() {
+    if (!vendas.length) return;
+    if (!confirm(`APAGAR TODO O HISTÓRICO DE VENDAS (${vendas.length} REGISTROS)?`)) return;
+    if (prompt('ESTA AÇÃO NÃO PODE SER DESFEITA. DIGITE "APAGAR" PARA CONFIRMAR:') !== "APAGAR") return;
+    try { await DB.excluirVendas(vendas.map(v => v.id)); vendas = []; renderizarDashboard(); UI.toast("HISTÓRICO DE VENDAS APAGADO."); }
+    catch (e) { UI.erro("Erro ao limpar vendas", e); }
+}
+
+/* ======================= INICIALIZAÇÃO ======================= */
+document.addEventListener("DOMContentLoaded", () => Auth.exigir(iniciar));
+
+async function iniciar() {
+    UI.opcoesPlataforma($("vendaPlataforma"));
+    carregarPadroes();
+    calcular();
+    const st = $("statusCloud");
+    try {
+        const novo = await DB.verificarSchema();
+        if (novo) st.textContent = "☁️ SUPABASE CONECTADO (CATÁLOGO, VENDAS, EMBALAGENS E FOTOS)";
+        else { st.className = "status-cloud aviso"; st.textContent = "⚠️ CONECTADO — EXECUTE sql/migracao.sql PARA HABILITAR KITS COMPLETOS E FOTOS"; }
+    } catch (e) { st.className = "status-cloud erro"; st.textContent = "❌ SEM CONEXÃO COM O SUPABASE"; }
+    await Promise.all([carregarEmbalagens(), carregarProdutos(), carregarVendas()]);
+}
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
 </body>
 </html>
