@@ -96,17 +96,20 @@ const Fmt = {
 /* ============================ CÁLCULOS ============================= */
 const Calc = {
     /** Custo de produção de uma peça a partir dos parâmetros da calculadora */
+    /* Peso e tempo são da impressão inteira; o custo da impressão é dividido pelo
+       número de peças que saem dela. O trabalho manual é informado por peça. */
     producao(p) {
         const vidaUtil = p.vidaUtil > 0 ? p.vidaUtil : 1;
-        const material = (p.peso / 1000) * p.precoKg;
-        const energia = (p.potencia / 1000) * p.horasImpressao * p.tarifa;
-        const depreciacao = (p.valorMaquina / vidaUtil) * p.horasImpressao;
+        const pecas = Math.max(1, Math.round(p.pecas || 1));
+        const material = ((p.peso / 1000) * p.precoKg) / pecas;
+        const energia = ((p.potencia / 1000) * p.horasImpressao * p.tarifa) / pecas;
+        const depreciacao = ((p.valorMaquina / vidaUtil) * p.horasImpressao) / pecas;
         const maoDeObra = p.horasTrabalho * p.valorHora;
         const subtotal = material + energia + depreciacao + maoDeObra;
         const falhas = subtotal * (p.percFalhas / 100);
         const custoTotal = subtotal + falhas;
         const lucro = custoTotal * (p.percLucro / 100);
-        return { material, energia, depreciacao, maoDeObra, subtotal, falhas, custoTotal, lucro, preco: custoTotal + lucro };
+        return { pecas, material, energia, depreciacao, maoDeObra, subtotal, falhas, custoTotal, lucro, preco: custoTotal + lucro };
     },
 
     /** Preço final sugerido: custo + margem, embutindo a taxa da plataforma e aplicando desconto */
@@ -1335,8 +1338,15 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
                             <div class="campo"><label for="linkProduto">Link de referência</label>
                                 <div class="entrada"><input type="url" id="linkProduto" class="calc" placeholder="Opcional"></div></div>
                         </div>
-                        <div class="grade g4">
-                            <div class="campo"><label for="pesoPeca">Peso da peça</label>
+                        <div class="grade" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))">
+                            <div class="campo"><label for="pecasPorImpressao">Peças por impressão</label>
+                                <div class="passo" style="width:100%; justify-content:space-between; border-radius:10px">
+                                    <button type="button" onclick="passoPecas(-1)" aria-label="Menos">−</button>
+                                    <input type="text" inputmode="numeric" id="pecasPorImpressao" value="1" class="calc" style="flex:1; font-size:15px">
+                                    <button type="button" onclick="passoPecas(1)" aria-label="Mais">+</button>
+                                </div>
+                                <span class="dica">Quantas peças saem da placa</span></div>
+                            <div class="campo"><label for="pesoPeca">Peso da impressão</label>
                                 <div class="entrada"><input type="text" inputmode="numeric" id="pesoPeca" value="0,00" class="num moeda calc"><span class="un">g</span></div></div>
                             <div class="campo"><label for="comprimentoFilamento">Filamento usado</label>
                                 <div class="entrada"><input type="text" inputmode="numeric" id="comprimentoFilamento" value="0,00" class="num moeda calc"><span class="un">m</span></div></div>
@@ -1354,7 +1364,7 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
                     <div class="secao-form">
                         <h3><svg><use href="#i-maquina"/></svg>Impressora e energia</h3>
                         <div class="grade g3">
-                            <div class="campo"><label for="tempoImpressao">Tempo de impressão</label>
+                            <div class="campo"><label for="tempoImpressao">Tempo da impressão</label>
                                 <div class="entrada"><input type="text" inputmode="numeric" id="tempoImpressao" value="00:00:00" class="num hora calc"><span class="un">h:m:s</span></div></div>
                             <div class="campo"><label for="potenciaImpressora">Potência</label>
                                 <div class="entrada"><input type="text" inputmode="numeric" id="potenciaImpressora" value="100,00" class="num moeda calc padrao"><span class="un">W</span></div></div>
@@ -1370,7 +1380,7 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
                     <div class="secao-form">
                         <h3><svg><use href="#i-mao"/></svg>Seu trabalho e margens</h3>
                         <div class="grade g4">
-                            <div class="campo"><label for="tempoTrabalho">Trabalho manual</label>
+                            <div class="campo"><label for="tempoTrabalho">Trabalho manual por peça</label>
                                 <div class="entrada"><input type="text" inputmode="numeric" id="tempoTrabalho" value="00:00:00" class="num hora calc"><span class="un">h:m:s</span></div></div>
                             <div class="campo"><label for="valorHoraTrabalho">Valor da sua hora</label>
                                 <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="valorHoraTrabalho" value="0,00" class="num moeda calc padrao"></div></div>
@@ -1396,7 +1406,7 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
 
                 <aside class="painel-preco" aria-live="polite">
                     <div class="preco-topo">
-                        <small>Preço de venda sugerido</small>
+                        <small id="rotuloPreco">Preço de venda sugerido</small>
                         <div class="valor num" id="resPrecoSemTaxa">R$ 0,00</div>
                         <small>sem taxas de plataforma</small>
                         <div class="plataformas">
@@ -1408,7 +1418,8 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
                         <h3>Do que é feito o custo</h3>
                         <div class="barra-custo" id="barraCusto"></div>
                         <div class="legenda" id="legendaCusto"></div>
-                        <div class="linha-total"><span>Custo de produção</span><b id="resCustoTotal">R$ 0,00</b></div>
+                        <div class="linha-total"><span id="rotuloCusto">Custo de produção</span><b id="resCustoTotal">R$ 0,00</b></div>
+                        <div id="notaPecas" class="oculto" style="font-size:12px; color:var(--tinta-2); background:var(--carretel-claro); border-radius:8px; padding:8px 10px; margin-bottom:6px"></div>
                         <div class="linha-total lucro" style="margin-top:0"><span>Seu lucro</span><b id="resLucro">R$ 0,00</b></div>
                         <button type="button" class="btn grande" id="btnSalvarProduto" onclick="salvarProduto()" style="margin-top:12px">Salvar no catálogo</button>
                     </div>
@@ -1618,7 +1629,7 @@ let itensNota = [];
 const venda = { itens: [], embalagens: [], valorManual: false, modo: "INDIVIDUAL", resultado: null };
 
 const $ = id => document.getElementById(id);
-const CAMPOS_CALC = ["nomeProduto","linkProduto","comprimentoFilamento","pesoPeca","precoKg","tipoFilamento","potenciaImpressora",
+const CAMPOS_CALC = ["nomeProduto","linkProduto","pecasPorImpressao","comprimentoFilamento","pesoPeca","precoKg","tipoFilamento","potenciaImpressora",
     "tarifaEnergia","tempoImpressao","valorImpressora","vidaUtil","tempoTrabalho","valorHoraTrabalho","margemFalhas","margemLucro"];
 const CHAVE_PADROES = "calc3d_padroes_v2";
 const CORES_FIL = { "PLA": "#2BB673", "PLA SILK": "#C9A227", "PLA MATTE": "#8A9A8F", "PLA WOOD": "#9C6B3E", "PLA CF": "#3A3F3C", "PETG": "#2F7DD1",
@@ -1699,9 +1710,13 @@ function lerParametros() {
         horasImpressao: Fmt.hhmmssParaHoras(v("tempoImpressao")), tarifa: Fmt.parse(v("tarifaEnergia")),
         valorMaquina: Fmt.parse(v("valorImpressora")), vidaUtil: Fmt.parse(v("vidaUtil")),
         horasTrabalho: Fmt.hhmmssParaHoras(v("tempoTrabalho")), valorHora: Fmt.parse(v("valorHoraTrabalho")),
-        percFalhas: Fmt.parse(v("margemFalhas")), percLucro: Fmt.parse(v("margemLucro"))
+        percFalhas: Fmt.parse(v("margemFalhas")), percLucro: Fmt.parse(v("margemLucro")),
+        pecas: pecasPorImpressao()
     };
 }
+function pecasPorImpressao() { return Math.max(1, parseInt($("pecasPorImpressao").value, 10) || 1); }
+function definirPecas(n) { $("pecasPorImpressao").value = Math.max(1, Math.min(999, parseInt(n, 10) || 1)); calcular(); }
+function passoPecas(d) { definirPecas(pecasPorImpressao() + d); }
 
 function calcular() {
     const r = Calc.producao(lerParametros());
@@ -1711,6 +1726,14 @@ function calcular() {
     $("resPrecoCartao").textContent = Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 5 }));
     $("resCustoTotal").textContent = Fmt.brl(r.custoTotal);
     $("resLucro").textContent = Fmt.brl(r.lucro);
+    const multi = r.pecas > 1;
+    $("rotuloPreco").textContent = multi ? "Preço de venda sugerido por peça" : "Preço de venda sugerido";
+    $("rotuloCusto").textContent = multi ? "Custo de cada peça" : "Custo de produção";
+    $("notaPecas").classList.toggle("oculto", !multi);
+    if (multi) {
+        const impressao = (r.material + r.energia + r.depreciacao) * r.pecas;
+        $("notaPecas").innerHTML = `A impressão inteira (${r.pecas} peças) custa <b>${Fmt.brl(impressao)}</b> de material, energia e desgaste. Os valores acima são de <b>uma peça</b>.`;
+    }
     const partes = [
         ["Material", r.material, "#0E7C66"], ["Energia", r.energia, "#E8A33D"], ["Desgaste da impressora", r.depreciacao, "#5B7F95"],
         ["Seu trabalho", r.maoDeObra, "#6B4FBB"], ["Margem p/ falhas", r.falhas, "#C8412F"]
@@ -1734,6 +1757,7 @@ function limparCamposProduto() {
     ["nomeProduto", "linkProduto", "linkRapido"].forEach(id => $(id).value = "");
     ["comprimentoFilamento", "pesoPeca"].forEach(id => $(id).value = "0,00");
     ["tempoImpressao", "tempoTrabalho"].forEach(id => $(id).value = "00:00:00");
+    $("pecasPorImpressao").value = "1";
     fotosNovoProduto = []; thumbsPendentes = []; importacao = null;
     $("fotosNovoProduto").value = ""; $("arquivoBambu").value = "";
     $("seletorLinkNovo").style.display = "none";
@@ -1811,6 +1835,8 @@ function aplicarPlaca(i) {
     $("comprimentoFilamento").value = Fmt.num(p.comprimentoM);
     $("tempoImpressao").value = Bambu.segundosParaHHMMSS(p.tempoSeg);
     $("tipoFilamento").value = Bambu.tipoPrincipal(p.filamentos);
+    const nObj = (p.objetos || []).length;
+    $("pecasPorImpressao").value = nObj > 1 ? nObj : 1;
     if (!$("nomeProduto").value.trim() || $("nomeProduto").dataset.auto === "1") {
         const nomeObj = p.objetos && p.objetos.length === 1 ? Bambu.nomeBase(p.objetos[0]) : r.nome;
         $("nomeProduto").value = nomeObj.toUpperCase();
@@ -1831,10 +1857,24 @@ function aplicarPlaca(i) {
                 <b>Placa ${p.indice} lida do Bambu Studio</b> — ${Fmt.num(p.pesoG, 1)} g, ${Fmt.num(p.comprimentoM, 2)} m, ${Bambu.segundosParaHHMMSS(p.tempoSeg)} de impressão
                 <div class="filas">${filas}</div>
                 ${p.filamentos.length > 1 ? `<div style="font-size:12px; color:var(--tinta-2); margin-top:6px">Peça multicolor: o custo usa o peso total e o preço do kg informado abaixo.</div>` : ""}
+                ${blocoPecas(nObj > 1 ? `Encontrei ${nObj} objetos nesta placa (${Fmt.esc(p.objetos.slice(0, 4).join(", "))}${nObj > 4 ? "…" : ""}).` : "")}
             </div>
         </div>${placas ? `<div style="margin:-6px 0 16px">${r.placas.length} placas no arquivo. Escolha qual é este produto:${placas}</div>` : ""}`;
 }
 $("nomeProduto").addEventListener("input", () => { $("nomeProduto").dataset.auto = "0"; });
+
+/** Pergunta de quantas peças saem da impressão, com botões rápidos */
+function blocoPecas(aviso) {
+    const n = pecasPorImpressao();
+    return `<div style="margin-top:10px; background:#fff; border:1px solid #BFE0D5; border-radius:10px; padding:10px 12px">
+        <div style="font-size:13px; font-weight:700">Quantas peças saem desta impressão?</div>
+        ${aviso ? `<div style="font-size:12px; color:var(--tinta-2); margin:2px 0 6px">${aviso}</div>` : ""}
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px">
+            ${[1, 2, 3, 4, 5, 6, 8, 10].map(k => `<button type="button" class="btn mini ${k === n ? "" : "sec"}" onclick="definirPecas(${k}); this.parentNode.querySelectorAll('button').forEach(b => b.className = 'btn mini ' + (b === this ? '' : 'sec'))">${k}</button>`).join("")}
+        </div>
+        <div style="font-size:12px; color:var(--tinta-3); margin-top:6px">Peso e tempo são da impressão inteira. O preço calculado é de uma peça.</div>
+    </div>`;
+}
 
 /* ---------- Cadastro pelo link ---------- */
 async function cadastrarPeloLink() {
@@ -1864,6 +1904,7 @@ function aplicarPerfilLink(i) {
         if (p.comprimentoM) $("comprimentoFilamento").value = Fmt.num(p.comprimentoM);
         if (p.tempoSeg) $("tempoImpressao").value = Bambu.segundosParaHHMMSS(p.tempoSeg);
         if (p.filamentos && p.filamentos.length) $("tipoFilamento").value = Bambu.tipoPrincipal(p.filamentos);
+        $("pecasPorImpressao").value = p.pecas > 1 ? p.pecas : 1;
     }
     thumbsPendentes = thumbsPendentes.filter(t => t.origem !== "link");
     calcular();
@@ -1876,8 +1917,10 @@ function aplicarPerfilLink(i) {
             ${d.imagens && d.imagens[0] ? `<img src="${Fmt.esc(Importar.reduzida(d.imagens[0], 240))}" referrerpolicy="no-referrer" style="object-fit:cover" alt="">` : ""}
             <div style="flex:1"><b>${Fmt.esc(d.nome || "Modelo")}</b>
                 <div style="font-size:13px; color:var(--tinta-2)">${p ? `Perfil "${Fmt.esc(p.nome || "padrão")}": ${p.pesoG ? Fmt.num(p.pesoG, 1) + " g" : "peso não informado"}, ${p.tempoSeg ? Bambu.segundosParaHHMMSS(p.tempoSeg) : "tempo não informado"}${p.placas > 1 ? `, ${p.placas} placas` : ""}` : "O link não traz peso e tempo. Complete com o arquivo do Bambu Studio."}</div>
+                ${p ? blocoPecas(p.pecas > 1 ? `O perfil indica ${p.pecas} peças por impressão.` : "Confira na imagem da placa quantas peças saem de uma impressão.") : ""}
                 ${d.imagens && d.imagens.length ? `<button type="button" class="btn sec mini" style="margin-top:8px" onclick="buscarFotosLinkNovo()">Escolher fotos do modelo (${d.imagens.length})</button>` : ""}
             </div>
+            ${p && p.imagemPlaca ? `<figure style="margin:0; text-align:center; font-size:11px; color:var(--tinta-2)"><img src="${Fmt.esc(Importar.reduzida(p.imagemPlaca, 320))}" referrerpolicy="no-referrer" alt="Placa de impressão" style="width:150px; height:150px; object-fit:contain; background:#2B3330; border-radius:10px"><figcaption>Placa de impressão</figcaption></figure>` : ""}
         </div>${listaPerfis ? `<div style="margin:-6px 0 16px">${perfis.length} perfis de impressão. Escolha o que você usa:${listaPerfis}</div>` : ""}`;
 }
 
@@ -2085,6 +2128,7 @@ async function salvarEdicaoProduto() {
 function carregarNaCalculadora() {
     const p = produtos.find(x => x.id === produtoModalId);
     if (!p || !p.parametros) return;
+    $("pecasPorImpressao").value = "1";
     Object.entries(p.parametros).forEach(([id, v]) => { if ($(id)) $(id).value = v; });
     editandoId = p.id;
     $("bannerEdicaoTexto").textContent = `Editando "${p.nome}". Altere os valores e clique em Atualizar produto.`;
