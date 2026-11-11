@@ -3,477 +3,747 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CALCULADORA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</title>
+<title>Calculadora 3D</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<meta name="theme-color" content="#007bff">
+<meta name="theme-color" content="#0E7C66">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/core.js"></script>
+<script src="js/leitores.js"></script>
 <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,.1); max-width: 1350px; width: 100%; }
-    h1 { text-align: center; color: #333; font-size: 24px; margin: 0 0 15px; text-transform: uppercase; }
-    .topo { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-    .status-cloud { font-size: 12px; font-weight: bold; padding: 8px 12px; border-radius: 5px; border: 1px solid #28a745; color: #28a745; background: #e6f4ea; }
-    .status-cloud.aviso { border-color: #d39e00; color: #856404; background: #fff3cd; }
-    .status-cloud.erro { border-color: #dc3545; color: #721c24; background: #f8d7da; }
-    a.btn-app { background: #343a40; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+:root {
+    --mesa: #EEF2EF;          /* fundo: mesa PEI */
+    --papel: #FFFFFF;
+    --tinta: #17201C;
+    --tinta-2: #4E5C55;
+    --tinta-3: #85918B;
+    --linha: #DCE3DE;
+    --carretel: #0E7C66;      /* principal */
+    --carretel-escuro: #095C4C;
+    --carretel-claro: #E1F1EC;
+    --kit: #6B4FBB;
+    --kit-claro: #EFEAFB;
+    --alerta: #C8412F;
+    --alerta-claro: #FBEAE7;
+    --ambar: #B7791F;
+    --ambar-claro: #FDF3E1;
+    --raio-s: 8px; --raio-m: 12px; --raio-l: 18px;
+    --sombra: 0 1px 2px rgba(23,32,28,.06), 0 4px 16px rgba(23,32,28,.06);
+    --display: "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
+    --texto: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--texto); background: var(--mesa); color: var(--tinta); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); letter-spacing: -.01em; margin: 0; line-height: 1.15; }
+h1 { font-size: 30px; font-weight: 800; }
+h2 { font-size: 19px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 700; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--carretel) 45%, transparent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.oculto { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-    .section-title { margin: 25px 0 15px; font-size: 18px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grid-4-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-    .grid-dashboard-vendas { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; }
-    @media (max-width: 900px) { .grid-dashboard-vendas, .grid-2-cols { grid-template-columns: 1fr; } .grid-4-cards { grid-template-columns: 1fr 1fr; } body { padding: 8px; } .container { padding: 15px; } }
+/* ---------- Estrutura ---------- */
+.app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+.lateral { background: var(--tinta); color: #DDE6E1; padding: 22px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+.marca { display: flex; align-items: center; gap: 10px; padding: 0 8px 22px; }
+.marca img { width: 36px; height: 36px; border-radius: 9px; }
+.marca strong { font-family: var(--display); font-size: 17px; color: #fff; line-height: 1.1; display: block; }
+.marca span { font-size: 12px; color: #8FA39A; }
+.nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 0; background: none; border-radius: 10px; cursor: pointer; text-align: left; font-weight: 600; color: #C3D0CA; }
+.nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+a.nav-item { text-decoration: none; }
+.nav-item.ativo { background: var(--carretel); color: #fff; }
+.nav-item .contador { margin-left: auto; background: rgba(255,255,255,.18); border-radius: 20px; padding: 0 8px; font-size: 12px; }
+.lateral-rodape { margin-top: auto; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; }
+.lateral-rodape a, .lateral-rodape button { font-size: 13px; }
+.status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8FA39A; padding: 8px 12px 0; }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: #3BC48F; flex-shrink: 0; }
+.status.aviso i { background: #E8A33D; } .status.erro i { background: #E5533F; }
 
-    .metric-card { padding: 15px; border-radius: 8px; text-align: center; }
-    .metric-card.green { background: #e6f4ea; border: 1px solid #c3e6cb; color: #155724; }
-    .metric-card.red { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-    .metric-card.blue { background: #e8f4f8; border: 1px solid #b8daff; color: #004085; }
-    .metric-card.gray { background: #f1f3f5; border: 1px solid #dee2e6; color: #343a40; }
-    .metric-card h4 { margin: 0 0 5px; font-size: 12px; text-transform: uppercase; }
-    .metric-card p { margin: 0; font-size: 22px; font-weight: bold; }
+main { padding: 32px clamp(16px, 3vw, 40px) 120px; max-width: 1320px; width: 100%; }
+.pagina { display: none; }
+.pagina.ativa { display: block; animation: entrar .25s ease; }
+@keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+.cabecalho { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.cabecalho p { margin: 6px 0 0; color: var(--tinta-2); max-width: 60ch; }
 
-    .painel { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
-    .filter-container { display: flex; gap: 15px; margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; align-items: flex-end; flex-wrap: wrap; }
-    .filter-container .form-group { margin: 0; flex: 1; min-width: 160px; }
-    .form-group { margin-bottom: 15px; width: 100%; }
-    label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 13px; text-transform: uppercase; }
-    input[type="number"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-transform: uppercase; background: #fff; }
-    input.sem-caixa, #linkProduto, #edLink { text-transform: none; }
-    input::placeholder { text-transform: uppercase; }
-    .num { font-family: monospace; text-align: right; font-weight: bold; }
+/* ---------- Componentes ---------- */
+.cartao { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio-l); padding: 20px; box-shadow: var(--sombra); }
+.cartao + .cartao { margin-top: 16px; }
+.layout-vendas > .cartao + .cartao { margin-top: 0; }
+.cartao > h2 { margin-bottom: 4px; }
+.cartao > .sub { color: var(--tinta-3); font-size: 13px; margin: 0 0 16px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid transparent; background: var(--carretel); color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap; text-decoration: none; transition: background .15s, transform .1s; }
+.btn:hover { background: var(--carretel-escuro); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .55; cursor: wait; }
+.btn svg { width: 18px; height: 18px; }
+.btn.sec { background: var(--papel); color: var(--tinta); border-color: var(--linha); }
+.btn.sec:hover { background: #F5F8F6; }
+.btn.fantasma { background: none; color: var(--tinta-2); }
+.btn.fantasma:hover { background: rgba(23,32,28,.05); }
+.btn.perigo { background: var(--alerta); } .btn.perigo:hover { background: #A7341F; }
+.btn.kit { background: var(--kit); } .btn.kit:hover { background: #57409C; }
+.btn.grande { padding: 14px 20px; font-size: 15px; width: 100%; }
+.btn.icone { padding: 8px; border-radius: 8px; }
+.btn.mini { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 
-    .results { margin-top: 25px; background: #eef2f5; padding: 25px; border-radius: 5px; border: 1px solid #dcdcdc; }
-    .results p { margin: 10px 0; font-size: 15px; color: #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .results .detalhe { font-size: 12px; color: #666; margin: 4px 0 4px 15px; }
+.campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.campo > label { font-size: 13px; font-weight: 600; color: var(--tinta-2); }
+.campo .dica { font-size: 12px; color: var(--tinta-3); }
+.entrada { display: flex; align-items: stretch; border: 1px solid var(--linha); border-radius: 10px; background: #fff; overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+.entrada:focus-within { border-color: var(--carretel); box-shadow: 0 0 0 3px var(--carretel-claro); }
+.entrada input, .entrada select { border: 0; outline: 0; padding: 10px 12px; width: 100%; min-width: 0; background: transparent; }
+.entrada .un { display: flex; align-items: center; padding: 0 12px; color: var(--tinta-3); font-size: 13px; font-weight: 600; background: #F6F8F7; }
+.entrada .un:first-child { border-right: 1px solid var(--linha); }
+.entrada .un:last-child { border-left: 1px solid var(--linha); }
+.entrada input.num { text-align: right; font-weight: 600; }
+input.maiuscula { text-transform: uppercase; }
+input.maiuscula::placeholder { text-transform: none; }
+.grade { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
-    button { width: 100%; padding: 12px; background: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background-color .2s, opacity .2s; text-transform: uppercase; }
-    button:hover { background: #0056b3; }
-    button:disabled { opacity: .55; cursor: wait; }
-    .btn-success { background: #28a745; } .btn-success:hover { background: #218838; }
-    .btn-info { background: #17a2b8; } .btn-info:hover { background: #117a8b; }
-    .btn-sm { padding: 6px 10px; font-size: 11px; width: auto; margin-top: 0; }
-    .btn-warning { background: #ffc107; color: #212529; } .btn-warning:hover { background: #e0a800; }
-    .btn-danger { background: #dc3545; } .btn-danger:hover { background: #c82333; }
-    .btn-secondary { background: #6c757d; } .btn-secondary:hover { background: #545b62; }
-    .btn-auto { width: auto; margin-top: 0; padding: 10px 18px; font-size: 13px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: #F1F4F2; color: var(--tinta-2); white-space: nowrap; }
+.chip.kit { background: var(--kit-claro); color: var(--kit); }
+.carretel-ponto { width: 10px; height: 10px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); flex-shrink: 0; }
+.segmentado { display: inline-flex; background: #E3E9E5; border-radius: 10px; padding: 3px; }
+.segmentado button { border: 0; background: none; padding: 7px 14px; border-radius: 8px; font-weight: 600; color: var(--tinta-2); cursor: pointer; }
+.segmentado button.ativo { background: #fff; color: var(--tinta); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-    .modal-overlay.aberto { display: flex; }
-    .modal-content { background: #fff; padding: 30px; border-radius: 10px; width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; position: relative; }
-    .modal-close { position: absolute; top: 12px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
-    .modal-close:hover { color: #333; }
+/* ---------- Calcular ---------- */
+.importar { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; margin-bottom: 16px; }
+.soltar { border: 2px dashed #B9C8C0; border-radius: var(--raio-l); background: #F8FBF9; padding: 20px; display: flex; gap: 16px; align-items: center; cursor: pointer; transition: border-color .15s, background .15s; }
+.soltar:hover, .soltar.arrastando { border-color: var(--carretel); background: var(--carretel-claro); }
+.soltar .ic { width: 48px; height: 48px; border-radius: 12px; background: var(--carretel); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.soltar .ic svg { width: 26px; height: 26px; }
+.soltar strong { display: block; font-size: 15px; }
+.soltar span { color: var(--tinta-2); font-size: 13px; }
+.link-box { border: 1px solid var(--linha); border-radius: var(--raio-l); background: var(--papel); padding: 16px 18px; }
+.link-box strong { display: block; margin-bottom: 8px; font-size: 15px; }
+.placas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.placa { border: 2px solid var(--linha); background: #fff; border-radius: 12px; padding: 6px; cursor: pointer; width: 112px; text-align: center; font-size: 12px; font-weight: 600; }
+.placa img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #2B3330; border-radius: 8px; display: block; margin-bottom: 4px; }
+.placa.ativa { border-color: var(--carretel); background: var(--carretel-claro); }
+.lido { display: flex; gap: 14px; align-items: center; background: var(--carretel-claro); border: 1px solid #BFE0D5; border-radius: var(--raio-m); padding: 12px 14px; margin-bottom: 16px; }
+.lido img { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #2B3330; }
+.lido .filas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 
-    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 760px; }
-    th, td { border: 1px solid #ddd; padding: 7px; text-align: center; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
-    th { background: #f2f2f2; color: #333; font-size: 10px; position: sticky; top: 0; z-index: 1; }
-    td.esq, th.esq { text-align: left; }
-    .history-container { max-height: 420px; overflow-y: auto; }
-    .ranking-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; max-height: 420px; overflow-y: auto; }
-    .ranking-card table { min-width: 0; }
-    tr.selecionado td { background: #e8f5e9; }
+.layout-calc { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.secao-form h3 { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.secao-form h3 svg { width: 20px; height: 20px; color: var(--carretel); }
+.secao-form + .secao-form { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--linha); }
 
-    .input-group { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; background: #fff; }
-    .input-group input { border: none; border-radius: 0; margin: 0; flex-grow: 1; min-width: 0; }
-    .input-group input:focus { outline: none; }
-    .addon, .addon-pre { background: #e9ecef; padding: 10px; color: #555; font-weight: bold; font-size: 14px; text-align: center; }
-    .addon { border-left: 1px solid #ccc; min-width: 30px; }
-    .addon-pre { border-right: 1px solid #ccc; }
+.painel-preco { position: sticky; top: 24px; border-radius: var(--raio-l); overflow: hidden; background: var(--papel); border: 1px solid var(--linha); box-shadow: var(--sombra); }
+.preco-topo {
+    padding: 22px 22px 20px; color: #fff; background-color: var(--carretel-escuro);
+    /* linhas de camada de impressão FDM */
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 2px, transparent 2px 6px), linear-gradient(160deg, #10957A, #08503F);
+}
+.preco-topo small { font-size: 13px; color: #BCE6DA; font-weight: 600; }
+.preco-topo .valor { font-family: var(--display); font-size: 46px; font-weight: 800; line-height: 1.05; margin: 4px 0 2px; letter-spacing: -.02em; }
+.preco-topo .plataformas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.preco-topo .plataformas div { background: rgba(0,0,0,.18); border-radius: 10px; padding: 8px 10px; }
+.preco-topo .plataformas span { display: block; font-size: 11px; color: #BCE6DA; }
+.preco-topo .plataformas b { font-size: 16px; }
+.preco-corpo { padding: 18px 22px 22px; }
+.barra-custo { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #EDF1EE; margin: 8px 0 12px; }
+.barra-custo div { transition: width .3s; }
+.legenda { display: grid; gap: 6px; font-size: 13px; }
+.legenda div { display: flex; align-items: center; gap: 8px; }
+.legenda i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legenda span { color: var(--tinta-2); flex: 1; }
+.legenda b { font-variant-numeric: tabular-nums; }
+.linha-total { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--linha); margin-top: 10px; }
+.linha-total span { color: var(--tinta-2); }
+.linha-total b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.linha-total.lucro b { color: var(--carretel); }
 
-    .badge { background: #e9ecef; padding: 3px 7px; border-radius: 4px; font-weight: bold; font-size: 10px; display: inline-block; }
-    .badge.kit { background: #6f42c1; color: #fff; }
-    .badge.foto { background: #e7f1ff; color: #0056b3; }
-    .chk { width: 18px; height: 18px; cursor: pointer; accent-color: #28a745; }
-    a.produto-link { color: #007bff; text-decoration: none; font-weight: bold; }
-    a.produto-link:hover { text-decoration: underline; }
-    .thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block; margin: auto; }
-    .thumb-vazio { width: 38px; height: 38px; border-radius: 4px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #bbb; margin: auto; font-size: 16px; }
-    .componentes { font-size: 9px; color: #6f42c1; font-weight: normal; white-space: normal; margin-top: 3px; }
+.fotos-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.foto-item { position: relative; }
+.foto-item img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--linha); display: block; }
+.foto-item button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; background: var(--alerta); color: #fff; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
+.foto-item .tag { position: absolute; left: 4px; bottom: 4px; font-size: 10px; background: rgba(0,0,0,.6); color: #fff; padding: 1px 5px; border-radius: 4px; }
 
-    .list-embalagens { border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: #fff; min-height: 46px; margin-bottom: 15px; }
-    .item-embalagem { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: #f8f9fa; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px; }
-    .qtd-input { width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+.faixa-edicao { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--ambar-claro); border: 1px solid #F1D6A6; color: #7A5212; padding: 10px 14px; border-radius: var(--raio-m); margin-bottom: 16px; font-weight: 600; }
 
-    .modo-venda { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-    .modo-venda label.opcao { border: 2px solid #ddd; border-radius: 8px; padding: 14px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; margin: 0; text-transform: none; font-weight: normal; font-size: 12px; color: #555; }
-    .modo-venda label.opcao strong { display: block; font-size: 14px; color: #333; text-transform: uppercase; margin-bottom: 3px; }
-    .modo-venda input { margin-top: 3px; accent-color: #6f42c1; width: 18px; height: 18px; }
-    .modo-venda label.opcao.ativo { border-color: #6f42c1; background: #f5f0ff; }
-    .kit-box { background: #f5f0ff; border: 1px solid #d6c8f5; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; }
+/* ---------- Catálogo ---------- */
+.barra-ferramentas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.busca { flex: 1; min-width: 220px; }
+.busca .entrada { border-radius: 12px; }
+.grade-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
+.produto { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio-l); overflow: hidden; display: flex; flex-direction: column; position: relative; transition: border-color .15s, box-shadow .15s; }
+.produto.sel { border-color: var(--carretel); box-shadow: 0 0 0 3px var(--carretel-claro); }
+.produto .capa { aspect-ratio: 4/3; background: #E6ECE8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+.produto .capa img { width: 100%; height: 100%; object-fit: cover; }
+.produto .capa svg { width: 44px; height: 44px; color: #A8B6AF; }
+.produto .marcar { position: absolute; top: 10px; left: 10px; width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.95); border: 2px solid #B9C8C0; display: flex; align-items: center; justify-content: center; color: transparent; }
+.produto.sel .marcar { background: var(--carretel); border-color: var(--carretel); color: #fff; }
+.produto .marcar svg { width: 16px; height: 16px; color: inherit; }
+.produto .fotos-qtd { position: absolute; right: 10px; bottom: 10px; background: rgba(23,32,28,.72); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.produto .corpo { padding: 14px 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.produto .nome { font-weight: 700; line-height: 1.3; }
+.produto .nome a { color: inherit; text-decoration: none; }
+.produto .nome a:hover { color: var(--carretel); text-decoration: underline; }
+.produto .comp { font-size: 12px; color: var(--kit); }
+.produto .valores { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 6px; }
+.produto .valores small { display: block; font-size: 11px; color: var(--tinta-3); }
+.produto .valores .preco { font-family: var(--display); font-size: 22px; font-weight: 800; }
+.produto .valores .custo { text-align: right; font-size: 12px; color: var(--tinta-2); }
+.produto .acoes { display: flex; border-top: 1px solid var(--linha); }
+.produto .acoes button { flex: 1; border: 0; background: none; padding: 10px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--tinta-2); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.produto .acoes button + button { border-left: 1px solid var(--linha); }
+.produto .acoes button:hover { background: #F5F8F6; color: var(--tinta); }
+.produto .acoes button.del:hover { color: var(--alerta); }
+.produto .acoes svg { width: 16px; height: 16px; }
 
-    .fotos-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
-    .foto-item { position: relative; }
-    .foto-item img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; }
-    .foto-item button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; padding: 0; margin: 0; font-size: 11px; background: #dc3545; }
-    .dica { font-size: 11px; color: #777; margin: 4px 0 0; text-transform: none; font-weight: normal; }
-    .edicao-banner { background: #fff3cd; border: 1px solid #ffe08a; color: #856404; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 13px; display: none; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.carrinho { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 140%); background: var(--tinta); color: #fff; border-radius: 16px; padding: 10px 10px 10px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 12px 32px rgba(0,0,0,.25); z-index: 60; transition: transform .25s ease; max-width: calc(100vw - 32px); }
+.carrinho:not(.visivel) { visibility: hidden; transition: transform .25s ease, visibility 0s .25s; }
+.carrinho.visivel { transform: translate(-50%, 0); }
+.carrinho .info { font-size: 14px; } .carrinho .info b { font-size: 16px; }
+.vazio { text-align: center; padding: 48px 20px; color: var(--tinta-2); border: 2px dashed var(--linha); border-radius: var(--raio-l); }
+.vazio strong { display: block; font-size: 16px; color: var(--tinta); margin-bottom: 4px; }
+
+/* ---------- Tabelas ---------- */
+.tabela-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 700; color: var(--tinta-3); font-size: 12px; padding: 0 12px 10px; border-bottom: 1px solid var(--linha); white-space: nowrap; }
+td { padding: 12px; border-bottom: 1px solid #EEF2EF; vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
+.pos { color: var(--carretel); font-weight: 700; } .neg { color: var(--alerta); font-weight: 700; }
+
+/* ---------- Vendas ---------- */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+.kpi { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio-l); padding: 16px 18px; }
+.kpi span { font-size: 13px; color: var(--tinta-2); font-weight: 600; }
+.kpi b { display: block; font-family: var(--display); font-size: 28px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi.destaque { background: var(--carretel); border-color: var(--carretel); color: #fff; }
+.kpi.destaque span { color: #CBEBE1; }
+.layout-vendas { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+.ranking li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF2EF; }
+.ranking li:last-child { border: 0; }
+.ranking ol { list-style: none; padding: 0; margin: 0; }
+.ranking .pos-n { width: 28px; height: 28px; border-radius: 8px; background: #EEF2EF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.ranking li:nth-child(1) .pos-n { background: #F6D776; } .ranking li:nth-child(2) .pos-n { background: #DDE3E7; } .ranking li:nth-child(3) .pos-n { background: #EBC7A4; }
+.ranking .barra { height: 5px; background: #EEF2EF; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.ranking .barra div { height: 100%; background: var(--carretel); }
+
+/* ---------- Gavetas e modais ---------- */
+.fundo { position: fixed; inset: 0; background: rgba(15,22,19,.5); z-index: 900; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.fundo.aberto { opacity: 1; pointer-events: auto; }
+.gaveta { position: fixed; top: 0; right: 0; height: 100vh; width: min(560px, 100vw); background: var(--mesa); z-index: 1000; transform: translateX(105%); transition: transform .25s ease; display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.18); }
+.gaveta.aberta { transform: translateX(0); }
+.gaveta.larga { width: min(820px, 100vw); }
+.gaveta-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px; background: var(--papel); border-bottom: 1px solid var(--linha); }
+.gaveta-corpo { padding: 20px 22px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.gaveta-rodape { padding: 16px 22px; background: var(--papel); border-top: 1px solid var(--linha); }
+.fechar { border: 0; background: #EEF2EF; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 20px; line-height: 1; color: var(--tinta-2); }
+.fechar:hover { background: #E2E8E4; }
+
+.item-venda { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #EEF2EF; }
+.item-venda:last-child { border: 0; }
+.passo { display: inline-flex; align-items: center; border: 1px solid var(--linha); border-radius: 8px; overflow: hidden; background: #fff; }
+.passo button { border: 0; background: #F3F6F4; width: 30px; height: 32px; cursor: pointer; font-weight: 800; }
+.passo input { width: 40px; border: 0; text-align: center; font-weight: 700; outline: 0; }
+.modos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modo { border: 2px solid var(--linha); border-radius: 12px; padding: 12px 14px; cursor: pointer; background: #fff; display: block; }
+.modo input { position: absolute; opacity: 0; pointer-events: none; }
+.modo strong { display: block; font-size: 14px; }
+.modo span { font-size: 12px; color: var(--tinta-2); }
+.modo.ativo { border-color: var(--carretel); background: var(--carretel-claro); }
+.modo.kit-op.ativo { border-color: var(--kit); background: var(--kit-claro); }
+.resumo-venda { background: var(--papel); border-radius: var(--raio-m); border: 1px solid var(--linha); padding: 14px 16px; }
+.resumo-venda .l { display: flex; justify-content: space-between; padding: 4px 0; color: var(--tinta-2); }
+.resumo-venda .l b { color: var(--tinta); font-variant-numeric: tabular-nums; }
+.resumo-venda .final { border-top: 1px dashed var(--linha); margin-top: 8px; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.resumo-venda .final .entrada { width: 170px; }
+.resumo-venda .final input { font-size: 20px; font-weight: 800; color: var(--carretel); }
+.resumo-venda .lucro { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; font-size: 15px; font-weight: 700; }
+.resumo-venda .lucro b { font-family: var(--display); font-size: 24px; }
+.emb-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #EEF2EF; font-size: 13px; }
+.emb-item:last-child { border: 0; }
+.emb-item span { flex: 1; }
+
+.nota-preview { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: start; }
+.nota-preview img { width: 100%; border-radius: 10px; border: 1px solid var(--linha); }
+.progresso { height: 8px; background: #E3E9E5; border-radius: 4px; overflow: hidden; }
+.progresso div { height: 100%; background: var(--carretel); width: 0; transition: width .2s; }
+.tabela-nota input { border: 1px solid var(--linha); border-radius: 8px; padding: 6px 8px; width: 100%; min-width: 0; }
+.tabela-nota input.num { text-align: right; width: 84px; }
+.tabela-nota td { padding: 8px 6px; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1100px) { .layout-calc { grid-template-columns: 1fr; } .painel-preco { position: static; } .layout-vendas { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .lateral { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; flex-direction: row; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); z-index: 70; justify-content: space-around; }
+    .marca, .lateral-rodape, .nav-item .contador { display: none; }
+    .nav-item { flex-direction: column; gap: 2px; font-size: 11px; padding: 6px 4px; text-align: center; justify-content: center; }
+    main { padding: 20px 14px 110px; }
+    h1 { font-size: 24px; }
+    .importar, .g2, .g3 { grid-template-columns: 1fr; }
+    .g4, .kpis { grid-template-columns: 1fr 1fr; }
+    .carrinho { bottom: 84px; }
+    .topo-movel { display: flex !important; }
+    .nota-preview { grid-template-columns: 1fr; }
+}
+.topo-movel { display: none; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.topo-movel strong { font-family: var(--display); font-size: 18px; }
 </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>SISTEMA DE PRECIFICAÇÃO 3D E GESTÃO DE VENDAS</h1>
-    <div class="topo">
-        <div class="status-cloud" id="statusCloud">☁️ CONECTANDO AO SUPABASE...</div>
-        <a class="btn-app" href="app.html" target="_blank">📱 ABRIR APP DE VENDAS (CÂMERA)</a>
-        <button type="button" class="btn-secondary btn-auto" style="padding:8px 14px; font-size:12px" onclick="Auth.sair()">🚪 SAIR</button>
-    </div>
+<!-- Ícones -->
+<svg width="0" height="0" style="position:absolute">
+    <symbol id="i-calc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14v4M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-cat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></symbol>
+    <symbol id="i-vendas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></symbol>
+    <symbol id="i-emb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3zM3 7l2-4h14l2 4M10 11h4"/></symbol>
+    <symbol id="i-arquivo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 18v-6M9 15l3-3 3 3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+    <symbol id="i-peca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-maquina" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18M9 8v5h6V8M7 18h10"/></symbol>
+    <symbol id="i-mao" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></symbol>
+    <symbol id="i-editar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+    <symbol id="i-lixo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+    <symbol id="i-carrinho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l3 12h11l2-8H6.5"/></symbol>
+    <symbol id="i-nota" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
+    <symbol id="i-celular" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+    <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-sair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+</svg>
 
-    <div class="edicao-banner" id="bannerEdicao">
-        <span id="bannerEdicaoTexto">✏️ EDITANDO PRODUTO</span>
-        <button type="button" class="btn-secondary btn-sm" onclick="cancelarEdicao()">CANCELAR EDIÇÃO</button>
-    </div>
+<div class="app">
+    <aside class="lateral">
+        <div class="marca"><img src="icons/icon-192.png" alt=""><div><strong>Calculadora 3D</strong><span>Precificação e vendas</span></div></div>
+        <button class="nav-item ativo" data-pagina="calcular"><svg><use href="#i-calc"/></svg>Calcular</button>
+        <button class="nav-item" data-pagina="catalogo"><svg><use href="#i-cat"/></svg>Catálogo<span class="contador" id="navQtdProdutos">0</span></button>
+        <button class="nav-item" data-pagina="vendas"><svg><use href="#i-vendas"/></svg>Vendas</button>
+        <button class="nav-item" data-pagina="embalagens"><svg><use href="#i-emb"/></svg>Embalagens</button>
+        <div class="lateral-rodape">
+            <a class="nav-item" href="app.html" target="_blank"><svg><use href="#i-celular"/></svg>App de vendas</a>
+            <button class="nav-item" onclick="Auth.sair()"><svg><use href="#i-sair"/></svg>Sair</button>
+            <div class="status" id="statusCloud"><i></i><span>Conectando…</span></div>
+        </div>
+    </aside>
 
-    <!-- 1. Detalhes da Peça e Material -->
-    <div class="section-title">1. DETALHES DA PEÇA E MATERIAL</div>
-    <div class="grid-2-cols" style="margin-bottom: 15px;">
-        <div class="form-group" style="margin:0">
-            <label for="nomeProduto">NOME DO PRODUTO/PROJETO (MOLDE):</label>
-            <input type="text" id="nomeProduto" class="calc maiuscula" placeholder="EX: VASO GEOMÉTRICO">
-        </div>
-        <div class="form-group" style="margin:0">
-            <label for="linkProduto">LINK DO PRODUTO/REFERÊNCIA (URL):</label>
-            <input type="text" id="linkProduto" class="calc" placeholder="COLE A URL AQUI (OPCIONAL)">
-        </div>
-    </div>
-
-    <div class="grid-2-cols painel">
-        <div class="form-group" style="margin:0">
-            <label for="comprimentoFilamento">COMPRIMENTO FILAMENTO (BAMBU STUDIO):</label>
-            <div class="input-group" style="width:170px"><input type="text" id="comprimentoFilamento" value="0,00" class="num moeda calc"><span class="addon">M</span></div>
-        </div>
-        <div class="form-group" style="margin:0">
-            <label for="pesoPeca">PESO TOTAL DA PEÇA (BAMBU STUDIO):</label>
-            <div class="input-group" style="width:170px"><input type="text" id="pesoPeca" value="0,00" class="num moeda calc"><span class="addon">G</span></div>
-        </div>
-    </div>
-
-    <div class="grid-2-cols">
-        <div class="form-group">
-            <label for="precoKg">PREÇO DO FILAMENTO (KG):</label>
-            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="precoKg" value="0,00" class="num moeda calc padrao"></div>
-        </div>
-        <div class="form-group">
-            <label for="tipoFilamento">TIPO DE FILAMENTO:</label>
-            <select id="tipoFilamento" class="calc padrao" style="font-weight:bold">
-                <option value="PLA">PLA</option><option value="PLA SILK">PLA SILK</option><option value="PLA MATTE">PLA MATTE</option>
-                <option value="PLA WOOD">PLA WOOD (MADEIRA)</option><option value="PLA CF">PLA CF (FIBRA DE CARBONO)</option>
-                <option value="PETG">PETG</option><option value="PETG CF">PETG CF</option><option value="ABS">ABS</option>
-                <option value="ABS+">ABS+</option><option value="ASA">ASA</option><option value="TPU (FLEX)">TPU (FLEXÍVEL)</option>
-                <option value="NYLON (PA)">NYLON (PA)</option><option value="NYLON CF">NYLON CF</option><option value="PC">PC (POLICARBONATO)</option>
-                <option value="HIPS">HIPS</option><option value="PVA">PVA</option><option value="RESINA">RESINA</option><option value="OUTROS">OUTROS</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- 2. Máquina e Energia -->
-    <div class="section-title">2. MÁQUINA E ENERGIA (BAMBU LAB A1 COM AMS)</div>
-    <div class="grid-2-cols">
-        <div class="form-group">
-            <label for="potenciaImpressora">POTÊNCIA:</label>
-            <div class="input-group"><input type="text" id="potenciaImpressora" value="100,00" class="num moeda calc padrao"><span class="addon">W</span></div>
-        </div>
-        <div class="form-group">
-            <label for="tarifaEnergia">TARIFA ENERGIA (BRASÍLIA):</label>
-            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="tarifaEnergia" value="0,88" class="num moeda calc padrao"><span class="addon">KWH</span></div>
-        </div>
-        <div class="form-group">
-            <label for="tempoImpressao">TEMPO DE IMPRESSÃO (HH:MM:SS):</label>
-            <div class="input-group"><input type="text" id="tempoImpressao" value="00:00:00" class="num hora calc"><span class="addon">H</span></div>
-        </div>
-        <div class="form-group">
-            <label for="valorImpressora">VALOR DA MÁQUINA:</label>
-            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="valorImpressora" value="4.335,00" class="num moeda calc padrao"></div>
-        </div>
-        <div class="form-group">
-            <label for="vidaUtil">VIDA ÚTIL ESTIMADA:</label>
-            <div class="input-group"><input type="text" id="vidaUtil" value="10.000,00" class="num moeda calc padrao"><span class="addon">H</span></div>
-        </div>
-    </div>
-
-    <!-- 3. Mão de Obra e Margem -->
-    <div class="section-title">3. MÃO DE OBRA E MARGEM DE FALHA</div>
-    <div class="grid-2-cols">
-        <div class="form-group">
-            <label for="tempoTrabalho">TEMPO TRABALHO MANUAL (HH:MM:SS):</label>
-            <div class="input-group"><input type="text" id="tempoTrabalho" value="00:00:00" class="num hora calc"><span class="addon">H</span></div>
-        </div>
-        <div class="form-group">
-            <label for="valorHoraTrabalho">VALOR DA SUA HORA:</label>
-            <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="valorHoraTrabalho" value="0,00" class="num moeda calc padrao"></div>
-        </div>
-        <div class="form-group">
-            <label for="margemFalhas">MARGEM PARA FALHAS:</label>
-            <div class="input-group"><input type="text" id="margemFalhas" value="10,00" class="num moeda calc padrao"><span class="addon">%</span></div>
-        </div>
-        <div class="form-group">
-            <label for="margemLucro">LUCRO DESEJADO (SOBRE CUSTO):</label>
-            <div class="input-group"><input type="text" id="margemLucro" value="100,00" class="num moeda calc padrao"><span class="addon">%</span></div>
-        </div>
-    </div>
-
-    <!-- 4. Fotos -->
-    <div class="section-title">4. FOTOS DO PRODUTO (PARA RECONHECIMENTO NO APP)</div>
-    <div class="painel">
-        <input type="file" id="fotosNovoProduto" accept="image/*" multiple style="text-transform:none">
-        <p class="dica">Opcional. Envie de 3 a 5 fotos da peça de ângulos diferentes, de preferência sobre fundo liso. Elas são usadas pelo app do celular para reconhecer o produto pela câmera.</p>
-        <div class="fotos-grid" id="previewFotosNovo"></div>
-        <button type="button" class="btn-info btn-auto" style="margin-top:6px" onclick="buscarFotosLinkNovo()">🔗 BUSCAR FOTOS NO LINK DO PRODUTO</button>
-        <div id="seletorLinkNovo" style="display:none; margin-top:10px"></div>
-    </div>
-
-    <!-- Resultados -->
-    <div class="results">
-        <h3 style="margin-top:0; color:#007bff; border-bottom:1px solid #ccc; padding-bottom:10px; font-size:16px;">RESUMO DE CUSTOS E FORMAÇÃO DE PREÇO</h3>
-        <p><span>CUSTO SUBTOTAL:</span> <span id="resSubtotal">R$ 0,00</span></p>
-        <p class="detalhe"><span>MATERIAL / ENERGIA / DEPRECIAÇÃO / MÃO DE OBRA:</span> <span id="resDetalhe">—</span></p>
-        <p><span>MARGEM PARA FALHAS:</span> <span id="resFalhas">R$ 0,00</span></p>
-        <p style="border-bottom:1px solid #ccc; padding-bottom:12px"><span><strong>CUSTO TOTAL DE PRODUÇÃO (CP):</strong></span> <strong id="resCustoTotal">R$ 0,00</strong></p>
-        <p><span>LUCRO LÍQUIDO DESEJADO:</span> <span id="resLucro" style="color:#28a745; font-weight:bold">R$ 0,00</span></p>
-        <p style="border-top:1px solid #ccc; padding-top:12px"><span><strong>PREÇO DE VENDA (BASE SEM TAXAS):</strong></span> <strong id="resPrecoSemTaxa">R$ 0,00</strong></p>
-        <p class="detalhe"><span>COM TAXA — MERCADO LIVRE/SHOPEE (20%) · CARTÃO (5%):</span> <span id="resPrecoPlataformas">—</span></p>
-    </div>
-
-    <button type="button" id="btnSalvarProduto" onclick="salvarProduto()" class="btn-success" style="font-size:16px; padding:15px">SALVAR NO CATÁLOGO DE PRODUTOS</button>
-
-    <!-- CATÁLOGO DE PRODUTOS -->
-    <div class="section-title" style="margin-top:40px">
-        <span>CATÁLOGO DE PRODUTOS</span>
-        <button type="button" class="btn-success btn-auto" id="btnVender" onclick="abrirModalVenda()">🛒 VENDER ITENS SELECIONADOS (0)</button>
-    </div>
-
-    <div class="filter-container">
-        <div class="form-group" style="flex:2">
-            <label for="pesquisaHistorico" style="font-size:12px">PESQUISAR NO CATÁLOGO:</label>
-            <input type="text" id="pesquisaHistorico" placeholder="🔍 DIGITE O NOME..." style="font-size:13px">
-        </div>
-        <div class="form-group">
-            <label for="filtroTipo" style="font-size:12px">TIPO:</label>
-            <select id="filtroTipo" style="font-size:13px"><option value="TODOS">TODOS</option><option value="PRODUTO">PRODUTOS</option><option value="KIT">KITS</option></select>
-        </div>
-        <div class="form-group">
-            <label for="filtroFilamento" style="font-size:12px">FILAMENTO:</label>
-            <select id="filtroFilamento" style="font-size:13px"><option value="TODOS">TODOS</option></select>
-        </div>
-    </div>
-
-    <div class="table-responsive history-container">
-        <table>
-            <thead><tr>
-                <th>FOTO</th><th class="esq">PRODUTO</th><th>DATA CADASTRO</th><th>FILAMENTO</th>
-                <th style="color:#dc3545">CUSTO TOTAL</th><th style="color:#28a745">LUCRO</th><th>VALOR BASE</th>
-                <th>SELECIONAR<br>P/ VENDA</th><th>AÇÕES</th>
-            </tr></thead>
-            <tbody id="corpoCatalogo"></tbody>
-        </table>
-    </div>
-
-    <!-- CATÁLOGO DE EMBALAGENS -->
-    <div class="section-title" style="margin-top:40px; border-bottom-color:#17a2b8">CATÁLOGO DE EMBALAGENS</div>
-    <div class="painel">
-        <div class="grid-2-cols" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label>NOME DA NOVA EMBALAGEM:</label><input type="text" id="catEmbNome" class="maiuscula" placeholder="EX: CAIXA KRAFT P"></div>
-            <div class="form-group" style="margin:0"><label>VALOR UNITÁRIO:</label>
-                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="catEmbValor" class="num moeda" placeholder="0,00"></div></div>
-        </div>
-        <button type="button" class="btn-info" onclick="salvarEmbalagem()">+ ADICIONAR EMBALAGEM</button>
-    </div>
-    <div class="table-responsive history-container" style="max-height:300px">
-        <table style="min-width:0">
-            <thead><tr><th class="esq">NOME DA EMBALAGEM</th><th>VALOR UNITÁRIO</th><th>EDITAR</th><th>EXCLUIR</th></tr></thead>
-            <tbody id="corpoEmbalagens"></tbody>
-        </table>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div class="section-title" style="margin-top:50px; border-bottom-color:#28a745">
-        <span>DASHBOARD & RANKING DE VENDAS</span>
-        <select id="filtroPeriodo" style="width:auto; font-size:12px; padding:6px 10px">
-            <option value="TODOS">TODO O PERÍODO</option><option value="HOJE">HOJE</option>
-            <option value="7">ÚLTIMOS 7 DIAS</option><option value="30">ÚLTIMOS 30 DIAS</option><option value="MES">ESTE MÊS</option>
-        </select>
-    </div>
-    <div class="grid-4-cards">
-        <div class="metric-card blue"><h4>FATURAMENTO</h4><p id="dashFaturamento">R$ 0,00</p></div>
-        <div class="metric-card green"><h4>LUCRO LÍQUIDO OBTIDO</h4><p id="dashLucroTotal">R$ 0,00</p></div>
-        <div class="metric-card red"><h4>CUSTO TOTAL</h4><p id="dashCustoTotal">R$ 0,00</p></div>
-        <div class="metric-card gray"><h4>ITENS VENDIDOS</h4><p id="dashQtdItens">0 UNID.</p></div>
-    </div>
-
-    <div class="grid-dashboard-vendas">
-        <div class="table-responsive history-container" style="padding:15px">
-            <h4 style="margin-top:0; color:#333; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px">📊 HISTÓRICO DE VENDAS RECENTES</h4>
-            <table>
-                <thead><tr><th>DATA</th><th class="esq">PRODUTO</th><th>TIPO</th><th>QTD</th><th>PLATAFORMA</th><th>VALOR VENDA</th><th>CUSTO (INC. EXTRAS)</th><th>LUCRO LÍQ.</th><th>AÇÃO</th></tr></thead>
-                <tbody id="corpoVendas"></tbody>
-            </table>
-        </div>
-        <div class="ranking-card">
-            <h4 style="margin-top:0; color:#d39e00; font-size:14px; border-bottom:1px solid #eee; padding-bottom:10px">🏆 RANKING DE MAIS VENDIDOS</h4>
-            <table>
-                <thead><tr style="background:#fff9e6"><th>POS</th><th class="esq">PRODUTO</th><th>QTD</th><th>LUCRO</th></tr></thead>
-                <tbody id="corpoRanking"></tbody>
-            </table>
-            <p class="dica">Peças vendidas dentro de kits também contam no ranking de cada produto.</p>
-        </div>
-    </div>
-
-    <button type="button" onclick="limparVendas()" class="btn-danger btn-auto" style="margin-top:20px">LIMPAR BANCO DE VENDAS</button>
-</div>
-
-<!-- ===================== MODAL DE VENDA ===================== -->
-<div class="modal-overlay" id="modalVenda">
-    <div class="modal-content">
-        <span class="modal-close" onclick="fecharModalVenda()" title="Fechar">&times;</span>
-        <h3 style="margin-top:0; color:#28a745; border-bottom:2px solid #28a745; padding-bottom:8px">🛒 FINALIZAR VENDA</h3>
-
-        <div id="listaProdutosVenda" style="margin-bottom:15px"></div>
-
-        <div id="blocoModoVenda" style="display:none">
-            <label>MODO DE VENDA:</label>
-            <div class="modo-venda">
-                <label class="opcao" id="opcaoIndividual"><input type="radio" name="modoVenda" value="INDIVIDUAL" checked>
-                    <span><strong>VENDA PRODUTO INDIVIDUAL</strong>Cada produto é lançado separadamente no histórico, com o valor e o lucro divididos proporcionalmente ao custo.</span></label>
-                <label class="opcao" id="opcaoKit"><input type="radio" name="modoVenda" value="KIT">
-                    <span><strong>VENDA KIT</strong>Os produtos são vendidos como um conjunto. O kit é cadastrado automaticamente no catálogo com o custo total dos produtos.</span></label>
+    <main>
+        <div class="topo-movel">
+            <strong>Calculadora 3D</strong>
+            <div style="display:flex; gap:6px">
+                <a class="btn sec icone" href="app.html" title="App de vendas"><svg><use href="#i-celular"/></svg></a>
+                <button class="btn sec icone" title="Sair" onclick="Auth.sair()"><svg><use href="#i-sair"/></svg></button>
             </div>
-            <div class="kit-box" id="kitBox" style="display:none">
-                <div class="form-group" style="margin-bottom:6px">
-                    <label for="kitNome" style="color:#6f42c1">NOME DO KIT:</label>
-                    <input type="text" id="kitNome" class="maiuscula">
+        </div>
+        <!-- ======================= CALCULAR ======================= -->
+        <section class="pagina ativa" id="pag-calcular">
+            <div class="cabecalho">
+                <div>
+                    <h1 id="tituloCalc">Novo produto</h1>
+                    <p>Comece pelo arquivo do Bambu Studio ou pelo link do modelo. Os campos são preenchidos sozinhos e você só ajusta o que precisar.</p>
                 </div>
-                <p class="dica" id="kitInfo"></p>
+            </div>
+
+            <div class="faixa-edicao oculto" id="bannerEdicao">
+                <span id="bannerEdicaoTexto">Editando produto</span>
+                <button type="button" class="btn sec mini" onclick="cancelarEdicao()">Cancelar edição</button>
+            </div>
+
+            <div class="importar">
+                <label class="soltar" id="zonaBambu" for="arquivoBambu">
+                    <div class="ic"><svg><use href="#i-arquivo"/></svg></div>
+                    <div>
+                        <strong>Arquivo do Bambu Studio</strong>
+                        <span>Arraste ou clique para escolher o <b>.gcode.3mf</b>, o projeto <b>.3mf</b> fatiado ou o <b>.gcode</b>. Peso, tempo e filamento são lidos da placa.</span>
+                    </div>
+                </label>
+                <input type="file" id="arquivoBambu" accept=".3mf,.gcode,.bgcode" hidden>
+                <div class="link-box">
+                    <strong>Ou cadastre pelo link do modelo</strong>
+                    <div style="display:flex; gap:8px">
+                        <div class="entrada" style="flex:1"><span class="un"><svg width="16" height="16"><use href="#i-link"/></svg></span><input type="url" id="linkRapido" placeholder="https://makerworld.com/pt/models/…"></div>
+                        <button type="button" class="btn" id="btnLinkRapido" onclick="cadastrarPeloLink()">Buscar</button>
+                    </div>
+                    <div class="dica" style="font-size:12px; color:var(--tinta-3); margin-top:6px">Traz nome, fotos, peso e tempo do perfil de impressão.</div>
+                </div>
+            </div>
+            <div id="resultadoImportacao"></div>
+
+            <div class="layout-calc">
+                <div class="cartao">
+                    <div class="secao-form">
+                        <h3><svg><use href="#i-peca"/></svg>Peça e material</h3>
+                        <div class="grade g2" style="margin-bottom:14px">
+                            <div class="campo"><label for="nomeProduto">Nome do produto</label>
+                                <div class="entrada"><input type="text" id="nomeProduto" class="calc maiuscula" placeholder="Ex.: vaso geométrico"></div></div>
+                            <div class="campo"><label for="linkProduto">Link de referência</label>
+                                <div class="entrada"><input type="url" id="linkProduto" class="calc" placeholder="Opcional"></div></div>
+                        </div>
+                        <div class="grade g4">
+                            <div class="campo"><label for="pesoPeca">Peso da peça</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="pesoPeca" value="0,00" class="num moeda calc"><span class="un">g</span></div></div>
+                            <div class="campo"><label for="comprimentoFilamento">Filamento usado</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="comprimentoFilamento" value="0,00" class="num moeda calc"><span class="un">m</span></div></div>
+                            <div class="campo"><label for="tipoFilamento">Filamento</label>
+                                <div class="entrada"><select id="tipoFilamento" class="calc padrao">
+                                    <option>PLA</option><option>PLA SILK</option><option>PLA MATTE</option><option value="PLA WOOD">PLA WOOD (MADEIRA)</option><option value="PLA CF">PLA CF (FIBRA DE CARBONO)</option>
+                                    <option>PETG</option><option>PETG CF</option><option>ABS</option><option>ABS+</option><option>ASA</option><option value="TPU (FLEX)">TPU (FLEXÍVEL)</option>
+                                    <option>NYLON (PA)</option><option>NYLON CF</option><option value="PC">PC (POLICARBONATO)</option><option>HIPS</option><option>PVA</option><option>RESINA</option><option>OUTROS</option>
+                                </select></div></div>
+                            <div class="campo"><label for="precoKg">Preço do kg</label>
+                                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="precoKg" value="0,00" class="num moeda calc padrao"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="secao-form">
+                        <h3><svg><use href="#i-maquina"/></svg>Impressora e energia</h3>
+                        <div class="grade g3">
+                            <div class="campo"><label for="tempoImpressao">Tempo de impressão</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="tempoImpressao" value="00:00:00" class="num hora calc"><span class="un">h:m:s</span></div></div>
+                            <div class="campo"><label for="potenciaImpressora">Potência</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="potenciaImpressora" value="100,00" class="num moeda calc padrao"><span class="un">W</span></div></div>
+                            <div class="campo"><label for="tarifaEnergia">Tarifa de energia</label>
+                                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="tarifaEnergia" value="0,88" class="num moeda calc padrao"><span class="un">kWh</span></div></div>
+                            <div class="campo"><label for="valorImpressora">Valor da impressora</label>
+                                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="valorImpressora" value="4.335,00" class="num moeda calc padrao"></div></div>
+                            <div class="campo"><label for="vidaUtil">Vida útil estimada</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="vidaUtil" value="10.000,00" class="num moeda calc padrao"><span class="un">h</span></div></div>
+                        </div>
+                    </div>
+
+                    <div class="secao-form">
+                        <h3><svg><use href="#i-mao"/></svg>Seu trabalho e margens</h3>
+                        <div class="grade g4">
+                            <div class="campo"><label for="tempoTrabalho">Trabalho manual</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="tempoTrabalho" value="00:00:00" class="num hora calc"><span class="un">h:m:s</span></div></div>
+                            <div class="campo"><label for="valorHoraTrabalho">Valor da sua hora</label>
+                                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="valorHoraTrabalho" value="0,00" class="num moeda calc padrao"></div></div>
+                            <div class="campo"><label for="margemFalhas">Margem p/ falhas</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="margemFalhas" value="10,00" class="num moeda calc padrao"><span class="un">%</span></div></div>
+                            <div class="campo"><label for="margemLucro">Lucro sobre o custo</label>
+                                <div class="entrada"><input type="text" inputmode="numeric" id="margemLucro" value="100,00" class="num moeda calc padrao"><span class="un">%</span></div></div>
+                        </div>
+                    </div>
+
+                    <div class="secao-form">
+                        <h3><svg><use href="#i-foto"/></svg>Fotos para o reconhecimento</h3>
+                        <p style="margin:-6px 0 12px; color:var(--tinta-3); font-size:13px">O app do celular usa estas fotos para reconhecer a peça pela câmera. A imagem da placa do Bambu Studio entra sozinha.</p>
+                        <div class="fotos-grid" id="previewFotosNovo"></div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px">
+                            <label class="btn sec mini" for="fotosNovoProduto"><svg width="16" height="16"><use href="#i-foto"/></svg>Enviar fotos</label>
+                            <button type="button" class="btn sec mini" onclick="buscarFotosLinkNovo()"><svg width="16" height="16"><use href="#i-link"/></svg>Buscar no link</button>
+                        </div>
+                        <input type="file" id="fotosNovoProduto" accept="image/*" multiple hidden>
+                        <div id="seletorLinkNovo" style="display:none; margin-top:12px"></div>
+                    </div>
+                </div>
+
+                <aside class="painel-preco" aria-live="polite">
+                    <div class="preco-topo">
+                        <small>Preço de venda sugerido</small>
+                        <div class="valor num" id="resPrecoSemTaxa">R$ 0,00</div>
+                        <small>sem taxas de plataforma</small>
+                        <div class="plataformas">
+                            <div><span>Mercado Livre / Shopee</span><b class="num" id="resPrecoML">R$ 0,00</b></div>
+                            <div><span>Cartão</span><b class="num" id="resPrecoCartao">R$ 0,00</b></div>
+                        </div>
+                    </div>
+                    <div class="preco-corpo">
+                        <h3>Do que é feito o custo</h3>
+                        <div class="barra-custo" id="barraCusto"></div>
+                        <div class="legenda" id="legendaCusto"></div>
+                        <div class="linha-total"><span>Custo de produção</span><b id="resCustoTotal">R$ 0,00</b></div>
+                        <div class="linha-total lucro" style="margin-top:0"><span>Seu lucro</span><b id="resLucro">R$ 0,00</b></div>
+                        <button type="button" class="btn grande" id="btnSalvarProduto" onclick="salvarProduto()" style="margin-top:12px">Salvar no catálogo</button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ======================= CATÁLOGO ======================= -->
+        <section class="pagina" id="pag-catalogo">
+            <div class="cabecalho">
+                <div><h1>Catálogo</h1><p>Marque os produtos para vender. Com mais de um item, você escolhe vender separado ou como kit.</p></div>
+                <button class="btn sec" onclick="irPara('calcular')">+ Novo produto</button>
+            </div>
+            <div class="barra-ferramentas">
+                <div class="busca"><div class="entrada"><span class="un"><svg width="16" height="16"><use href="#i-busca"/></svg></span><input type="search" id="pesquisaHistorico" placeholder="Buscar pelo nome"></div></div>
+                <div class="segmentado" id="filtroTipo">
+                    <button class="ativo" data-v="TODOS">Todos</button><button data-v="PRODUTO">Produtos</button><button data-v="KIT">Kits</button>
+                </div>
+                <div class="entrada" style="width:auto"><select id="filtroFilamento"><option value="TODOS">Todos os filamentos</option></select></div>
+            </div>
+            <div class="grade-produtos" id="gradeCatalogo"></div>
+        </section>
+
+        <!-- ======================= VENDAS ======================= -->
+        <section class="pagina" id="pag-vendas">
+            <div class="cabecalho">
+                <div><h1>Vendas</h1><p>Resultado do período escolhido. Peças vendidas dentro de kits também contam no ranking.</p></div>
+                <div class="entrada" style="width:auto"><select id="filtroPeriodo">
+                    <option value="TODOS">Todo o período</option><option value="HOJE">Hoje</option><option value="7">Últimos 7 dias</option>
+                    <option value="30">Últimos 30 dias</option><option value="MES" selected>Este mês</option></select></div>
+            </div>
+            <div class="kpis">
+                <div class="kpi destaque"><span>Lucro líquido</span><b id="dashLucroTotal">R$ 0,00</b></div>
+                <div class="kpi"><span>Faturamento</span><b id="dashFaturamento">R$ 0,00</b></div>
+                <div class="kpi"><span>Custos</span><b id="dashCustoTotal">R$ 0,00</b></div>
+                <div class="kpi"><span>Peças vendidas</span><b id="dashQtdItens">0</b></div>
+            </div>
+            <div class="layout-vendas">
+                <div class="cartao">
+                    <h2>Histórico</h2><p class="sub">Mais recentes primeiro</p>
+                    <div class="tabela-wrap"><table>
+                        <thead><tr><th>Produto</th><th>Data</th><th>Canal</th><th class="n">Valor</th><th class="n">Lucro</th><th></th></tr></thead>
+                        <tbody id="corpoVendas"></tbody>
+                    </table></div>
+                    <button type="button" class="btn fantasma mini" style="margin-top:12px; color:var(--alerta)" onclick="limparVendas()">Apagar todo o histórico</button>
+                </div>
+                <div class="cartao ranking">
+                    <h2>Mais vendidos</h2><p class="sub">Por quantidade no período</p>
+                    <ol id="corpoRanking"></ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================= EMBALAGENS ======================= -->
+        <section class="pagina" id="pag-embalagens">
+            <div class="cabecalho">
+                <div><h1>Embalagens</h1><p>Cadastre lendo a foto ou o print da nota de compra. O custo de cada unidade é calculado mesmo quando vem em pacote.</p></div>
+                <label class="btn" for="arquivoNota"><svg><use href="#i-nota"/></svg>Ler nota de compra</label>
+                <input type="file" id="arquivoNota" accept="image/*" hidden>
+            </div>
+            <div class="cartao">
+                <h2>Cadastrar manualmente</h2>
+                <div class="grade" style="grid-template-columns: 2fr 1fr auto; align-items:end; margin-top:12px">
+                    <div class="campo"><label for="catEmbNome">Nome</label><div class="entrada"><input type="text" id="catEmbNome" class="maiuscula" placeholder="Ex.: caixa kraft P"></div></div>
+                    <div class="campo"><label for="catEmbValor">Valor por unidade</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="catEmbValor" class="num moeda" placeholder="0,00"></div></div>
+                    <button type="button" class="btn" onclick="salvarEmbalagem()">Adicionar</button>
+                </div>
+                <p style="font-size:12px; color:var(--tinta-3); margin:10px 0 0">Dica: você também pode colar um print (Ctrl+V) nesta página para ler a nota.</p>
+            </div>
+            <div class="cartao">
+                <h2>Embalagens cadastradas</h2><p class="sub" id="embQtd"></p>
+                <div class="tabela-wrap"><table>
+                    <thead><tr><th>Nome</th><th class="n">Valor por unidade</th><th></th></tr></thead>
+                    <tbody id="corpoEmbalagens"></tbody>
+                </table></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Carrinho -->
+<div class="carrinho" id="carrinho">
+    <div class="info"><b id="carrinhoQtd">0</b> selecionado(s) · <span id="carrinhoValor">R$ 0,00</span></div>
+    <button class="btn fantasma mini" style="color:#C3D0CA" onclick="limparSelecao()">Limpar</button>
+    <button class="btn" onclick="abrirModalVenda()"><svg><use href="#i-carrinho"/></svg>Vender</button>
+</div>
+
+<div class="fundo" id="fundo" onclick="fecharGavetas()"></div>
+
+<!-- ======================= GAVETA: VENDA ======================= -->
+<div class="gaveta" id="gavetaVenda" role="dialog" aria-labelledby="tVenda">
+    <div class="gaveta-topo"><h2 id="tVenda">Finalizar venda</h2><button class="fechar" onclick="fecharGavetas()" aria-label="Fechar">×</button></div>
+    <div class="gaveta-corpo">
+        <div class="cartao" style="padding:6px 16px"><div id="listaProdutosVenda"></div></div>
+
+        <div id="blocoModoVenda" class="oculto">
+            <div class="modos">
+                <label class="modo ativo" id="opcaoIndividual"><input type="radio" name="modoVenda" value="INDIVIDUAL" checked>
+                    <strong>Produtos separados</strong><span>Cada produto vira uma linha no histórico.</span></label>
+                <label class="modo kit-op" id="opcaoKit"><input type="radio" name="modoVenda" value="KIT">
+                    <strong>Vender como kit</strong><span>Uma venda só, e o kit entra no catálogo.</span></label>
+            </div>
+            <div id="kitBox" class="oculto" style="margin-top:10px">
+                <div class="campo"><label for="kitNome">Nome do kit</label><div class="entrada"><input type="text" id="kitNome" class="maiuscula"></div></div>
+                <p id="kitInfo" style="font-size:12px; color:var(--kit); margin:6px 0 0"></p>
             </div>
         </div>
 
-        <div class="painel" style="background:#eef2f5">
-            <h4 style="margin-top:0; font-size:14px; color:#007bff; border-bottom:1px solid #ccc; padding-bottom:5px">📦 EMBALAGENS DA VENDA</h4>
-            <div class="list-embalagens" id="listaEmbalagensVenda"></div>
-            <div style="text-align:right; font-weight:bold; font-size:15px; margin-bottom:15px; color:#dc3545">TOTAL EMBALAGEM: <span id="totalEmbalagemModal">R$ 0,00</span></div>
-            <label style="font-size:11px">ADICIONAR ITEM DO CATÁLOGO DE EMBALAGENS:</label>
-            <div style="display:flex; gap:10px">
-                <select id="selectEmbalagemVenda" style="flex:1"></select>
-                <button type="button" class="btn-auto" onclick="adicionarEmbalagemVenda()">+ ADD</button>
+        <div class="grade g2">
+            <div class="campo"><label for="vendaPlataforma">Canal de venda</label>
+                <div style="display:flex; gap:6px"><div class="entrada" style="flex:1"><select id="vendaPlataforma" class="venda-calc"></select></div>
+                <div class="entrada oculto" id="grupoTaxaOutro" style="width:96px"><input type="text" inputmode="numeric" id="vendaTaxaOutro" value="0,00" class="num moeda venda-calc"><span class="un">%</span></div></div></div>
+            <div class="campo"><label for="vendaFrete">Frete pago por você</label>
+                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="vendaFrete" value="0,00" class="num moeda venda-calc"></div></div>
+            <div class="campo"><label for="vendaMargem">Margem de lucro</label>
+                <div class="entrada"><input type="text" inputmode="numeric" id="vendaMargem" value="100,00" class="num moeda venda-calc"><span class="un">%</span></div>
+                <span class="dica">Vem preenchida com a margem do catálogo</span></div>
+            <div class="campo"><label for="vendaDesconto">Desconto</label>
+                <div class="entrada"><input type="text" inputmode="numeric" id="vendaDesconto" value="0,00" class="num moeda venda-calc"><span class="un">%</span></div></div>
+        </div>
+
+        <div class="cartao" style="padding:14px 16px">
+            <h3 style="margin-bottom:6px">Embalagens</h3>
+            <div id="listaEmbalagensVenda"></div>
+            <div style="display:flex; gap:8px; margin-top:8px">
+                <div class="entrada" style="flex:1"><select id="selectEmbalagemVenda"></select></div>
+                <button type="button" class="btn sec" onclick="adicionarEmbalagemVenda()">Adicionar</button>
             </div>
         </div>
 
-        <div class="grid-2-cols">
-            <div class="form-group"><label>VALOR DO FRETE:</label>
-                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="vendaFrete" value="0,00" class="num moeda venda-calc"></div></div>
-            <div class="form-group"><label>FORMA DE VENDA (PLATAFORMA):</label>
-                <div style="display:flex; gap:8px">
-                    <select id="vendaPlataforma" class="venda-calc" style="flex:1"></select>
-                    <div class="input-group" id="grupoTaxaOutro" style="display:none; width:120px"><input type="text" id="vendaTaxaOutro" value="0,00" class="num moeda venda-calc"><span class="addon">%</span></div>
-                </div></div>
-            <div class="form-group"><label>MARGEM DE LUCRO (%):</label>
-                <div class="input-group"><input type="text" id="vendaMargem" value="100,00" class="num moeda venda-calc"><span class="addon">%</span></div>
-                <p class="dica">Pré-preenchida com a margem que está no catálogo.</p></div>
-            <div class="form-group"><label>DESCONTO ADICIONAL (%):</label>
-                <div class="input-group"><input type="text" id="vendaDesconto" value="0,00" class="num moeda venda-calc"><span class="addon">%</span></div></div>
+        <div class="resumo-venda">
+            <div class="l"><span>Custo total (produção, embalagem e frete)</span><b id="vendaCustoTotal">R$ 0,00</b></div>
+            <div class="l"><span>Taxa do canal</span><b id="vendaTaxaPlat" style="color:var(--alerta)">R$ 0,00</b></div>
+            <div class="final"><strong>Valor da venda</strong>
+                <div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="vendaValorTotal" value="0,00" class="num moeda"></div></div>
+            <div class="lucro"><span>Lucro líquido <small id="vendaPercLucro" style="color:var(--tinta-3); font-weight:600">(0%)</small></span><b id="vendaLucroFinal" class="pos">R$ 0,00</b></div>
         </div>
+    </div>
+    <div class="gaveta-rodape"><button type="button" class="btn grande" id="btnConfirmarVenda" onclick="confirmarVenda()">Confirmar venda</button></div>
+</div>
 
-        <div class="results" style="margin-top:5px; background:#f1f8f5; padding:20px; border-radius:8px; border:1px solid #c3e6cb">
-            <h4 style="margin-top:0; color:#155724; border-bottom:1px solid #c3e6cb; padding-bottom:8px">RESUMO FINAL DA TRANSAÇÃO</h4>
-            <p style="font-size:14px"><span>CUSTO TOTAL (PRODUÇÃO + EMB + FRETE):</span><span id="vendaCustoTotal" style="font-weight:bold; color:#444">R$ 0,00</span></p>
-            <p style="font-size:14px"><span>TAXA DEDUZIDA P/ PLATAFORMA:</span><span id="vendaTaxaPlat" style="color:#dc3545; font-weight:bold">R$ 0,00</span></p>
-            <p style="font-size:15px; font-weight:bold"><span>VALOR FINAL DE VENDA:</span>
-                <span class="input-group" style="width:200px"><span class="addon-pre" style="padding:6px">R$</span>
-                <input type="text" id="vendaValorTotal" value="0,00" class="num moeda" style="padding:6px; font-size:15px; color:#007bff"></span></p>
-            <p style="border-top:1px dashed #c3e6cb; padding-top:12px; font-weight:bold; font-size:18px"><span>LUCRO LÍQUIDO FINAL:</span>
-                <span><span id="vendaLucroFinal" style="color:#28a745">R$ 0,00</span> <span id="vendaPercLucro" style="font-size:14px; color:#555; font-weight:normal">(0%)</span></span></p>
+<!-- ======================= GAVETA: PRODUTO ======================= -->
+<div class="gaveta" id="gavetaProduto" role="dialog" aria-labelledby="tProduto">
+    <div class="gaveta-topo"><h2 id="tProduto">Editar produto</h2><button class="fechar" onclick="fecharGavetas()" aria-label="Fechar">×</button></div>
+    <div class="gaveta-corpo">
+        <div class="campo"><label for="edNome">Nome</label><div class="entrada"><input type="text" id="edNome" class="maiuscula"></div></div>
+        <div class="campo"><label for="edLink">Link</label><div class="entrada"><input type="url" id="edLink"></div></div>
+        <div class="grade g2">
+            <div class="campo"><label for="edCusto">Custo de produção</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="edCusto" class="num moeda"></div></div>
+            <div class="campo"><label for="edPreco">Preço base (sem taxas)</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="edPreco" class="num moeda"></div></div>
         </div>
-
-        <div style="display:flex; gap:15px; margin-top:20px">
-            <button type="button" class="btn-success" id="btnConfirmarVenda" onclick="confirmarVenda()" style="font-size:16px; padding:14px">✅ FINALIZAR VENDA</button>
-            <button type="button" class="btn-danger" onclick="fecharModalVenda()" style="font-size:16px; padding:14px">❌ CANCELAR</button>
+        <div id="edComponentes" class="oculto" style="background:var(--kit-claro); border-radius:10px; padding:12px 14px; color:var(--kit); font-size:13px"></div>
+        <div class="cartao" style="padding:16px">
+            <h3>Fotos de referência</h3>
+            <p style="margin:2px 0 12px; font-size:12px; color:var(--tinta-3)">Quanto mais fotos (ângulos, luz e fundos diferentes), melhor o app reconhece a peça. São salvas na hora.</p>
+            <div class="fotos-grid" id="edFotos"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px">
+                <label class="btn sec mini" for="edNovasFotos"><svg width="16" height="16"><use href="#i-foto"/></svg>Enviar fotos</label>
+                <button type="button" class="btn sec mini" id="btnFotosLink" onclick="buscarFotosLinkProduto()"><svg width="16" height="16"><use href="#i-link"/></svg>Buscar no link</button>
+            </div>
+            <input type="file" id="edNovasFotos" accept="image/*" multiple hidden>
+            <div id="edSeletorLink" style="display:none; margin-top:12px"></div>
         </div>
+    </div>
+    <div class="gaveta-rodape" style="display:flex; gap:10px">
+        <button type="button" class="btn sec" id="btnRecalcular" onclick="carregarNaCalculadora()">Recalcular</button>
+        <button type="button" class="btn" style="flex:1" onclick="salvarEdicaoProduto()">Salvar alterações</button>
     </div>
 </div>
 
-<!-- ===================== MODAL EDITAR PRODUTO ===================== -->
-<div class="modal-overlay" id="modalProduto">
-    <div class="modal-content" style="max-width:680px">
-        <span class="modal-close" onclick="fecharModalProduto()">&times;</span>
-        <h3 style="margin-top:0; color:#d39e00; border-bottom:2px solid #ffc107; padding-bottom:8px">✏️ EDITAR PRODUTO</h3>
-        <div class="form-group"><label>NOME:</label><input type="text" id="edNome" class="maiuscula"></div>
-        <div class="form-group"><label>LINK (URL):</label><input type="text" id="edLink"></div>
-        <div class="grid-2-cols">
-            <div class="form-group"><label>CUSTO TOTAL DE PRODUÇÃO:</label>
-                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="edCusto" class="num moeda"></div></div>
-            <div class="form-group"><label>PREÇO BASE (SEM TAXAS):</label>
-                <div class="input-group"><span class="addon-pre">R$</span><input type="text" id="edPreco" class="num moeda"></div></div>
+<!-- ======================= GAVETA: NOTA ======================= -->
+<div class="gaveta larga" id="gavetaNota" role="dialog" aria-labelledby="tNota">
+    <div class="gaveta-topo"><h2 id="tNota">Ler nota de compra</h2><button class="fechar" onclick="fecharGavetas()" aria-label="Fechar">×</button></div>
+    <div class="gaveta-corpo">
+        <div class="nota-preview">
+            <img id="notaImagem" alt="Nota enviada">
+            <div>
+                <div id="notaStatus" style="font-weight:600; margin-bottom:8px">Lendo a nota…</div>
+                <div class="progresso"><div id="notaProgresso"></div></div>
+                <p style="font-size:12px; color:var(--tinta-3); margin:10px 0 0">Confira os itens antes de salvar. Ajuste a quantidade de unidades por pacote (ex.: pacote com 50 caixas), e o custo por unidade é recalculado. Itens com o mesmo nome de uma embalagem já cadastrada têm o valor atualizado.</p>
+            </div>
         </div>
-        <div id="edComponentes" class="kit-box" style="display:none"></div>
-
-        <label>📷 FOTOS DE REFERÊNCIA (RECONHECIMENTO):</label>
-        <div class="fotos-grid" id="edFotos"></div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-            <input type="file" id="edNovasFotos" accept="image/*" multiple style="text-transform:none; flex:1; min-width:200px">
-            <button type="button" class="btn-info btn-auto" id="btnFotosLink" onclick="buscarFotosLinkProduto()">🔗 BUSCAR FOTOS NO LINK DO PRODUTO</button>
+        <div class="cartao oculto" id="notaItensBox" style="padding:12px">
+            <div class="tabela-wrap"><table class="tabela-nota">
+                <thead><tr><th></th><th>Embalagem</th><th class="n">Qtd</th><th class="n">Un./pacote</th><th class="n">Total pago</th><th class="n">Custo por unidade</th><th></th></tr></thead>
+                <tbody id="notaItens"></tbody>
+            </table></div>
+            <button type="button" class="btn sec mini" style="margin-top:10px" onclick="adicionarLinhaNota()">+ Adicionar linha</button>
         </div>
-        <div id="edSeletorLink" style="display:none; margin-top:10px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:10px"></div>
-        <p class="dica">Quanto mais fotos (ângulos, luz e fundos diferentes), melhor o app reconhece a peça. Fotos são salvas na hora.</p>
-
-        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap">
-            <button type="button" class="btn-success" style="flex:2" onclick="salvarEdicaoProduto()">💾 SALVAR ALTERAÇÕES</button>
-            <button type="button" class="btn-secondary" id="btnRecalcular" style="flex:1" onclick="carregarNaCalculadora()">🧮 RECALCULAR</button>
-        </div>
+        <details id="notaTextoBox" class="oculto"><summary style="cursor:pointer; color:var(--tinta-2); font-size:13px">Ver texto lido da imagem</summary>
+            <pre id="notaTexto" style="white-space:pre-wrap; font-size:11px; background:#fff; border:1px solid var(--linha); border-radius:8px; padding:10px; max-height:240px; overflow:auto"></pre></details>
     </div>
+    <div class="gaveta-rodape"><button type="button" class="btn grande" id="btnSalvarNota" onclick="salvarItensNota()" disabled>Salvar embalagens</button></div>
 </div>
 
 <script>
 /* ======================= ESTADO ======================= */
-let produtos = [];
-let vendas = [];
-let embalagens = [];
-let fotosResumo = {};
+let produtos = [], vendas = [], embalagens = [], fotosResumo = {};
 const selecionados = new Set();
-let editandoId = null;          // produto carregado na calculadora para atualização
-let produtoModalId = null;      // produto aberto no modal de edição
-let fotosNovoProduto = [];      // fotos processadas antes de salvar um produto novo
-let ultimoCalculo = null;
-
+let editandoId = null, produtoModalId = null, ultimoCalculo = null;
+let fotosNovoProduto = [];        // {thumb, emb} prontas
+let thumbsPendentes = [];         // imagens (dataURL) a processar ao salvar (Bambu/link)
+let importacao = null;            // resultado do Bambu Studio
+let filtroTipo = "TODOS";
+let itensNota = [];
 const venda = { itens: [], embalagens: [], valorManual: false, modo: "INDIVIDUAL", resultado: null };
 
 const $ = id => document.getElementById(id);
 const CAMPOS_CALC = ["nomeProduto","linkProduto","comprimentoFilamento","pesoPeca","precoKg","tipoFilamento","potenciaImpressora",
     "tarifaEnergia","tempoImpressao","valorImpressora","vidaUtil","tempoTrabalho","valorHoraTrabalho","margemFalhas","margemLucro"];
 const CHAVE_PADROES = "calc3d_padroes_v2";
+const CORES_FIL = { "PLA": "#2BB673", "PLA SILK": "#C9A227", "PLA MATTE": "#8A9A8F", "PLA WOOD": "#9C6B3E", "PLA CF": "#3A3F3C", "PETG": "#2F7DD1",
+    "PETG CF": "#24384F", "ABS": "#D9534F", "ABS+": "#B8322E", "ASA": "#E07B39", "TPU (FLEX)": "#9B59B6", "NYLON (PA)": "#E8DCC0", "NYLON CF": "#2C2C2C",
+    "PC": "#A7C7E7", "HIPS": "#F0F0F0", "PVA": "#F5F0D0", "RESINA": "#7FB3D5" };
+const corFil = t => CORES_FIL[t] || (String(t).includes("+") ? "#6B4FBB" : "#B0BAB4");
+const chipFil = t => `<span class="chip"><i class="carretel-ponto" style="background:${corFil(t)}"></i>${Fmt.esc(t)}</span>`;
+const icone = (id, tam = 16) => `<svg width="${tam}" height="${tam}"><use href="#i-${id}"/></svg>`;
+
+/* ======================= NAVEGAÇÃO ======================= */
+function irPara(p) {
+    document.querySelectorAll(".pagina").forEach(s => s.classList.toggle("ativa", s.id === "pag-" + p));
+    document.querySelectorAll(".nav-item[data-pagina]").forEach(b => b.classList.toggle("ativo", b.dataset.pagina === p));
+    atualizarCarrinho();
+    window.scrollTo({ top: 0 });
+}
+document.querySelectorAll(".nav-item[data-pagina]").forEach(b => b.addEventListener("click", () => irPara(b.dataset.pagina)));
+
+function abrirGaveta(id) { $("fundo").classList.add("aberto"); $(id).classList.add("aberta"); $("carrinho").classList.remove("visivel"); }
+function fecharGavetas() {
+    document.querySelectorAll(".gaveta").forEach(g => g.classList.remove("aberta"));
+    $("fundo").classList.remove("aberto");
+    produtoModalId = null;
+    venda.itens = []; venda.embalagens = []; venda.valorManual = false;
+    atualizarCarrinho();
+}
 
 /* ======================= EVENTOS GLOBAIS ======================= */
 document.addEventListener("input", e => {
     const el = e.target;
     if (el.classList.contains("moeda")) Fmt.mascaraMoeda(el);
     if (el.classList.contains("hora")) Fmt.mascaraHora(el);
-    if (el.classList.contains("maiuscula")) { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); }
     if (el.classList.contains("calc")) calcular();
     if (el.classList.contains("padrao")) salvarPadroes();
     if (el.classList.contains("venda-calc")) { venda.valorManual = false; calcularVenda(); }
     if (el.id === "vendaValorTotal") { venda.valorManual = true; calcularVenda(); }
     if (el.id === "pesquisaHistorico") renderizarCatalogo();
-    if (el.id === "kitNome") atualizarInfoKit();
+    if (el.closest && el.closest("#notaItens")) atualizarLinhaNota(el);
 });
 document.addEventListener("change", e => {
     const el = e.target;
     if (el.tagName === "SELECT" && el.classList.contains("calc")) calcular();
     if (el.tagName === "SELECT" && el.classList.contains("padrao")) salvarPadroes();
-    if (el.id === "vendaPlataforma") { $("grupoTaxaOutro").style.display = el.value === "OUTRO" ? "flex" : "none"; venda.valorManual = false; calcularVenda(); }
-    if (["filtroTipo","filtroFilamento"].includes(el.id)) renderizarCatalogo();
+    if (el.id === "vendaPlataforma") { $("grupoTaxaOutro").classList.toggle("oculto", el.value !== "OUTRO"); venda.valorManual = false; calcularVenda(); }
+    if (el.id === "filtroFilamento") renderizarCatalogo();
     if (el.id === "filtroPeriodo") renderizarDashboard();
     if (el.name === "modoVenda") definirModoVenda(el.value);
-    if (el.classList.contains("chk")) {
-        const id = Number(el.dataset.id);
-        el.checked ? selecionados.add(id) : selecionados.delete(id);
-        el.closest("tr").classList.toggle("selecionado", el.checked);
-        atualizarBotaoVender();
-    }
     if (el.id === "fotosNovoProduto") processarFotosNovoProduto(el.files);
     if (el.id === "edNovasFotos") adicionarFotosProduto(el.files);
+    if (el.id === "arquivoBambu" && el.files[0]) importarBambu(el.files[0]);
+    if (el.id === "arquivoNota" && el.files[0]) lerNota(el.files[0]);
+    if (el.closest && el.closest("#notaItens") && el.type === "checkbox") atualizarBotaoNota();
 });
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") { fecharModalVenda(); fecharModalProduto(); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") fecharGavetas(); });
+$("filtroTipo").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filtroTipo = b.dataset.v;
+    $("filtroTipo").querySelectorAll("button").forEach(x => x.classList.toggle("ativo", x === b));
+    renderizarCatalogo();
+});
+// Arrastar arquivo do Bambu
+const zona = $("zonaBambu");
+["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("arrastando"); }));
+["dragleave", "drop"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove("arrastando"); }));
+zona.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) importarBambu(f); });
+// Colar print da nota na página de embalagens
+document.addEventListener("paste", e => {
+    if (!$("pag-embalagens").classList.contains("ativa")) return;
+    const item = [...(e.clipboardData || {}).items || []].find(i => i.type.startsWith("image/"));
+    if (item) { e.preventDefault(); lerNota(item.getAsFile()); }
 });
 
 /* ======================= CALCULADORA ======================= */
@@ -490,41 +760,39 @@ function lerParametros() {
 
 function calcular() {
     const r = Calc.producao(lerParametros());
-    $("resSubtotal").textContent = Fmt.brl(r.subtotal);
-    $("resDetalhe").textContent = [r.material, r.energia, r.depreciacao, r.maoDeObra].map(Fmt.brl).join(" / ");
-    $("resFalhas").textContent = Fmt.brl(r.falhas);
+    ultimoCalculo = r;
+    $("resPrecoSemTaxa").textContent = Fmt.brl(r.preco);
+    $("resPrecoML").textContent = Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 20 }));
+    $("resPrecoCartao").textContent = Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 5 }));
     $("resCustoTotal").textContent = Fmt.brl(r.custoTotal);
     $("resLucro").textContent = Fmt.brl(r.lucro);
-    $("resPrecoSemTaxa").textContent = Fmt.brl(r.preco);
-    $("resPrecoPlataformas").textContent = `${Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 20 }))} · ${Fmt.brl(Calc.precoVenda({ custo: r.preco, taxaPerc: 5 }))}`;
-    ultimoCalculo = r;
+    const partes = [
+        ["Material", r.material, "#0E7C66"], ["Energia", r.energia, "#E8A33D"], ["Desgaste da impressora", r.depreciacao, "#5B7F95"],
+        ["Seu trabalho", r.maoDeObra, "#6B4FBB"], ["Margem p/ falhas", r.falhas, "#C8412F"]
+    ];
+    const tot = r.custoTotal || 1;
+    $("barraCusto").innerHTML = partes.map(([, v, c]) => `<div style="width:${(v / tot) * 100}%; background:${c}"></div>`).join("");
+    $("legendaCusto").innerHTML = partes.map(([n, v, c]) => `<div><i style="background:${c}"></i><span>${n}</span><b>${Fmt.brl(v)}</b></div>`).join("");
 }
 
 function salvarPadroes() {
-    const padroes = {};
-    document.querySelectorAll(".padrao").forEach(el => padroes[el.id] = el.value);
-    try { localStorage.setItem(CHAVE_PADROES, JSON.stringify(padroes)); } catch (e) {}
+    const p = {};
+    document.querySelectorAll(".padrao").forEach(el => p[el.id] = el.value);
+    try { localStorage.setItem(CHAVE_PADROES, JSON.stringify(p)); } catch (e) {}
 }
 function carregarPadroes() {
-    try {
-        const p = JSON.parse(localStorage.getItem(CHAVE_PADROES) || "{}");
-        Object.entries(p).forEach(([id, val]) => { if ($(id)) $(id).value = val; });
-    } catch (e) {}
+    try { Object.entries(JSON.parse(localStorage.getItem(CHAVE_PADROES) || "{}")).forEach(([id, v]) => { if ($(id)) $(id).value = v; }); } catch (e) {}
 }
-
-function snapshotCampos() {
-    const s = {};
-    CAMPOS_CALC.forEach(id => s[id] = $(id).value);
-    return s;
-}
+function snapshotCampos() { const s = {}; CAMPOS_CALC.forEach(id => s[id] = $(id).value); return s; }
 
 function limparCamposProduto() {
-    ["nomeProduto", "linkProduto"].forEach(id => $(id).value = "");
+    ["nomeProduto", "linkProduto", "linkRapido"].forEach(id => $(id).value = "");
     ["comprimentoFilamento", "pesoPeca"].forEach(id => $(id).value = "0,00");
     ["tempoImpressao", "tempoTrabalho"].forEach(id => $(id).value = "00:00:00");
-    fotosNovoProduto = [];
-    $("fotosNovoProduto").value = "";
+    fotosNovoProduto = []; thumbsPendentes = []; importacao = null;
+    $("fotosNovoProduto").value = ""; $("arquivoBambu").value = "";
     $("seletorLinkNovo").style.display = "none";
+    $("resultadoImportacao").innerHTML = "";
     renderizarPreviewFotosNovo();
     calcular();
 }
@@ -532,74 +800,169 @@ function limparCamposProduto() {
 async function salvarProduto() {
     calcular();
     const nome = $("nomeProduto").value.trim().toUpperCase() || "PRODUTO SEM NOME";
-    if (ultimoCalculo.custoTotal <= 0 && !confirm("O CUSTO ESTÁ ZERADO. SALVAR MESMO ASSIM?")) return;
-
+    if (ultimoCalculo.custoTotal <= 0 && !confirm("O custo está zerado. Salvar mesmo assim?")) return;
     const reg = {
         nome, link: $("linkProduto").value.trim(), tipo_filamento: $("tipoFilamento").value,
         custo_producao_base: +ultimoCalculo.custoTotal.toFixed(4), preco_base: +ultimoCalculo.preco.toFixed(4),
         parametros: snapshotCampos()
     };
-
     if (!editandoId) {
-        const duplicado = produtos.find(p => p.nome === nome && p.tipo !== "KIT");
-        if (duplicado && confirm(`JÁ EXISTE "${nome}" NO CATÁLOGO.\n\nOK = ATUALIZAR O EXISTENTE\nCANCELAR = CRIAR UM NOVO`)) editandoId = duplicado.id;
+        const dup = produtos.find(p => p.nome === nome && p.tipo !== "KIT");
+        if (dup && confirm(`Já existe "${nome}" no catálogo.\n\nOK = atualizar o existente\nCancelar = criar outro`)) editandoId = dup.id;
     }
-
     const btn = $("btnSalvarProduto");
-    btn.disabled = true;
+    btn.disabled = true; btn.textContent = "Salvando…";
     try {
         let salvo;
-        if (editandoId) {
-            salvo = await DB.atualizarProduto(editandoId, reg);
-            produtos = produtos.map(p => p.id === editandoId ? salvo : p);
-        } else {
-            salvo = await DB.inserirProduto({ ...reg, data: Fmt.hoje(), quantidade: 1, vendido: false, tipo: "PRODUTO" });
-            produtos.push(salvo);
+        const atualizando = !!editandoId;
+        if (editandoId) { salvo = await DB.atualizarProduto(editandoId, reg); produtos = produtos.map(p => p.id === editandoId ? salvo : p); }
+        else { salvo = await DB.inserirProduto({ ...reg, data: Fmt.hoje(), quantidade: 1, vendido: false, tipo: "PRODUTO" }); produtos.push(salvo); }
+        if (DB.schemaNovo && thumbsPendentes.length) {
+            btn.textContent = "Preparando fotos…";
+            for (const t of thumbsPendentes) {
+                try { const img = await carregarImagem(t.src); fotosNovoProduto.push(await Visao.processarFonte(img)); } catch (e) { console.warn(e); }
+            }
         }
         if (fotosNovoProduto.length) await gravarFotos(salvo.id, fotosNovoProduto);
-        UI.toast(editandoId ? "✅ PRODUTO ATUALIZADO!" : "✅ PRODUTO SALVO NO CATÁLOGO!");
-        cancelarEdicao(true);
-        limparCamposProduto();
-        atualizarFiltros();
-        renderizarCatalogo();
-    } catch (e) { UI.erro("Erro ao salvar produto", e); }
-    finally { btn.disabled = false; }
+        UI.toast(atualizando ? "Produto atualizado" : "Produto salvo no catálogo");
+        cancelarEdicao(true); limparCamposProduto(); atualizarFiltros(); renderizarCatalogo();
+    } catch (e) { UI.erro("Não foi possível salvar o produto", e); }
+    finally { btn.disabled = false; btn.textContent = editandoId ? "Atualizar produto" : "Salvar no catálogo"; }
+}
+
+function carregarImagem(src) {
+    return new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = src; });
 }
 
 function cancelarEdicao(silencioso) {
     editandoId = null;
-    $("bannerEdicao").style.display = "none";
-    $("btnSalvarProduto").textContent = "SALVAR NO CATÁLOGO DE PRODUTOS";
+    $("bannerEdicao").classList.add("oculto");
+    $("tituloCalc").textContent = "Novo produto";
+    $("btnSalvarProduto").textContent = "Salvar no catálogo";
     if (silencioso !== true) limparCamposProduto();
+}
+
+/* ---------- Bambu Studio ---------- */
+async function importarBambu(arquivo) {
+    $("resultadoImportacao").innerHTML = `<div class="lido"><div>Lendo <b>${Fmt.esc(arquivo.name)}</b>…</div></div>`;
+    try {
+        importacao = await Bambu.ler(arquivo);
+        aplicarPlaca(0);
+    } catch (e) {
+        $("resultadoImportacao").innerHTML = `<div class="lido" style="background:var(--alerta-claro); border-color:#F2C4BC"><div><b>Não consegui ler este arquivo.</b><br><span style="font-size:13px">${Fmt.esc(e.message)}</span></div></div>`;
+        importacao = null;
+    }
+    $("arquivoBambu").value = "";
+}
+
+function aplicarPlaca(i) {
+    const r = importacao, p = r.placas[i];
+    $("pesoPeca").value = Fmt.num(p.pesoG);
+    $("comprimentoFilamento").value = Fmt.num(p.comprimentoM);
+    $("tempoImpressao").value = Bambu.segundosParaHHMMSS(p.tempoSeg);
+    $("tipoFilamento").value = Bambu.tipoPrincipal(p.filamentos);
+    if (!$("nomeProduto").value.trim() || $("nomeProduto").dataset.auto === "1") {
+        const nomeObj = p.objetos && p.objetos.length === 1 ? Bambu.nomeBase(p.objetos[0]) : r.nome;
+        $("nomeProduto").value = nomeObj.toUpperCase();
+        $("nomeProduto").dataset.auto = "1";
+    }
+    thumbsPendentes = thumbsPendentes.filter(t => t.origem !== "bambu");
+    if (p.thumb) thumbsPendentes.unshift({ src: p.thumb, origem: "bambu" });
+    renderizarPreviewFotosNovo();
+    calcular();
+
+    const filas = p.filamentos.map(f => `<span class="chip"><i class="carretel-ponto" style="background:${Fmt.esc(f.cor || corFil(Bambu.tipoPrincipal([f])))}"></i>${Fmt.esc(f.tipo)} · ${Fmt.num(f.g, 1)} g</span>`).join("");
+    const placas = r.placas.length > 1 ? `<div class="placas">${r.placas.map((pl, k) => `
+        <div class="placa ${k === i ? "ativa" : ""}" onclick="aplicarPlaca(${k})">${pl.thumb ? `<img src="${pl.thumb}" alt="">` : ""}Placa ${pl.indice}<br><span style="color:var(--tinta-3); font-weight:500">${Fmt.num(pl.pesoG, 1)} g</span></div>`).join("")}</div>` : "";
+    $("resultadoImportacao").innerHTML = `
+        <div class="lido">
+            ${p.thumb ? `<img src="${p.thumb}" alt="Placa ${p.indice}">` : ""}
+            <div style="flex:1">
+                <b>Placa ${p.indice} lida do Bambu Studio</b> — ${Fmt.num(p.pesoG, 1)} g, ${Fmt.num(p.comprimentoM, 2)} m, ${Bambu.segundosParaHHMMSS(p.tempoSeg)} de impressão
+                <div class="filas">${filas}</div>
+                ${p.filamentos.length > 1 ? `<div style="font-size:12px; color:var(--tinta-2); margin-top:6px">Peça multicolor: o custo usa o peso total e o preço do kg informado abaixo.</div>` : ""}
+            </div>
+        </div>${placas ? `<div style="margin:-6px 0 16px">${r.placas.length} placas no arquivo. Escolha qual é este produto:${placas}</div>` : ""}`;
+}
+$("nomeProduto").addEventListener("input", () => { $("nomeProduto").dataset.auto = "0"; });
+
+/* ---------- Cadastro pelo link ---------- */
+async function cadastrarPeloLink() {
+    const url = $("linkRapido").value.trim();
+    if (!Fmt.linkSeguro(url)) { UI.toast("Cole o link completo do modelo (começando com https://).", "aviso"); return; }
+    const btn = $("btnLinkRapido");
+    btn.disabled = true; btn.textContent = "Buscando…";
+    $("resultadoImportacao").innerHTML = `<div class="lido"><div>Lendo a página do modelo…</div></div>`;
+    try {
+        const d = await Importar.produto(url);
+        importacao = { link: d, url };
+        aplicarPerfilLink(0);
+    } catch (e) {
+        $("resultadoImportacao").innerHTML = `<div class="lido" style="background:var(--alerta-claro); border-color:#F2C4BC"><div><b>Não consegui ler este link.</b><br><span style="font-size:13px">${Fmt.esc(e.message)}</span></div></div>`;
+    } finally { btn.disabled = false; btn.textContent = "Buscar"; }
+}
+
+function aplicarPerfilLink(i) {
+    const d = importacao.link, url = importacao.url;
+    const perfis = d.perfis || [];
+    const p = perfis[i];
+    $("linkProduto").value = url;
+    if (d.nome && (!$("nomeProduto").value.trim() || $("nomeProduto").dataset.auto === "1")) { $("nomeProduto").value = d.nome.toUpperCase(); $("nomeProduto").dataset.auto = "1"; }
+    if (p) {
+        if (p.pesoG) $("pesoPeca").value = Fmt.num(p.pesoG);
+        if (p.comprimentoM) $("comprimentoFilamento").value = Fmt.num(p.comprimentoM);
+        if (p.tempoSeg) $("tempoImpressao").value = Bambu.segundosParaHHMMSS(p.tempoSeg);
+        if (p.filamentos && p.filamentos.length) $("tipoFilamento").value = Bambu.tipoPrincipal(p.filamentos);
+    }
+    thumbsPendentes = thumbsPendentes.filter(t => t.origem !== "link");
+    calcular();
+    const listaPerfis = perfis.length > 1 ? `<div class="placas">${perfis.map((pf, k) => `
+        <div class="placa ${k === i ? "ativa" : ""}" style="width:150px; text-align:left" onclick="aplicarPerfilLink(${k})">${pf.capa ? `<img src="${Fmt.esc(Importar.reduzida(pf.capa, 240))}" referrerpolicy="no-referrer" alt="" style="object-fit:cover">` : ""}
+            <span style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${Fmt.esc(pf.nome || "Perfil " + (k + 1))}</span>
+            <span style="color:var(--tinta-3); font-weight:500">${pf.pesoG ? Fmt.num(pf.pesoG, 1) + " g · " : ""}${pf.tempoSeg ? Bambu.segundosParaHHMMSS(pf.tempoSeg) : ""}</span></div>`).join("")}</div>` : "";
+    $("resultadoImportacao").innerHTML = `
+        <div class="lido">
+            ${d.imagens && d.imagens[0] ? `<img src="${Fmt.esc(Importar.reduzida(d.imagens[0], 240))}" referrerpolicy="no-referrer" style="object-fit:cover" alt="">` : ""}
+            <div style="flex:1"><b>${Fmt.esc(d.nome || "Modelo")}</b>
+                <div style="font-size:13px; color:var(--tinta-2)">${p ? `Perfil "${Fmt.esc(p.nome || "padrão")}": ${p.pesoG ? Fmt.num(p.pesoG, 1) + " g" : "peso não informado"}, ${p.tempoSeg ? Bambu.segundosParaHHMMSS(p.tempoSeg) : "tempo não informado"}${p.placas > 1 ? `, ${p.placas} placas` : ""}` : "O link não traz peso e tempo. Complete com o arquivo do Bambu Studio."}</div>
+                ${d.imagens && d.imagens.length ? `<button type="button" class="btn sec mini" style="margin-top:8px" onclick="buscarFotosLinkNovo()">Escolher fotos do modelo (${d.imagens.length})</button>` : ""}
+            </div>
+        </div>${listaPerfis ? `<div style="margin:-6px 0 16px">${perfis.length} perfis de impressão. Escolha o que você usa:${listaPerfis}</div>` : ""}`;
 }
 
 /* ======================= FOTOS ======================= */
 async function processarArquivos(files) {
-    const lista = [...files].filter(f => f.type.startsWith("image/"));
+    const lista = [...files].filter(f => (f.type || "").startsWith("image/"));
     if (!lista.length) return [];
-    UI.toast("🧠 PROCESSANDO FOTOS (A 1ª VEZ BAIXA O MODELO DE IA)...", "info", 4000);
+    UI.toast("Preparando fotos (na primeira vez o modelo de IA é baixado)…", "info", 4000);
     const saida = [];
     for (const f of lista) saida.push(await Visao.processarArquivo(f));
     return saida;
 }
-
 async function processarFotosNovoProduto(files) {
-    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
-    try {
-        fotosNovoProduto.push(...await processarArquivos(files));
-        renderizarPreviewFotosNovo();
-    } catch (e) { UI.erro("Erro ao processar fotos", e); }
+    if (!DB.schemaNovo) { UI.toast("Fotos indisponíveis: o banco ainda não foi atualizado.", "aviso", 6000); return; }
+    try { fotosNovoProduto.push(...await processarArquivos(files)); renderizarPreviewFotosNovo(); }
+    catch (e) { UI.erro("Erro ao preparar fotos", e); }
     $("fotosNovoProduto").value = "";
 }
-
 function renderizarPreviewFotosNovo() {
-    $("previewFotosNovo").innerHTML = fotosNovoProduto.map((f, i) =>
-        `<div class="foto-item"><img src="${f.thumb}"><button type="button" onclick="fotosNovoProduto.splice(${i},1); renderizarPreviewFotosNovo()">✕</button></div>`).join("");
+    const a = thumbsPendentes.map((t, i) => `<div class="foto-item"><img src="${t.src}" alt=""><span class="tag">${t.origem === "bambu" ? "Bambu" : "Link"}</span><button type="button" title="Remover" onclick="thumbsPendentes.splice(${i},1); renderizarPreviewFotosNovo()">×</button></div>`);
+    const b = fotosNovoProduto.map((f, i) => `<div class="foto-item"><img src="${f.thumb}" alt=""><button type="button" title="Remover" onclick="fotosNovoProduto.splice(${i},1); renderizarPreviewFotosNovo()">×</button></div>`);
+    $("previewFotosNovo").innerHTML = [...a, ...b].join("") || `<span style="font-size:13px; color:var(--tinta-3)">Nenhuma foto ainda.</span>`;
 }
-
 async function gravarFotos(produtoId, fotos) {
     for (const f of fotos) await DB.inserirFoto(produtoId, f.thumb, f.emb);
     fotosResumo = await DB.resumoFotos();
+}
+function buscarFotosLinkNovo() {
+    if (!DB.schemaNovo) { UI.toast("Fotos indisponíveis: o banco ainda não foi atualizado.", "aviso", 6000); return; }
+    const url = $("linkProduto").value.trim() || $("linkRapido").value.trim();
+    if (!Fmt.linkSeguro(url)) { UI.toast("Preencha o link de referência do produto.", "aviso"); return; }
+    Importar.seletor($("seletorLinkNovo"), url, async blobs => {
+        fotosNovoProduto.push(...await processarArquivos(blobs));
+        renderizarPreviewFotosNovo();
+        UI.toast("Fotos prontas. Elas serão salvas junto com o produto.");
+    });
 }
 
 /* ======================= CATÁLOGO ======================= */
@@ -607,396 +970,361 @@ async function carregarProdutos() {
     try {
         produtos = await DB.listarProdutos();
         fotosResumo = await DB.resumoFotos().catch(() => ({}));
-        atualizarFiltros();
-        renderizarCatalogo();
-    } catch (e) { UI.erro("Erro ao carregar catálogo", e); }
+        atualizarFiltros(); renderizarCatalogo();
+    } catch (e) { UI.erro("Erro ao carregar o catálogo", e); }
 }
-
 function atualizarFiltros() {
     const sel = $("filtroFilamento"), atual = sel.value;
     const fils = [...new Set(produtos.map(p => p.tipoFilamento))].sort();
-    sel.innerHTML = '<option value="TODOS">TODOS</option>' + fils.map(f => `<option value="${Fmt.esc(f)}">${Fmt.esc(f)}</option>`).join("");
+    sel.innerHTML = '<option value="TODOS">Todos os filamentos</option>' + fils.map(f => `<option value="${Fmt.esc(f)}">${Fmt.esc(f)}</option>`).join("");
     if (fils.includes(atual)) sel.value = atual;
+    $("navQtdProdutos").textContent = produtos.length;
 }
-
 function nomeComLink(nome, link) {
     const url = Fmt.linkSeguro(link);
-    return url ? `<a href="${Fmt.esc(url)}" target="_blank" rel="noopener" class="produto-link">${Fmt.esc(nome)}</a>` : Fmt.esc(nome);
+    return url ? `<a href="${Fmt.esc(url)}" target="_blank" rel="noopener">${Fmt.esc(nome)}</a>` : Fmt.esc(nome);
 }
-
-function textoComponentes(comp) {
-    return (comp || []).map(c => `${c.qtd}X ${c.nome}`).join(" + ");
-}
+function textoComponentes(comp) { return (comp || []).map(c => `${c.qtd}× ${c.nome}`).join(" + "); }
 
 function renderizarCatalogo() {
     const termo = $("pesquisaHistorico").value.toUpperCase().trim();
-    const fTipo = $("filtroTipo").value, fFil = $("filtroFilamento").value;
+    const fFil = $("filtroFilamento").value;
     const lista = produtos
         .filter(p => !termo || p.nome.includes(termo))
-        .filter(p => fTipo === "TODOS" || p.tipo === fTipo)
+        .filter(p => filtroTipo === "TODOS" || p.tipo === filtroTipo)
         .filter(p => fFil === "TODOS" || p.tipoFilamento === fFil)
         .sort((a, b) => a.nome.localeCompare(b.nome));
-
     if (!lista.length) {
-        $("corpoCatalogo").innerHTML = '<tr><td colspan="9" style="color:#777">NENHUM PRODUTO ENCONTRADO.</td></tr>';
+        $("gradeCatalogo").innerHTML = produtos.length
+            ? `<div class="vazio" style="grid-column:1/-1"><strong>Nada encontrado</strong>Tente outro nome ou limpe os filtros.</div>`
+            : `<div class="vazio" style="grid-column:1/-1"><strong>Seu catálogo está vazio</strong>Cadastre o primeiro produto pelo arquivo do Bambu Studio ou pelo link do modelo.<br><button class="btn" style="margin-top:14px" onclick="irPara('calcular')">Cadastrar produto</button></div>`;
+        atualizarCarrinho();
         return;
     }
-    $("corpoCatalogo").innerHTML = lista.map(p => {
-        const f = fotosResumo[p.id];
-        const foto = f ? `<img class="thumb" src="${f.thumb}" title="${f.qtd} foto(s)">` : `<div class="thumb-vazio" title="Sem fotos">📷</div>`;
-        const kit = p.tipo === "KIT";
-        const sel = selecionados.has(p.id);
-        return `<tr class="${sel ? "selecionado" : ""}">
-            <td>${foto}</td>
-            <td class="esq" style="font-weight:bold; white-space:normal; max-width:320px">
-                ${kit ? '<span class="badge kit">KIT</span> ' : ""}${nomeComLink(p.nome, p.link)}
-                ${kit && p.componentes ? `<div class="componentes">${Fmt.esc(textoComponentes(p.componentes))}</div>` : ""}
-            </td>
-            <td style="font-size:10px">${Fmt.esc(p.data)}</td>
-            <td><span class="badge">${Fmt.esc(p.tipoFilamento)}</span></td>
-            <td style="color:#dc3545; font-weight:bold">${Fmt.brl(p.custoProducaoBase)}</td>
-            <td style="color:#28a745; font-weight:bold">${Fmt.brl(p.precoBase - p.custoProducaoBase)}</td>
-            <td style="font-weight:bold; background:#e9ecef">${Fmt.brl(p.precoBase)}</td>
-            <td><input type="checkbox" class="chk" data-id="${p.id}" ${sel ? "checked" : ""}></td>
-            <td style="white-space:nowrap">
-                <button type="button" class="btn-warning btn-sm" title="Editar / fotos" onclick="abrirModalProduto(${p.id})">✏️${f ? ` <span class="badge foto">${f.qtd}📷</span>` : ""}</button>
-                <button type="button" class="btn-danger btn-sm" title="Excluir" onclick="excluirProduto(${p.id})">X</button>
-            </td></tr>`;
+    $("gradeCatalogo").innerHTML = lista.map(p => {
+        const f = fotosResumo[p.id], kit = p.tipo === "KIT", sel = selecionados.has(p.id);
+        return `<article class="produto ${sel ? "sel" : ""}">
+            <div class="capa" onclick="alternarSelecao(${p.id})" title="${sel ? "Desmarcar" : "Marcar para vender"}">
+                ${f ? `<img src="${f.thumb}" alt="">` : icone("cat", 44)}
+                <span class="marcar">${icone("ok")}</span>
+                ${f ? `<span class="fotos-qtd">${f.qtd} foto${f.qtd > 1 ? "s" : ""}</span>` : ""}
+            </div>
+            <div class="corpo">
+                <div style="display:flex; gap:6px; flex-wrap:wrap">${kit ? '<span class="chip kit">Kit</span>' : ""}${chipFil(p.tipoFilamento)}</div>
+                <div class="nome">${nomeComLink(p.nome, p.link)}</div>
+                ${kit && p.componentes ? `<div class="comp">${Fmt.esc(textoComponentes(p.componentes))}</div>` : ""}
+                <div class="valores">
+                    <div><small>Preço base</small><span class="preco num">${Fmt.brl(p.precoBase)}</span></div>
+                    <div class="custo">custo ${Fmt.brl(p.custoProducaoBase)}<br><span class="pos">+${Fmt.brl(p.precoBase - p.custoProducaoBase)}</span></div>
+                </div>
+            </div>
+            <div class="acoes">
+                <button onclick="abrirModalProduto(${p.id})">${icone("editar")}Editar</button>
+                <button class="del" onclick="excluirProduto(${p.id})">${icone("lixo")}Excluir</button>
+            </div></article>`;
     }).join("");
+    atualizarCarrinho();
 }
-
-function atualizarBotaoVender() {
-    $("btnVender").textContent = `🛒 VENDER ITENS SELECIONADOS (${selecionados.size})`;
+function alternarSelecao(id) { selecionados.has(id) ? selecionados.delete(id) : selecionados.add(id); renderizarCatalogo(); }
+function limparSelecao() { selecionados.clear(); renderizarCatalogo(); }
+function atualizarCarrinho() {
+    const n = selecionados.size;
+    const total = [...selecionados].reduce((s, id) => { const p = produtos.find(x => x.id === id); return s + (p ? p.precoBase : 0); }, 0);
+    $("carrinhoQtd").textContent = n;
+    $("carrinhoValor").textContent = Fmt.brl(total);
+    const gavetaAberta = !!document.querySelector(".gaveta.aberta");
+    $("carrinho").classList.toggle("visivel", n > 0 && !gavetaAberta && $("pag-catalogo").classList.contains("ativa"));
 }
-
 async function excluirProduto(id) {
     const p = produtos.find(x => x.id === id);
-    if (!p || !confirm(`EXCLUIR "${p.nome}" DEFINITIVAMENTE DO CATÁLOGO?\n(As vendas já lançadas são mantidas.)`)) return;
+    if (!p || !confirm(`Excluir "${p.nome}" do catálogo?\nAs vendas já lançadas continuam no histórico.`)) return;
     try {
         await DB.excluirProduto(id);
-        produtos = produtos.filter(x => x.id !== id);
-        selecionados.delete(id);
-        delete fotosResumo[id];
-        atualizarFiltros(); renderizarCatalogo(); atualizarBotaoVender();
-        UI.toast("PRODUTO EXCLUÍDO.");
+        produtos = produtos.filter(x => x.id !== id); selecionados.delete(id); delete fotosResumo[id];
+        atualizarFiltros(); renderizarCatalogo();
+        UI.toast("Produto excluído");
     } catch (e) { UI.erro("Erro ao excluir", e); }
 }
 
-/* ---------- Modal editar produto ---------- */
+/* ---------- Gaveta editar produto ---------- */
 async function abrirModalProduto(id) {
     const p = produtos.find(x => x.id === id);
     if (!p) return;
     produtoModalId = id;
-    $("edNome").value = p.nome;
-    $("edLink").value = p.link;
-    $("edCusto").value = Fmt.num(p.custoProducaoBase);
-    $("edPreco").value = Fmt.num(p.precoBase);
-    $("btnRecalcular").style.display = p.parametros ? "" : "none";
+    $("tProduto").textContent = p.tipo === "KIT" ? "Editar kit" : "Editar produto";
+    $("edNome").value = p.nome; $("edLink").value = p.link;
+    $("edCusto").value = Fmt.num(p.custoProducaoBase); $("edPreco").value = Fmt.num(p.precoBase);
+    $("btnRecalcular").classList.toggle("oculto", !p.parametros);
     const comp = $("edComponentes");
-    if (p.tipo === "KIT" && p.componentes) {
-        comp.style.display = "block";
-        comp.innerHTML = `<strong style="color:#6f42c1; font-size:12px">COMPOSIÇÃO DO KIT:</strong><br><span style="font-size:12px">${Fmt.esc(textoComponentes(p.componentes))}</span>`;
-    } else comp.style.display = "none";
-    $("edSeletorLink").style.display = "none";
-    $("edSeletorLink").innerHTML = "";
-    $("modalProduto").classList.add("aberto");
+    comp.classList.toggle("oculto", !(p.tipo === "KIT" && p.componentes));
+    if (p.tipo === "KIT" && p.componentes) comp.innerHTML = `<b>Composição do kit</b><br>${Fmt.esc(textoComponentes(p.componentes))}`;
+    $("edSeletorLink").style.display = "none"; $("edSeletorLink").innerHTML = "";
+    abrirGaveta("gavetaProduto");
     await renderizarFotosModal();
 }
-
 async function renderizarFotosModal() {
     const box = $("edFotos");
-    if (!DB.schemaNovo) { box.innerHTML = '<span class="dica">Execute sql/migracao.sql no Supabase para habilitar fotos.</span>'; return; }
-    box.innerHTML = '<span class="dica">Carregando fotos...</span>';
+    if (!DB.schemaNovo) { box.innerHTML = '<span style="font-size:13px; color:var(--tinta-3)">Fotos indisponíveis: o banco ainda não foi atualizado.</span>'; return; }
+    box.innerHTML = '<span style="font-size:13px; color:var(--tinta-3)">Carregando…</span>';
     try {
         const fotos = await DB.listarFotosProduto(produtoModalId);
-        box.innerHTML = fotos.length ? fotos.map(f =>
-            `<div class="foto-item"><img src="${f.thumb}"><button type="button" title="Remover" onclick="removerFoto(${f.id})">✕</button></div>`).join("")
-            : '<span class="dica">Nenhuma foto. Adicione abaixo.</span>';
+        box.innerHTML = fotos.length ? fotos.map(f => `<div class="foto-item"><img src="${f.thumb}" alt=""><button type="button" title="Remover" onclick="removerFoto(${f.id})">×</button></div>`).join("")
+            : '<span style="font-size:13px; color:var(--tinta-3)">Nenhuma foto ainda.</span>';
     } catch (e) { box.innerHTML = ""; UI.erro("Erro ao carregar fotos", e); }
 }
-
 async function adicionarFotosProduto(files) {
     if (!produtoModalId) return;
-    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
     try {
         const fotos = await processarArquivos(files);
         await gravarFotos(produtoModalId, fotos);
-        UI.toast(`📷 ${fotos.length} FOTO(S) ADICIONADA(S)`);
-        await renderizarFotosModal();
-        renderizarCatalogo();
+        UI.toast(`${fotos.length} foto(s) adicionada(s)`);
+        await renderizarFotosModal(); renderizarCatalogo();
     } catch (e) { UI.erro("Erro ao salvar fotos", e); }
     $("edNovasFotos").value = "";
 }
-
-/* Fotos de referência a partir do link cadastrado (MakerWorld etc.) */
 function buscarFotosLinkProduto() {
     if (!produtoModalId) return;
-    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
     const id = produtoModalId;
     Importar.seletor($("edSeletorLink"), $("edLink").value.trim(), async blobs => {
         const fotos = await processarArquivos(blobs);
         await gravarFotos(id, fotos);
-        UI.toast(`📷 ${fotos.length} FOTO(S) DO LINK ADICIONADA(S)`);
+        UI.toast(`${fotos.length} foto(s) do link adicionada(s)`);
         if (produtoModalId === id) await renderizarFotosModal();
         renderizarCatalogo();
     });
 }
-
-function buscarFotosLinkNovo() {
-    if (!DB.schemaNovo) { UI.toast("⚠️ EXECUTE sql/migracao.sql NO SUPABASE PARA HABILITAR FOTOS.", "aviso", 6000); return; }
-    const url = $("linkProduto").value.trim();
-    if (!Fmt.linkSeguro(url)) { UI.toast("PREENCHA O LINK DO PRODUTO (URL) NA SEÇÃO 1.", "aviso"); return; }
-    Importar.seletor($("seletorLinkNovo"), url, async blobs => {
-        fotosNovoProduto.push(...await processarArquivos(blobs));
-        renderizarPreviewFotosNovo();
-        UI.toast("📷 FOTOS PRONTAS — ELAS SERÃO SALVAS JUNTO COM O PRODUTO.");
-    });
-}
-
 async function removerFoto(fotoId) {
-    if (!confirm("REMOVER ESTA FOTO?")) return;
-    try {
-        await DB.excluirFoto(fotoId);
-        fotosResumo = await DB.resumoFotos();
-        await renderizarFotosModal();
-        renderizarCatalogo();
-    } catch (e) { UI.erro("Erro ao remover foto", e); }
+    if (!confirm("Remover esta foto?")) return;
+    try { await DB.excluirFoto(fotoId); fotosResumo = await DB.resumoFotos(); await renderizarFotosModal(); renderizarCatalogo(); }
+    catch (e) { UI.erro("Erro ao remover foto", e); }
 }
-
 async function salvarEdicaoProduto() {
-    const campos = {
-        nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME",
-        link: $("edLink").value.trim(),
-        custo_producao_base: Fmt.parse($("edCusto").value),
-        preco_base: Fmt.parse($("edPreco").value)
-    };
+    const campos = { nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME", link: $("edLink").value.trim(),
+        custo_producao_base: Fmt.parse($("edCusto").value), preco_base: Fmt.parse($("edPreco").value) };
     try {
         const salvo = await DB.atualizarProduto(produtoModalId, campos);
-        produtos = produtos.map(p => p.id === produtoModalId ? (salvo || { ...p, ...campos }) : p);
-        fecharModalProduto();
-        atualizarFiltros(); renderizarCatalogo();
-        UI.toast("✅ PRODUTO ATUALIZADO!");
-    } catch (e) { UI.erro("Erro ao atualizar", e); }
+        const id = produtoModalId;
+        produtos = produtos.map(p => p.id === id ? (salvo || { ...p, ...campos }) : p);
+        fecharGavetas(); atualizarFiltros(); renderizarCatalogo();
+        UI.toast("Alterações salvas");
+    } catch (e) { UI.erro("Erro ao salvar", e); }
 }
-
 function carregarNaCalculadora() {
     const p = produtos.find(x => x.id === produtoModalId);
     if (!p || !p.parametros) return;
-    Object.entries(p.parametros).forEach(([id, val]) => { if ($(id)) $(id).value = val; });
+    Object.entries(p.parametros).forEach(([id, v]) => { if ($(id)) $(id).value = v; });
     editandoId = p.id;
-    $("bannerEdicaoTexto").textContent = `✏️ EDITANDO "${p.nome}" — ALTERE OS VALORES E CLIQUE EM ATUALIZAR`;
-    $("bannerEdicao").style.display = "flex";
-    $("btnSalvarProduto").textContent = "ATUALIZAR PRODUTO NO CATÁLOGO";
-    fecharModalProduto();
-    calcular();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function fecharModalProduto() {
-    $("modalProduto").classList.remove("aberto");
-    produtoModalId = null;
+    $("bannerEdicaoTexto").textContent = `Editando "${p.nome}". Altere os valores e clique em Atualizar produto.`;
+    $("bannerEdicao").classList.remove("oculto");
+    $("tituloCalc").textContent = "Recalcular produto";
+    $("btnSalvarProduto").textContent = "Atualizar produto";
+    fecharGavetas(); irPara("calcular"); calcular();
 }
 
 /* ======================= EMBALAGENS ======================= */
 async function carregarEmbalagens() {
-    try { embalagens = await DB.listarEmbalagens(); }
-    catch (e) { UI.erro("Erro ao carregar embalagens", e); embalagens = []; }
+    try { embalagens = await DB.listarEmbalagens(); } catch (e) { UI.erro("Erro ao carregar embalagens", e); embalagens = []; }
     renderizarEmbalagens();
 }
-
 function renderizarEmbalagens() {
     embalagens.sort((a, b) => a.nome.localeCompare(b.nome));
+    $("embQtd").textContent = `${embalagens.length} embalagem(ns)`;
     $("corpoEmbalagens").innerHTML = embalagens.length ? embalagens.map(e => `
-        <tr><td class="esq" style="font-weight:bold">${Fmt.esc(e.nome)}</td>
-            <td style="font-weight:bold; color:#007bff">${Fmt.brl(e.valor)}</td>
-            <td><button type="button" class="btn-warning btn-sm" onclick="editarEmbalagem(${e.id})">✏️</button></td>
-            <td><button type="button" class="btn-danger btn-sm" onclick="excluirEmbalagem(${e.id})">X</button></td></tr>`).join("")
-        : '<tr><td colspan="4" style="color:#777">NENHUMA EMBALAGEM CADASTRADA.</td></tr>';
-    $("selectEmbalagemVenda").innerHTML = '<option value="">-- SELECIONE --</option>' +
-        embalagens.map(e => `<option value="${e.id}">${Fmt.esc(e.nome)} - ${Fmt.brl(e.valor)}</option>`).join("");
+        <tr><td><b>${Fmt.esc(e.nome)}</b></td><td class="n">${Fmt.brl(e.valor)}</td>
+            <td class="n"><button class="btn fantasma icone" title="Editar" onclick="editarEmbalagem(${e.id})">${icone("editar")}</button>
+            <button class="btn fantasma icone" title="Excluir" onclick="excluirEmbalagem(${e.id})">${icone("lixo")}</button></td></tr>`).join("")
+        : `<tr><td colspan="3" style="color:var(--tinta-3); text-align:center; padding:24px">Nenhuma embalagem. Leia uma nota de compra para começar.</td></tr>`;
+    $("selectEmbalagemVenda").innerHTML = '<option value="">Escolha uma embalagem</option>' +
+        embalagens.map(e => `<option value="${e.id}">${Fmt.esc(e.nome)} (${Fmt.brl(e.valor)})</option>`).join("");
 }
-
 async function salvarEmbalagem() {
-    const nome = $("catEmbNome").value.trim().toUpperCase();
-    const valor = Fmt.parse($("catEmbValor").value);
-    if (!nome || valor <= 0) { UI.toast("PREENCHA O NOME E UM VALOR VÁLIDO.", "aviso"); return; }
-    try {
-        embalagens.push(await DB.inserirEmbalagem({ nome, valor }));
-        $("catEmbNome").value = ""; $("catEmbValor").value = "";
-        renderizarEmbalagens();
-        UI.toast("✅ EMBALAGEM ADICIONADA");
-    } catch (e) { UI.erro("Erro ao salvar embalagem", e); }
+    const nome = $("catEmbNome").value.trim().toUpperCase(), valor = Fmt.parse($("catEmbValor").value);
+    if (!nome || valor <= 0) { UI.toast("Preencha o nome e o valor.", "aviso"); return; }
+    try { embalagens.push(await DB.inserirEmbalagem({ nome, valor })); $("catEmbNome").value = ""; $("catEmbValor").value = ""; renderizarEmbalagens(); UI.toast("Embalagem adicionada"); }
+    catch (e) { UI.erro("Erro ao salvar embalagem", e); }
 }
-
 async function editarEmbalagem(id) {
-    const emb = embalagens.find(e => e.id === id);
-    if (!emb) return;
-    const nome = prompt("Novo nome da embalagem:", emb.nome);
-    if (nome === null) return;
-    const valorStr = prompt("Novo valor unitário (ex: 2,50):", Fmt.num(emb.valor));
-    if (valorStr === null) return;
-    const campos = { nome: nome.trim().toUpperCase() || emb.nome, valor: Fmt.parse(valorStr) };
-    try { await DB.atualizarEmbalagem(id, campos); Object.assign(emb, campos); renderizarEmbalagens(); }
-    catch (e) { UI.erro("Erro ao atualizar", e); }
+    const emb = embalagens.find(e => e.id === id); if (!emb) return;
+    const nome = prompt("Nome da embalagem:", emb.nome); if (nome === null) return;
+    const v = prompt("Valor por unidade (ex.: 2,50):", Fmt.num(emb.valor)); if (v === null) return;
+    const campos = { nome: nome.trim().toUpperCase() || emb.nome, valor: Fmt.parse(v) };
+    try { await DB.atualizarEmbalagem(id, campos); Object.assign(emb, campos); renderizarEmbalagens(); } catch (e) { UI.erro("Erro ao atualizar", e); }
 }
-
 async function excluirEmbalagem(id) {
-    if (!confirm("EXCLUIR ESTA EMBALAGEM DO CATÁLOGO?")) return;
-    try { await DB.excluirEmbalagem(id); embalagens = embalagens.filter(e => e.id !== id); renderizarEmbalagens(); }
-    catch (e) { UI.erro("Erro ao excluir", e); }
+    if (!confirm("Excluir esta embalagem?")) return;
+    try { await DB.excluirEmbalagem(id); embalagens = embalagens.filter(e => e.id !== id); renderizarEmbalagens(); } catch (e) { UI.erro("Erro ao excluir", e); }
 }
 
-/* ======================= MODAL DE VENDA ======================= */
+/* ---------- Leitura de nota ---------- */
+async function lerNota(arquivo) {
+    $("arquivoNota").value = "";
+    itensNota = [];
+    $("notaImagem").src = URL.createObjectURL(arquivo);
+    $("notaStatus").textContent = "Preparando a leitura (na primeira vez baixa o leitor de texto)…";
+    $("notaProgresso").style.width = "3%";
+    $("notaItensBox").classList.add("oculto");
+    $("notaTextoBox").classList.add("oculto");
+    $("btnSalvarNota").disabled = true;
+    abrirGaveta("gavetaNota");
+    try {
+        const texto = await Nota.lerTexto(arquivo, pct => {
+            $("notaStatus").textContent = `Lendo o texto da nota… ${pct}%`;
+            $("notaProgresso").style.width = Math.max(3, pct) + "%";
+        });
+        $("notaProgresso").style.width = "100%";
+        $("notaTexto").textContent = texto;
+        $("notaTextoBox").classList.remove("oculto");
+        mostrarItensNota(Nota.interpretar(texto));
+    } catch (e) {
+        $("notaStatus").textContent = "Não foi possível ler a imagem: " + e.message;
+        mostrarItensNota([]);
+    }
+}
+function mostrarItensNota(itens) {
+    itensNota = itens.map(i => ({ ...i, incluir: true }));
+    $("notaStatus").textContent = itens.length
+        ? `${itens.length} item(ns) encontrado(s). Confira e ajuste antes de salvar.`
+        : "Não identifiquei itens automaticamente. Adicione as linhas manualmente com base na imagem.";
+    if (!itens.length) itensNota.push({ nome: "", qtd: 1, total: 0, pacote: 1, incluir: true });
+    renderizarItensNota();
+    $("notaItensBox").classList.remove("oculto");
+}
+function renderizarItensNota() {
+    $("notaItens").innerHTML = itensNota.map((it, i) => {
+        const existe = embalagens.find(e => e.nome === it.nome.trim().toUpperCase());
+        return `<tr data-i="${i}">
+            <td><input type="checkbox" data-c="incluir" ${it.incluir ? "checked" : ""} style="width:18px; height:18px; accent-color:var(--carretel)"></td>
+            <td><input type="text" data-c="nome" value="${Fmt.esc(it.nome)}" class="maiuscula" style="min-width:260px">
+                ${existe ? `<span class="sub" style="color:var(--ambar)">Atualiza a existente (hoje ${Fmt.brl(existe.valor)})</span>` : ""}</td>
+            <td class="n"><input type="text" inputmode="decimal" data-c="qtd" value="${Fmt.num(it.qtd, it.qtd % 1 ? 2 : 0)}" class="num" style="width:60px"></td>
+            <td class="n"><input type="text" inputmode="numeric" data-c="pacote" value="${it.pacote}" class="num" style="width:70px"></td>
+            <td class="n"><input type="text" inputmode="numeric" data-c="total" value="${Fmt.num(it.total)}" class="num moeda"></td>
+            <td class="n"><b data-unit>${Fmt.brl(Nota.custoUnitario(it))}</b></td>
+            <td><button class="btn fantasma icone" title="Remover linha" onclick="itensNota.splice(${i},1); renderizarItensNota()">${icone("lixo")}</button></td></tr>`;
+    }).join("");
+    atualizarBotaoNota();
+}
+function atualizarLinhaNota(el) {
+    const tr = el.closest("tr"), it = itensNota[+tr.dataset.i];
+    const c = el.dataset.c;
+    if (c === "nome") it.nome = el.value.toUpperCase();
+    if (c === "qtd") it.qtd = Math.max(0, parseFloat(el.value.replace(",", ".")) || 0);
+    if (c === "pacote") it.pacote = Math.max(1, parseInt(el.value, 10) || 1);
+    if (c === "total") it.total = Fmt.parse(el.value);
+    tr.querySelector("[data-unit]").textContent = Fmt.brl(Nota.custoUnitario(it));
+}
+function atualizarBotaoNota() {
+    document.querySelectorAll('#notaItens [data-c="incluir"]').forEach(cb => { itensNota[+cb.closest("tr").dataset.i].incluir = cb.checked; });
+    const n = itensNota.filter(i => i.incluir && i.nome.trim() && i.total > 0).length;
+    $("btnSalvarNota").disabled = !n;
+    $("btnSalvarNota").textContent = n ? `Salvar ${n} embalagem(ns)` : "Salvar embalagens";
+}
+function adicionarLinhaNota() { itensNota.push({ nome: "", qtd: 1, total: 0, pacote: 1, incluir: true }); renderizarItensNota(); }
+async function salvarItensNota() {
+    atualizarBotaoNota();
+    const lista = itensNota.filter(i => i.incluir && i.nome.trim() && i.total > 0);
+    const btn = $("btnSalvarNota"); btn.disabled = true;
+    let novos = 0, atualizados = 0;
+    try {
+        for (const it of lista) {
+            const nome = it.nome.trim().toUpperCase(), valor = +Nota.custoUnitario(it).toFixed(4);
+            const existe = embalagens.find(e => e.nome === nome);
+            if (existe) { await DB.atualizarEmbalagem(existe.id, { valor }); existe.valor = valor; atualizados++; }
+            else { embalagens.push(await DB.inserirEmbalagem({ nome, valor })); novos++; }
+        }
+        renderizarEmbalagens(); fecharGavetas();
+        UI.toast(`${novos} embalagem(ns) cadastrada(s)${atualizados ? `, ${atualizados} atualizada(s)` : ""}`);
+    } catch (e) { UI.erro("Erro ao salvar embalagens", e); btn.disabled = false; }
+}
+
+/* ======================= VENDA ======================= */
 function totalUnidades() { return venda.itens.reduce((s, i) => s + i.qtd, 0); }
 function podeSerKit() { return totalUnidades() > 1; }
-
 function abrirModalVenda() {
-    if (!selecionados.size) { UI.toast("⚠️ SELECIONE PELO MENOS UM PRODUTO NO CATÁLOGO.", "aviso"); return; }
+    if (!selecionados.size) { UI.toast("Marque pelo menos um produto no catálogo.", "aviso"); return; }
     venda.itens = [...selecionados].map(id => produtos.find(p => p.id === id)).filter(Boolean).map(p => ({ ...p, qtd: 1 }));
-    venda.embalagens = [];
-    venda.valorManual = false;
-    $("vendaFrete").value = "0,00";
-    $("vendaDesconto").value = "0,00";
-    $("vendaTaxaOutro").value = "0,00";
-    $("vendaPlataforma").value = "DIRETA";
-    $("grupoTaxaOutro").style.display = "none";
-    $("kitNome").value = "";
+    venda.embalagens = []; venda.valorManual = false;
+    $("vendaFrete").value = "0,00"; $("vendaDesconto").value = "0,00"; $("vendaTaxaOutro").value = "0,00";
+    $("vendaPlataforma").value = "DIRETA"; $("grupoTaxaOutro").classList.add("oculto"); $("kitNome").value = "";
     document.querySelector('input[name="modoVenda"][value="INDIVIDUAL"]').checked = true;
-    definirModoVenda("INDIVIDUAL", true);
-    definirMargemPadrao();
-    renderizarItensVenda();
-    renderizarEmbalagensVenda();
-    calcularVenda();
-    $("modalVenda").classList.add("aberto");
+    definirModoVenda("INDIVIDUAL", true); definirMargemPadrao();
+    renderizarItensVenda(); renderizarEmbalagensVenda(); calcularVenda();
+    abrirGaveta("gavetaVenda");
 }
-
-function fecharModalVenda() {
-    $("modalVenda").classList.remove("aberto");
-    venda.itens = []; venda.embalagens = []; venda.valorManual = false;
-}
-
+function fecharModalVenda() { fecharGavetas(); }
 function definirMargemPadrao() {
-    const custo = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0);
-    const preco = venda.itens.reduce((s, i) => s + i.precoBase * i.qtd, 0);
-    $("vendaMargem").value = Fmt.num(Calc.margemImplicita(custo, preco));
+    const c = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0), p = venda.itens.reduce((s, i) => s + i.precoBase * i.qtd, 0);
+    $("vendaMargem").value = Fmt.num(Calc.margemImplicita(c, p));
 }
-
 function nomeKitPadrao() {
-    return "KIT " + venda.itens.map(i => {
-        const nome = i.tipo === "KIT" ? `(${i.nome.replace(/^KIT\s+/, "")})` : i.nome;
-        return (i.qtd > 1 ? `${i.qtd}X ` : "") + nome;
-    }).join(" + ");
+    return "KIT " + venda.itens.map(i => (i.qtd > 1 ? `${i.qtd}X ` : "") + (i.tipo === "KIT" ? `(${i.nome.replace(/^KIT\s+/, "")})` : i.nome)).join(" + ");
 }
-
-function nomeKitSugerido() {
-    const existe = kitExistente();
-    return existe ? existe.nome : nomeKitPadrao();
-}
-
+function nomeKitSugerido() { const e = kitExistente(); return e ? e.nome : nomeKitPadrao(); }
 function definirModoVenda(modo, semRecalculo) {
     venda.modo = modo;
     $("opcaoIndividual").classList.toggle("ativo", modo === "INDIVIDUAL");
     $("opcaoKit").classList.toggle("ativo", modo === "KIT");
-    $("kitBox").style.display = modo === "KIT" ? "block" : "none";
+    $("kitBox").classList.toggle("oculto", modo !== "KIT");
     if (modo === "KIT" && !$("kitNome").value.trim()) $("kitNome").value = nomeKitSugerido();
+    $("btnConfirmarVenda").className = "btn grande" + (modo === "KIT" ? " kit" : "");
+    $("btnConfirmarVenda").textContent = modo === "KIT" ? "Confirmar venda do kit" : "Confirmar venda";
     atualizarInfoKit();
     if (!semRecalculo) calcularVenda();
 }
-
-function assinaturaKit(componentes) {
-    return componentes.map(c => `${c.id}:${c.qtd}`).sort().join("|");
-}
-
-function componentesVenda() {
-    return venda.itens.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd, custo: +i.custoProducaoBase.toFixed(4) }));
-}
-
+function assinaturaKit(c) { return c.map(x => `${x.id}:${x.qtd}`).sort().join("|"); }
+function componentesVenda() { return venda.itens.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd, custo: +i.custoProducaoBase.toFixed(4) })); }
 function kitExistente() {
     const sig = assinaturaKit(componentesVenda());
     return produtos.find(p => p.tipo === "KIT" && Array.isArray(p.componentes) && assinaturaKit(p.componentes) === sig);
 }
-
 function atualizarInfoKit() {
     if (venda.modo !== "KIT") return;
-    const custo = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0);
-    const existe = kitExistente();
-    $("kitInfo").innerHTML = existe
-        ? `ℹ️ Este kit já existe no catálogo como <b>${Fmt.esc(existe.nome)}</b> — a venda será lançada nele e o custo será atualizado para <b>${Fmt.brl(custo)}</b>.`
-        : `➕ Ao finalizar, este kit entra automaticamente no catálogo com custo total de <b>${Fmt.brl(custo)}</b> (soma dos produtos).`;
+    const custo = venda.itens.reduce((s, i) => s + i.custoProducaoBase * i.qtd, 0), e = kitExistente();
+    $("kitInfo").innerHTML = e ? `Este kit já está no catálogo como <b>${Fmt.esc(e.nome)}</b>. A venda entra nele e o custo é atualizado para <b>${Fmt.brl(custo)}</b>.`
+        : `Ao confirmar, o kit entra no catálogo com custo de <b>${Fmt.brl(custo)}</b> (soma dos produtos).`;
 }
-
 function renderizarItensVenda() {
-    $("listaProdutosVenda").innerHTML = `
-        <div class="table-responsive"><table style="min-width:0; font-size:12px">
-            <thead><tr><th class="esq">PRODUTO</th><th style="width:80px">QTD</th><th style="width:150px">CUSTO PRODUÇÃO</th><th style="width:150px">PREÇO BASE</th><th style="width:50px"></th></tr></thead>
-            <tbody>${venda.itens.map((i, idx) => `
-                <tr><td class="esq" style="font-weight:bold; white-space:normal">${i.tipo === "KIT" ? '<span class="badge kit">KIT</span> ' : ""}${Fmt.esc(i.nome)}</td>
-                    <td><input type="number" min="1" value="${i.qtd}" class="qtd-input" onchange="alterarQtdItem(${idx}, this.value)"></td>
-                    <td style="color:#dc3545; font-weight:bold">${Fmt.brl(i.custoProducaoBase * i.qtd)}</td>
-                    <td style="font-weight:bold">${Fmt.brl(i.precoBase * i.qtd)}</td>
-                    <td><button type="button" class="btn-danger btn-sm" title="Remover da venda" onclick="removerItemVenda(${idx})">X</button></td></tr>`).join("")}
-            </tbody></table></div>`;
-    $("blocoModoVenda").style.display = podeSerKit() ? "block" : "none";
-    if (!podeSerKit() && venda.modo === "KIT") {
-        document.querySelector('input[name="modoVenda"][value="INDIVIDUAL"]').checked = true;
-        definirModoVenda("INDIVIDUAL", true);
-    }
+    $("listaProdutosVenda").innerHTML = venda.itens.map((i, k) => `
+        <div class="item-venda">
+            <div><b>${i.tipo === "KIT" ? '<span class="chip kit">Kit</span> ' : ""}${Fmt.esc(i.nome)}</b><span class="sub" style="display:block; font-size:12px; color:var(--tinta-3)">custo ${Fmt.brl(i.custoProducaoBase)} · base ${Fmt.brl(i.precoBase)}</span></div>
+            <div class="passo"><button onclick="alterarQtdItem(${k}, ${i.qtd - 1})">−</button><input value="${i.qtd}" inputmode="numeric" onchange="alterarQtdItem(${k}, this.value)"><button onclick="alterarQtdItem(${k}, ${i.qtd + 1})">+</button></div>
+            <b class="num" style="min-width:76px; text-align:right">${Fmt.brl(i.precoBase * i.qtd)}</b>
+            <button class="btn fantasma icone" title="Tirar da venda" onclick="removerItemVenda(${k})">${icone("lixo")}</button>
+        </div>`).join("");
+    $("blocoModoVenda").classList.toggle("oculto", !podeSerKit());
+    if (!podeSerKit() && venda.modo === "KIT") { document.querySelector('input[name="modoVenda"][value="INDIVIDUAL"]').checked = true; definirModoVenda("INDIVIDUAL", true); }
 }
-
-function alterarQtdItem(idx, valor) {
-    venda.itens[idx].qtd = Math.max(1, parseInt(valor, 10) || 1);
+function alterarQtdItem(k, v) {
+    venda.itens[k].qtd = Math.max(1, parseInt(v, 10) || 1);
     venda.valorManual = false;
     if (venda.modo === "KIT") $("kitNome").value = nomeKitSugerido();
     renderizarItensVenda(); definirMargemPadrao(); atualizarInfoKit(); calcularVenda();
 }
-
-function removerItemVenda(idx) {
-    const [item] = venda.itens.splice(idx, 1);
-    selecionados.delete(item.id);
-    atualizarBotaoVender(); renderizarCatalogo();
-    if (!venda.itens.length) { fecharModalVenda(); return; }
+function removerItemVenda(k) {
+    const [item] = venda.itens.splice(k, 1);
+    selecionados.delete(item.id); renderizarCatalogo();
+    if (!venda.itens.length) { fecharGavetas(); return; }
     venda.valorManual = false;
     if (venda.modo === "KIT") $("kitNome").value = nomeKitSugerido();
     renderizarItensVenda(); definirMargemPadrao(); atualizarInfoKit(); calcularVenda();
 }
-
 function adicionarEmbalagemVenda() {
-    const emb = embalagens.find(e => String(e.id) === $("selectEmbalagemVenda").value);
-    if (!emb) return;
-    const existente = venda.embalagens.find(e => e.id === emb.id);
-    existente ? existente.qtd++ : venda.embalagens.push({ id: emb.id, nome: emb.nome, valor: emb.valor, qtd: 1 });
-    $("selectEmbalagemVenda").value = "";
-    venda.valorManual = false;
+    const emb = embalagens.find(e => String(e.id) === $("selectEmbalagemVenda").value); if (!emb) return;
+    const ja = venda.embalagens.find(e => e.id === emb.id);
+    ja ? ja.qtd++ : venda.embalagens.push({ id: emb.id, nome: emb.nome, valor: emb.valor, qtd: 1 });
+    $("selectEmbalagemVenda").value = ""; venda.valorManual = false;
     renderizarEmbalagensVenda(); calcularVenda();
 }
-
-function alterarQtdEmbalagem(idx, valor) {
-    venda.embalagens[idx].qtd = Math.max(1, parseInt(valor, 10) || 1);
-    venda.valorManual = false;
-    renderizarEmbalagensVenda(); calcularVenda();
-}
-
-function removerEmbalagemVenda(idx) {
-    venda.embalagens.splice(idx, 1);
-    venda.valorManual = false;
-    renderizarEmbalagensVenda(); calcularVenda();
-}
-
+function alterarQtdEmbalagem(k, v) { venda.embalagens[k].qtd = Math.max(1, parseInt(v, 10) || 1); venda.valorManual = false; renderizarEmbalagensVenda(); calcularVenda(); }
+function removerEmbalagemVenda(k) { venda.embalagens.splice(k, 1); venda.valorManual = false; renderizarEmbalagensVenda(); calcularVenda(); }
 function renderizarEmbalagensVenda() {
-    const total = venda.embalagens.reduce((s, e) => s + e.valor * e.qtd, 0);
-    $("listaEmbalagensVenda").innerHTML = venda.embalagens.length ? venda.embalagens.map((e, i) => `
-        <div class="item-embalagem">
-            <span style="font-size:12px; font-weight:bold; flex:1">${Fmt.esc(e.nome)} (${Fmt.brl(e.valor)} un.)</span>
-            <div style="display:flex; align-items:center; gap:10px">
-                <label style="font-size:11px; margin:0">QTD:</label>
-                <input type="number" min="1" value="${e.qtd}" class="qtd-input" style="width:50px" onchange="alterarQtdEmbalagem(${i}, this.value)">
-                <span style="font-size:13px; font-weight:bold; color:#d39e00; width:90px; text-align:right">${Fmt.brl(e.valor * e.qtd)}</span>
-                <button type="button" class="btn-danger btn-sm" onclick="removerEmbalagemVenda(${i})">X</button>
-            </div></div>`).join("")
-        : '<span style="color:#777; font-size:12px">Nenhuma embalagem selecionada.</span>';
-    $("totalEmbalagemModal").textContent = Fmt.brl(total);
+    $("listaEmbalagensVenda").innerHTML = venda.embalagens.length ? venda.embalagens.map((e, k) => `
+        <div class="emb-item"><span>${Fmt.esc(e.nome)} <small style="color:var(--tinta-3)">${Fmt.brl(e.valor)} un.</small></span>
+            <div class="passo"><button onclick="alterarQtdEmbalagem(${k}, ${e.qtd - 1})">−</button><input value="${e.qtd}" onchange="alterarQtdEmbalagem(${k}, this.value)"><button onclick="alterarQtdEmbalagem(${k}, ${e.qtd + 1})">+</button></div>
+            <b class="num">${Fmt.brl(e.valor * e.qtd)}</b>
+            <button class="btn fantasma icone" onclick="removerEmbalagemVenda(${k})">${icone("lixo")}</button></div>`).join("")
+        : `<div style="font-size:13px; color:var(--tinta-3)">Nenhuma embalagem nesta venda.</div>`;
 }
-
 function calcularVenda() {
     if (!venda.itens.length) return null;
     const taxaPerc = UI.taxaPlataforma($("vendaPlataforma").value, $("vendaTaxaOutro"));
@@ -1004,197 +1332,141 @@ function calcularVenda() {
     const custoEmbalagens = venda.embalagens.reduce((s, e) => s + e.valor * e.qtd, 0);
     const frete = Fmt.parse($("vendaFrete").value);
     const custoTotal = custoProducao + custoEmbalagens + frete;
-
     let valor;
     if (venda.valorManual) valor = Fmt.parse($("vendaValorTotal").value);
-    else {
-        valor = Calc.precoVenda({ custo: custoTotal, margemPerc: Fmt.parse($("vendaMargem").value), taxaPerc, descontoPerc: Fmt.parse($("vendaDesconto").value) });
-        $("vendaValorTotal").value = Fmt.num(valor);
-    }
+    else { valor = Calc.precoVenda({ custo: custoTotal, margemPerc: Fmt.parse($("vendaMargem").value), taxaPerc, descontoPerc: Fmt.parse($("vendaDesconto").value) }); $("vendaValorTotal").value = Fmt.num(valor); }
     const r = Calc.resultado({ valor, custo: custoTotal, taxaPerc });
     $("vendaCustoTotal").textContent = Fmt.brl(custoTotal);
     $("vendaTaxaPlat").textContent = Fmt.brl(r.taxa);
     $("vendaLucroFinal").textContent = Fmt.brl(r.lucro);
-    $("vendaPercLucro").textContent = `(${Fmt.num(r.percSobreCusto)}%)`;
-    const cor = r.lucro >= 0 ? "#28a745" : "#dc3545";
-    $("vendaLucroFinal").style.color = cor;
-    $("vendaPercLucro").style.color = r.lucro >= 0 ? "#555" : "#dc3545";
-
+    $("vendaLucroFinal").className = r.lucro >= 0 ? "pos" : "neg";
+    $("vendaPercLucro").textContent = `(${Fmt.num(r.percSobreCusto, 0)}% sobre o custo)`;
     venda.resultado = { taxaPerc, custoProducao, custoEmbalagens, frete, custoTotal, valor, taxa: r.taxa, lucro: r.lucro,
         plataforma: UI.nomePlataforma($("vendaPlataforma").value, $("vendaTaxaOutro")) };
     return venda.resultado;
 }
-
-/** Busca o kit com a mesma composição ou cria um novo no catálogo */
 async function obterOuCriarKit(r) {
     const componentes = componentesVenda();
-    let nome = ($("kitNome").value.trim().toUpperCase() || nomeKitPadrao());
+    let nome = $("kitNome").value.trim().toUpperCase() || nomeKitPadrao();
     if (!nome.startsWith("KIT")) nome = "KIT " + nome;
     const custo = +r.custoProducao.toFixed(4);
     const precoBase = +(custo * (1 + Fmt.parse($("vendaMargem").value) / 100)).toFixed(4);
     const filamentos = [...new Set(venda.itens.map(i => i.tipoFilamento))].join(" + ");
-
-    // Sem a migração não há composição salva: reaproveita kit com o mesmo nome
     const existente = kitExistente() || (!DB.schemaNovo && produtos.find(p => p.tipo === "KIT" && p.nome === nome));
     if (existente) {
-        const atualizado = await DB.atualizarProduto(existente.id, { nome, custo_producao_base: custo, preco_base: precoBase, componentes });
-        const kit = atualizado || { ...existente, nome, custoProducaoBase: custo, precoBase, componentes };
+        const at = await DB.atualizarProduto(existente.id, { nome, custo_producao_base: custo, preco_base: precoBase, componentes });
+        const kit = at || { ...existente, nome, custoProducaoBase: custo, precoBase, componentes };
         produtos = produtos.map(p => p.id === kit.id ? kit : p);
         return { kit, novo: false };
     }
-    const kit = await DB.inserirProduto({
-        nome, link: "", data: Fmt.hoje(), quantidade: 1, tipo_filamento: filamentos, vendido: false,
-        custo_producao_base: custo, preco_base: precoBase, tipo: "KIT", componentes
-    });
+    const kit = await DB.inserirProduto({ nome, link: "", data: Fmt.hoje(), quantidade: 1, tipo_filamento: filamentos, vendido: false,
+        custo_producao_base: custo, preco_base: precoBase, tipo: "KIT", componentes });
     produtos.push(kit);
     return { kit, novo: true };
 }
-
 async function confirmarVenda() {
-    const r = calcularVenda();
-    if (!r) return;
-    if (r.valor <= 0 && !confirm("O VALOR DE VENDA ESTÁ ZERADO. CONFIRMAR?")) return;
-    if (r.lucro < 0 && !confirm(`ATENÇÃO: ESTA VENDA DÁ PREJUÍZO DE ${Fmt.brl(-r.lucro)}. CONFIRMAR?`)) return;
-
-    const btn = $("btnConfirmarVenda");
-    btn.disabled = true;
+    const r = calcularVenda(); if (!r) return;
+    if (r.valor <= 0 && !confirm("O valor da venda está zerado. Confirmar?")) return;
+    if (r.lucro < 0 && !confirm(`Esta venda dá prejuízo de ${Fmt.brl(-r.lucro)}. Confirmar?`)) return;
+    const btn = $("btnConfirmarVenda"); btn.disabled = true;
     const data = Fmt.hoje();
     try {
-        let registros, mensagem;
+        let regs, msg;
         if (venda.modo === "KIT" && podeSerKit()) {
             const { kit, novo } = await obterOuCriarKit(r);
-            registros = [{
-                nome: kit.nome, link: "", quantidade: 1, plataforma: r.plataforma,
-                valor_venda: +r.valor.toFixed(2), custo: +r.custoTotal.toFixed(2), lucro: +r.lucro.toFixed(2), data_venda: data,
-                produto_id: kit.id, tipo_venda: "KIT", itens: componentesVenda()
-            }];
-            mensagem = novo ? `✅ KIT VENDIDO E CADASTRADO NO CATÁLOGO: ${kit.nome}` : `✅ VENDA DO KIT ${kit.nome} LANÇADA`;
+            regs = [{ nome: kit.nome, link: "", quantidade: 1, plataforma: r.plataforma, valor_venda: +r.valor.toFixed(2), custo: +r.custoTotal.toFixed(2),
+                lucro: +r.lucro.toFixed(2), data_venda: data, produto_id: kit.id, tipo_venda: "KIT", itens: componentesVenda() }];
+            msg = novo ? `Kit vendido e cadastrado no catálogo: ${kit.nome}` : `Venda do ${kit.nome} registrada`;
         } else {
             const pesos = venda.itens.map(i => i.custoProducaoBase * i.qtd);
-            const valores = Calc.ratear(r.valor, pesos);
-            const custos = Calc.ratear(r.custoTotal, pesos);
-            const taxas = Calc.ratear(r.taxa, pesos);
-            registros = venda.itens.map((i, k) => ({
-                nome: i.nome, link: i.link || "", quantidade: i.qtd, plataforma: r.plataforma,
-                valor_venda: valores[k], custo: custos[k], lucro: +(valores[k] - taxas[k] - custos[k]).toFixed(2), data_venda: data,
-                produto_id: i.id, tipo_venda: "INDIVIDUAL", itens: i.tipo === "KIT" ? i.componentes : null
-            }));
-            mensagem = "✅ VENDA(S) LANÇADA(S) COM SUCESSO!";
+            const vals = Calc.ratear(r.valor, pesos), custos = Calc.ratear(r.custoTotal, pesos), taxas = Calc.ratear(r.taxa, pesos);
+            regs = venda.itens.map((i, k) => ({ nome: i.nome, link: i.link || "", quantidade: i.qtd, plataforma: r.plataforma, valor_venda: vals[k], custo: custos[k],
+                lucro: +(vals[k] - taxas[k] - custos[k]).toFixed(2), data_venda: data, produto_id: i.id, tipo_venda: "INDIVIDUAL", itens: i.tipo === "KIT" ? i.componentes : null }));
+            msg = regs.length > 1 ? `${regs.length} vendas registradas` : "Venda registrada";
         }
-        const salvas = await DB.inserirVendas(registros);
-        vendas.push(...salvas);
-        selecionados.clear();
-        fecharModalVenda();
-        atualizarBotaoVender(); atualizarFiltros(); renderizarCatalogo(); renderizarDashboard();
-        UI.toast(mensagem, "ok", 4500);
-    } catch (e) { UI.erro("Erro ao lançar venda", e); }
+        vendas.push(...await DB.inserirVendas(regs));
+        selecionados.clear(); fecharGavetas(); atualizarFiltros(); renderizarCatalogo(); renderizarDashboard();
+        UI.toast(msg, "ok", 4500);
+    } catch (e) { UI.erro("Erro ao registrar a venda", e); }
     finally { btn.disabled = false; }
 }
 
 /* ======================= DASHBOARD ======================= */
 async function carregarVendas() {
-    try { vendas = await DB.listarVendas(); }
-    catch (e) { UI.erro("Erro ao carregar vendas", e); vendas = []; }
+    try { vendas = await DB.listarVendas(); } catch (e) { UI.erro("Erro ao carregar vendas", e); vendas = []; }
     renderizarDashboard();
 }
-
 function vendasNoPeriodo() {
     const f = $("filtroPeriodo").value;
     if (f === "TODOS") return vendas;
-    const agora = new Date();
-    const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
-    let inicio;
-    if (f === "HOJE") inicio = inicioHoje;
-    else if (f === "MES") inicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
-    else inicio = new Date(inicioHoje.getTime() - (Number(f) - 1) * 86400000);
-    return vendas.filter(v => Fmt.dataVenda(v) >= inicio);
+    const a = new Date(), hoje = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const ini = f === "HOJE" ? hoje : f === "MES" ? new Date(a.getFullYear(), a.getMonth(), 1) : new Date(hoje.getTime() - (Number(f) - 1) * 86400000);
+    return vendas.filter(v => Fmt.dataVenda(v) >= ini);
 }
-
 function renderizarDashboard() {
     const lista = vendasNoPeriodo();
-    let fat = 0, lucro = 0, custo = 0, itens = 0;
+    let fat = 0, lucro = 0, custo = 0, pecas = 0;
     lista.forEach(v => {
-        fat += Number(v.valor_venda) || 0; lucro += Number(v.lucro) || 0; custo += Number(v.custo) || 0;
-        itens += Array.isArray(v.itens) && v.tipo_venda === "KIT" ? v.itens.reduce((s, c) => s + (c.qtd || 1), 0) : (Number(v.quantidade) || 1);
+        fat += +v.valor_venda || 0; lucro += +v.lucro || 0; custo += +v.custo || 0;
+        pecas += v.tipo_venda === "KIT" && Array.isArray(v.itens) ? v.itens.reduce((s, c) => s + (c.qtd || 1), 0) : (+v.quantidade || 1);
     });
-    $("dashFaturamento").textContent = Fmt.brl(fat);
-    $("dashLucroTotal").textContent = Fmt.brl(lucro);
-    $("dashCustoTotal").textContent = Fmt.brl(custo);
-    $("dashQtdItens").textContent = `${itens} UNID.`;
-
+    $("dashFaturamento").textContent = Fmt.brl(fat); $("dashLucroTotal").textContent = Fmt.brl(lucro);
+    $("dashCustoTotal").textContent = Fmt.brl(custo); $("dashQtdItens").textContent = pecas;
     $("corpoVendas").innerHTML = lista.length ? [...lista].reverse().map(v => {
         const kit = v.tipo_venda === "KIT" || String(v.nome).startsWith("KIT");
-        const comp = Array.isArray(v.itens) ? `<div class="componentes">${Fmt.esc(textoComponentes(v.itens))}</div>` : "";
         return `<tr>
-            <td style="font-family:monospace; font-size:10px; color:#666">${Fmt.esc(v.data_venda || v.data || "")}</td>
-            <td class="esq" style="font-weight:bold; white-space:normal; max-width:260px">${nomeComLink(v.nome, v.link)}${comp}</td>
-            <td>${kit ? '<span class="badge kit">KIT</span>' : '<span class="badge">INDIV.</span>'}</td>
-            <td style="font-weight:bold">${Number(v.quantidade) || 1}</td>
-            <td style="font-size:10px; font-weight:bold; color:#004085">${Fmt.esc(v.plataforma || "N/A")}</td>
-            <td style="color:#007bff; font-weight:bold">${Fmt.brl(v.valor_venda)}</td>
-            <td style="color:#dc3545; font-weight:bold">${Fmt.brl(v.custo)}</td>
-            <td style="color:${(Number(v.lucro) || 0) >= 0 ? "#28a745" : "#dc3545"}; font-weight:bold">${Fmt.brl(v.lucro)}</td>
-            <td><button type="button" class="btn-danger btn-sm" onclick="excluirVenda(${v.id})">X</button></td></tr>`;
-    }).join("") : '<tr><td colspan="9" style="color:#777">NENHUMA VENDA NO PERÍODO.</td></tr>';
-
+            <td><b>${kit ? '<span class="chip kit">Kit</span> ' : ""}${nomeComLink(v.nome, v.link)}</b>
+                <span class="sub">${(+v.quantidade || 1)} un.${Array.isArray(v.itens) && kit ? " · " + Fmt.esc(textoComponentes(v.itens)) : ""}</span></td>
+            <td class="num" style="white-space:nowrap">${Fmt.esc(v.data_venda || v.data || "")}</td>
+            <td style="font-size:12px">${Fmt.esc(v.plataforma || "—")}</td>
+            <td class="n">${Fmt.brl(v.valor_venda)}<span class="sub">custo ${Fmt.brl(v.custo)}</span></td>
+            <td class="n ${(+v.lucro || 0) >= 0 ? "pos" : "neg"}">${Fmt.brl(v.lucro)}</td>
+            <td class="n"><button class="btn fantasma icone" title="Excluir venda" onclick="excluirVenda(${v.id})">${icone("lixo")}</button></td></tr>`;
+    }).join("") : `<tr><td colspan="6" style="text-align:center; color:var(--tinta-3); padding:28px">Nenhuma venda neste período.</td></tr>`;
     renderizarRanking(lista);
 }
-
 function renderizarRanking(lista) {
     const mapa = {};
-    const somar = (nome, link, qtd, lucro) => {
-        const m = mapa[nome] || (mapa[nome] = { nome, link, qtd: 0, lucro: 0 });
-        m.qtd += qtd; m.lucro += lucro;
-    };
+    const somar = (nome, link, q, l) => { const m = mapa[nome] || (mapa[nome] = { nome, link, qtd: 0, lucro: 0 }); m.qtd += q; m.lucro += l; };
     lista.forEach(v => {
-        const lucro = Number(v.lucro) || 0;
+        const l = +v.lucro || 0;
         if (v.tipo_venda === "KIT" && Array.isArray(v.itens) && v.itens.length) {
-            // Distribui o lucro do kit entre as peças, proporcional ao custo
-            const pesos = v.itens.map(c => (c.custo || 0) * (c.qtd || 1));
-            const partes = Calc.ratear(lucro, pesos);
+            const partes = Calc.ratear(l, v.itens.map(c => (c.custo || 0) * (c.qtd || 1)));
             v.itens.forEach((c, k) => somar(c.nome, "", c.qtd || 1, partes[k]));
-        } else if (v.nome) somar(v.nome, v.link, Number(v.quantidade) || 1, lucro);
+        } else if (v.nome) somar(v.nome, v.link, +v.quantidade || 1, l);
     });
-    const arr = Object.values(mapa).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro);
-    const medalha = i => ["🥇 1º", "🥈 2º", "🥉 3º"][i] || `#${i + 1}`;
+    const arr = Object.values(mapa).sort((a, b) => b.qtd - a.qtd || b.lucro - a.lucro).slice(0, 15);
+    const max = arr.length ? arr[0].qtd : 1;
     $("corpoRanking").innerHTML = arr.length ? arr.map((r, i) => `
-        <tr><td style="font-weight:bold; color:#555">${medalha(i)}</td>
-            <td class="esq" style="font-weight:bold; white-space:normal">${nomeComLink(r.nome, r.link)}</td>
-            <td style="font-weight:bold">${r.qtd}</td>
-            <td style="color:#28a745; font-weight:bold; text-align:right">${Fmt.brl(r.lucro)}</td></tr>`).join("")
-        : '<tr><td colspan="4">SEM DADOS DE VENDA</td></tr>';
+        <li><span class="pos-n">${i + 1}</span>
+            <div style="flex:1; min-width:0"><div style="font-weight:600; font-size:13px">${nomeComLink(r.nome, r.link)}</div><div class="barra"><div style="width:${(r.qtd / max) * 100}%"></div></div></div>
+            <div style="text-align:right; font-size:12px"><b style="font-size:14px">${r.qtd}</b> un.<br><span class="pos">${Fmt.brl(r.lucro)}</span></div></li>`).join("")
+        : `<li style="color:var(--tinta-3)">Sem vendas no período.</li>`;
 }
-
 async function excluirVenda(id) {
-    if (!confirm("EXCLUIR ESTA VENDA?")) return;
-    try { await DB.excluirVenda(id); vendas = vendas.filter(v => v.id !== id); renderizarDashboard(); }
-    catch (e) { UI.erro("Erro ao excluir venda", e); }
+    if (!confirm("Excluir esta venda?")) return;
+    try { await DB.excluirVenda(id); vendas = vendas.filter(v => v.id !== id); renderizarDashboard(); } catch (e) { UI.erro("Erro ao excluir venda", e); }
 }
-
 async function limparVendas() {
     if (!vendas.length) return;
-    if (!confirm(`APAGAR TODO O HISTÓRICO DE VENDAS (${vendas.length} REGISTROS)?`)) return;
-    if (prompt('ESTA AÇÃO NÃO PODE SER DESFEITA. DIGITE "APAGAR" PARA CONFIRMAR:') !== "APAGAR") return;
-    try { await DB.excluirVendas(vendas.map(v => v.id)); vendas = []; renderizarDashboard(); UI.toast("HISTÓRICO DE VENDAS APAGADO."); }
-    catch (e) { UI.erro("Erro ao limpar vendas", e); }
+    if (!confirm(`Apagar todo o histórico (${vendas.length} vendas)?`)) return;
+    if (prompt('Isso não pode ser desfeito. Digite APAGAR para confirmar:') !== "APAGAR") return;
+    try { await DB.excluirVendas(vendas.map(v => v.id)); vendas = []; renderizarDashboard(); UI.toast("Histórico apagado"); } catch (e) { UI.erro("Erro ao apagar", e); }
 }
 
 /* ======================= INICIALIZAÇÃO ======================= */
 document.addEventListener("DOMContentLoaded", () => Auth.exigir(iniciar));
-
 async function iniciar() {
     UI.opcoesPlataforma($("vendaPlataforma"));
-    carregarPadroes();
-    calcular();
+    carregarPadroes(); calcular(); renderizarPreviewFotosNovo();
     const st = $("statusCloud");
     try {
         const novo = await DB.verificarSchema();
-        if (novo) st.textContent = "☁️ SUPABASE CONECTADO (CATÁLOGO, VENDAS, EMBALAGENS E FOTOS)";
-        else { st.className = "status-cloud aviso"; st.textContent = "⚠️ CONECTADO — EXECUTE sql/migracao.sql PARA HABILITAR KITS COMPLETOS E FOTOS"; }
-    } catch (e) { st.className = "status-cloud erro"; st.textContent = "❌ SEM CONEXÃO COM O SUPABASE"; }
+        st.className = "status" + (novo ? "" : " aviso");
+        st.querySelector("span").textContent = novo ? "Conectado" : "Banco desatualizado: fotos indisponíveis";
+    } catch (e) { st.className = "status erro"; st.querySelector("span").textContent = "Sem conexão"; }
     await Promise.all([carregarEmbalagens(), carregarProdutos(), carregarVendas()]);
 }
-
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
