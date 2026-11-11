@@ -4,15 +4,940 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calculadora 3D</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="icon" href="data:image/png;base64,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">
 <meta name="theme-color" content="#0E7C66">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/core.js"></script>
-<script src="js/leitores.js"></script>
+<script>
+/* =====================================================================
+   CALCULADORA 3D — NÚCLEO COMPARTILHADO (web + app celular)
+   Configuração, formatação, cálculos, banco de dados e reconhecimento
+   de imagem. Usado por index.html (sistema completo) e app.html (PWA).
+   ===================================================================== */
+
+const CONFIG = {
+    SUPABASE_URL: "https://pmqrnodfjwhldkkkgeqy.supabase.co",
+    SUPABASE_KEY: "sb_publishable_SawajxYBUmg_M0u_IHG_MQ_r-j_Cvsl",
+    TABELA_PRODUTOS: "3dbsb",
+    TABELA_VENDAS: "vendas",
+    TABELA_EMBALAGENS: "embalagens",
+    TABELA_FOTOS: "produto_fotos",
+    // Login: só a senha é pedida na tela; este é o usuário criado no Supabase Auth
+    EMAIL_LOGIN: "admin@calculadora3d.app",
+    FUNCAO_FOTOS: "importar-fotos",
+    // Similaridade mínima (0 a 1) para considerar uma foto "reconhecida"
+    LIMIAR_CONFIANCA: 0.62,
+    TAMANHO_IMAGEM: 224
+};
+
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+const PLATAFORMAS = [
+    { id: "DIRETA", nome: "VENDA DIRETA", taxa: 0 },
+    { id: "ML",     nome: "MERCADO LIVRE", taxa: 20 },
+    { id: "SHOPEE", nome: "SHOPEE", taxa: 20 },
+    { id: "CARTAO", nome: "CARTÃO", taxa: 5 },
+    { id: "OUTRO",  nome: "OUTRO", taxa: null } // taxa digitada pelo usuário
+];
+
+/* ============================ FORMATAÇÃO ============================ */
+const Fmt = {
+    brl(v) {
+        const n = Number(v);
+        return (isFinite(n) ? n : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    },
+    /** Número -> "1.234,56" (para preencher inputs com máscara) */
+    num(v, casas = 2) {
+        const n = Number(v);
+        return (isFinite(n) ? n : 0).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    },
+    /** "1.234,56" -> 1234.56 */
+    parse(str) {
+        if (str === null || str === undefined || str === "") return 0;
+        if (typeof str === "number") return isFinite(str) ? str : 0;
+        const n = parseFloat(String(str).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", "."));
+        return isNaN(n) ? 0 : n;
+    },
+    mascaraMoeda(input) {
+        const d = input.value.replace(/\D/g, "");
+        if (d === "") { input.value = ""; return; }
+        input.value = Fmt.num(parseInt(d, 10) / 100);
+    },
+    mascaraHora(input) {
+        const d = input.value.replace(/\D/g, "");
+        if (d === "") { input.value = ""; return; }
+        const v = d.padStart(6, "0").slice(-6);
+        input.value = `${v.slice(0, 2)}:${v.slice(2, 4)}:${v.slice(4, 6)}`;
+    },
+    hhmmssParaHoras(t) {
+        if (!t) return 0;
+        const p = String(t).split(":").map(x => parseInt(x, 10) || 0);
+        const h = p.length === 3 ? p[0] + p[1] / 60 + p[2] / 3600 : p.length === 2 ? p[0] + p[1] / 60 : p[0];
+        return isFinite(h) ? h : 0;
+    },
+    hoje() { return new Date().toLocaleDateString("pt-BR"); },
+    /** Escapa texto para inserir em HTML (evita quebrar a página com nomes como <, ", &) */
+    esc(s) {
+        return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    },
+    linkSeguro(url) {
+        return /^https?:\/\//i.test(url || "") ? url : "";
+    },
+    /** Data da venda como objeto Date (usa created_at; senão dd/mm/aaaa) */
+    dataVenda(v) {
+        if (v.created_at) return new Date(v.created_at);
+        const m = String(v.data_venda || v.data || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        return m ? new Date(+m[3], +m[2] - 1, +m[1]) : new Date(0);
+    }
+};
+
+/* ============================ CÁLCULOS ============================= */
+const Calc = {
+    /** Custo de produção de uma peça a partir dos parâmetros da calculadora */
+    producao(p) {
+        const vidaUtil = p.vidaUtil > 0 ? p.vidaUtil : 1;
+        const material = (p.peso / 1000) * p.precoKg;
+        const energia = (p.potencia / 1000) * p.horasImpressao * p.tarifa;
+        const depreciacao = (p.valorMaquina / vidaUtil) * p.horasImpressao;
+        const maoDeObra = p.horasTrabalho * p.valorHora;
+        const subtotal = material + energia + depreciacao + maoDeObra;
+        const falhas = subtotal * (p.percFalhas / 100);
+        const custoTotal = subtotal + falhas;
+        const lucro = custoTotal * (p.percLucro / 100);
+        return { material, energia, depreciacao, maoDeObra, subtotal, falhas, custoTotal, lucro, preco: custoTotal + lucro };
+    },
+
+    /** Preço final sugerido: custo + margem, embutindo a taxa da plataforma e aplicando desconto */
+    precoVenda({ custo, margemPerc = 0, taxaPerc = 0, descontoPerc = 0 }) {
+        const alvo = custo * (1 + margemPerc / 100);
+        const taxa = taxaPerc / 100;
+        const comTaxa = taxa > 0 && taxa < 1 ? alvo / (1 - taxa) : alvo;
+        return Math.max(0, comTaxa * (1 - descontoPerc / 100));
+    },
+
+    /** Resultado de uma venda a um valor final já definido */
+    resultado({ valor, custo, taxaPerc = 0 }) {
+        const taxa = valor * (taxaPerc / 100);
+        const lucro = valor - taxa - custo;
+        return { taxa, lucro, percSobreCusto: custo > 0 ? (lucro / custo) * 100 : 0 };
+    },
+
+    /** Margem (%) implícita entre custo e preço base do catálogo */
+    margemImplicita(custo, preco) {
+        return custo > 0 && preco > 0 ? (preco / custo - 1) * 100 : 100;
+    },
+
+    /** Divide um valor em partes proporcionais aos pesos, sem perder centavos */
+    ratear(total, pesos) {
+        const centavos = Math.round(total * 100);
+        const soma = pesos.reduce((a, b) => a + b, 0);
+        const base = soma > 0 ? pesos.map(p => p / soma) : pesos.map(() => 1 / pesos.length);
+        const brutos = base.map(f => f * centavos);
+        const partes = brutos.map(Math.floor);
+        let resto = centavos - partes.reduce((a, b) => a + b, 0);
+        brutos.map((b, i) => [b - Math.floor(b), i]).sort((a, b) => b[0] - a[0])
+            .forEach(([, i]) => { if (resto > 0) { partes[i]++; resto--; } });
+        return partes.map(c => c / 100);
+    }
+};
+
+/* ========================= BANCO (SUPABASE) ========================= */
+const DB = {
+    /** true quando a migração (sql/migracao.sql) já foi executada */
+    schemaNovo: false,
+
+    async verificarSchema() {
+        const r1 = await sb.from(CONFIG.TABELA_PRODUTOS).select("tipo,componentes,parametros").limit(1);
+        const r2 = await sb.from(CONFIG.TABELA_FOTOS).select("id").limit(1);
+        DB.schemaNovo = !r1.error && !r2.error;
+        return DB.schemaNovo;
+    },
+
+    _mapProduto(i) {
+        return {
+            id: i.id,
+            nome: i.nome || "",
+            link: i.link || "",
+            data: i.data || "",
+            tipoFilamento: i.tipo_filamento || "PLA",
+            custoProducaoBase: Number(i.custo_producao_base) || 0,
+            precoBase: Number(i.preco_base) || 0,
+            tipo: i.tipo || (String(i.nome || "").startsWith("KIT") ? "KIT" : "PRODUTO"),
+            componentes: i.componentes || null,
+            parametros: i.parametros || null
+        };
+    },
+
+    /** Remove campos que só existem após a migração, para funcionar no banco antigo */
+    _limpar(reg, camposNovos) {
+        if (DB.schemaNovo) return reg;
+        const r = { ...reg };
+        camposNovos.forEach(c => delete r[c]);
+        return r;
+    },
+
+    async listarProdutos() {
+        const { data, error } = await sb.from(CONFIG.TABELA_PRODUTOS).select("*");
+        if (error) throw error;
+        return (data || []).map(DB._mapProduto);
+    },
+    async inserirProduto(reg) {
+        const { data, error } = await sb.from(CONFIG.TABELA_PRODUTOS)
+            .insert([DB._limpar(reg, ["tipo", "componentes", "parametros"])]).select();
+        if (error) throw error;
+        return DB._mapProduto(data[0]);
+    },
+    async atualizarProduto(id, campos) {
+        const { data, error } = await sb.from(CONFIG.TABELA_PRODUTOS)
+            .update(DB._limpar(campos, ["tipo", "componentes", "parametros"])).eq("id", id).select();
+        if (error) throw error;
+        return data && data[0] ? DB._mapProduto(data[0]) : null;
+    },
+    async excluirProduto(id) {
+        const { error } = await sb.from(CONFIG.TABELA_PRODUTOS).delete().eq("id", id);
+        if (error) throw error;
+    },
+
+    async listarVendas() {
+        const { data, error } = await sb.from(CONFIG.TABELA_VENDAS).select("*").order("id", { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+    async inserirVendas(regs) {
+        const limpos = regs.map(r => DB._limpar(r, ["produto_id", "tipo_venda", "itens"]));
+        const { data, error } = await sb.from(CONFIG.TABELA_VENDAS).insert(limpos).select();
+        if (error) throw error;
+        return data || [];
+    },
+    async excluirVenda(id) {
+        const { error } = await sb.from(CONFIG.TABELA_VENDAS).delete().eq("id", id);
+        if (error) throw error;
+    },
+    async excluirVendas(ids) {
+        if (!ids.length) return;
+        const { error } = await sb.from(CONFIG.TABELA_VENDAS).delete().in("id", ids);
+        if (error) throw error;
+    },
+
+    async listarEmbalagens() {
+        const { data, error } = await sb.from(CONFIG.TABELA_EMBALAGENS).select("*");
+        if (error) throw error;
+        return (data || []).map(e => ({ ...e, valor: Number(e.valor) || 0 }))
+            .sort((a, b) => a.nome.localeCompare(b.nome));
+    },
+    async inserirEmbalagem(reg) {
+        const { data, error } = await sb.from(CONFIG.TABELA_EMBALAGENS).insert([reg]).select();
+        if (error) throw error;
+        return data[0];
+    },
+    async atualizarEmbalagem(id, campos) {
+        const { error } = await sb.from(CONFIG.TABELA_EMBALAGENS).update(campos).eq("id", id);
+        if (error) throw error;
+    },
+    async excluirEmbalagem(id) {
+        const { error } = await sb.from(CONFIG.TABELA_EMBALAGENS).delete().eq("id", id);
+        if (error) throw error;
+    },
+
+    /* ---- Fotos de referência (reconhecimento) ---- */
+    async listarAssinaturas() {
+        if (!DB.schemaNovo) return [];
+        const { data, error } = await sb.from(CONFIG.TABELA_FOTOS).select("id,produto_id,emb");
+        if (error) throw error;
+        return data || [];
+    },
+    async listarFotosProduto(produtoId) {
+        if (!DB.schemaNovo) return [];
+        const { data, error } = await sb.from(CONFIG.TABELA_FOTOS).select("id,thumb").eq("produto_id", produtoId).order("id");
+        if (error) throw error;
+        return data || [];
+    },
+    /** { produto_id: { thumb: primeira miniatura, qtd: nº de fotos } } */
+    async resumoFotos() {
+        if (!DB.schemaNovo) return {};
+        const { data, error } = await sb.from(CONFIG.TABELA_FOTOS).select("produto_id,thumb").order("id");
+        if (error) throw error;
+        const mapa = {};
+        (data || []).forEach(f => {
+            const m = mapa[f.produto_id] || (mapa[f.produto_id] = { thumb: f.thumb, qtd: 0 });
+            m.qtd++;
+        });
+        return mapa;
+    },
+    async inserirFoto(produtoId, thumb, emb) {
+        if (!DB.schemaNovo) throw new Error("Execute o arquivo sql/migracao.sql no Supabase para habilitar fotos.");
+        const { data, error } = await sb.from(CONFIG.TABELA_FOTOS).insert([{ produto_id: produtoId, thumb, emb }]).select("id,produto_id,emb");
+        if (error) throw error;
+        return data[0];
+    },
+    async excluirFoto(id) {
+        const { error } = await sb.from(CONFIG.TABELA_FOTOS).delete().eq("id", id);
+        if (error) throw error;
+    }
+};
+
+/* =================== RECONHECIMENTO DE IMAGEM =================== */
+/* Usa MobileNet (TensorFlow.js) rodando no próprio navegador/celular.
+   Cada foto de referência vira uma "assinatura" numérica; a foto nova é
+   comparada com todas e o produto mais parecido é sugerido. */
+const Visao = {
+    _modelo: null,
+    _carregando: null,
+
+    _script(src) {
+        return new Promise((ok, falha) => {
+            const s = document.createElement("script");
+            s.src = src;
+            s.onload = ok;
+            s.onerror = () => falha(new Error("Falha ao baixar " + src));
+            document.head.appendChild(s);
+        });
+    },
+
+    async carregar() {
+        if (Visao._modelo) return Visao._modelo;
+        if (!Visao._carregando) {
+            Visao._carregando = (async () => {
+                // Carrega as bibliotecas só quando precisa (página abre mais rápido)
+                if (!window.tf) await Visao._script("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js");
+                if (!window.mobilenet) await Visao._script("https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1");
+                if (!window.tf || !window.mobilenet) throw new Error("Bibliotecas de IA não carregadas (verifique a internet).");
+                await tf.ready();
+                Visao._modelo = await mobilenet.load({ version: 2, alpha: 1.0 });
+                return Visao._modelo;
+            })().catch(e => { Visao._carregando = null; throw e; });
+        }
+        return Visao._carregando;
+    },
+
+    /** Carrega um File/Blob em um elemento Image */
+    arquivoParaImagem(file) {
+        return new Promise((ok, falha) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => { URL.revokeObjectURL(url); ok(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); falha(new Error("Imagem inválida")); };
+            img.src = url;
+        });
+    },
+
+    /** Recorta o centro (quadrado) da imagem/vídeo em um canvas do tamanho pedido */
+    recorteQuadrado(fonte, tamanho = CONFIG.TAMANHO_IMAGEM) {
+        const w = fonte.videoWidth || fonte.naturalWidth || fonte.width;
+        const h = fonte.videoHeight || fonte.naturalHeight || fonte.height;
+        const lado = Math.min(w, h);
+        const c = document.createElement("canvas");
+        c.width = c.height = tamanho;
+        c.getContext("2d").drawImage(fonte, (w - lado) / 2, (h - lado) / 2, lado, lado, 0, 0, tamanho, tamanho);
+        return c;
+    },
+
+    miniatura(canvas, tamanho = 160) {
+        const c = document.createElement("canvas");
+        c.width = c.height = tamanho;
+        c.getContext("2d").drawImage(canvas, 0, 0, tamanho, tamanho);
+        return c.toDataURL("image/jpeg", 0.72);
+    },
+
+    /** Vetor de características normalizado (Float32Array) */
+    async assinatura(canvas) {
+        const modelo = await Visao.carregar();
+        const vetor = tf.tidy(() => {
+            const t = modelo.infer(canvas, true).flatten();
+            return t.div(t.norm().add(1e-8));
+        });
+        const arr = await vetor.data();
+        vetor.dispose();
+        return Float32Array.from(arr);
+    },
+
+    /** Compacta a assinatura em Int8 + base64 (~1,7 KB por foto) */
+    compactar(vec) {
+        let max = 0;
+        for (const v of vec) max = Math.max(max, Math.abs(v));
+        const escala = max > 0 ? 127 / max : 1;
+        const bytes = new Uint8Array(vec.length);
+        const i8 = new Int8Array(bytes.buffer);
+        vec.forEach((v, i) => { i8[i] = Math.round(v * escala); });
+        let s = "";
+        for (let i = 0; i < bytes.length; i += 4096) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 4096));
+        return btoa(s);
+    },
+
+    descompactar(b64) {
+        const bin = atob(b64);
+        const i8 = new Int8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) i8[i] = (bin.charCodeAt(i) << 24) >> 24;
+        let n = 0;
+        for (const v of i8) n += v * v;
+        n = Math.sqrt(n) || 1;
+        return Float32Array.from(i8, v => v / n);
+    },
+
+    cosseno(a, b) {
+        let s = 0;
+        const n = Math.min(a.length, b.length);
+        for (let i = 0; i < n; i++) s += a[i] * b[i];
+        return s;
+    },
+
+    /** Prepara índice {produto_id, vec} a partir das assinaturas do banco */
+    indexar(assinaturas) {
+        return assinaturas.map(a => ({ id: a.id, produtoId: a.produto_id, vec: Visao.descompactar(a.emb) }));
+    },
+
+    /** Ranking de produtos mais parecidos com a foto */
+    buscar(vec, indice, topo = 3) {
+        const porProduto = {};
+        indice.forEach(r => {
+            const s = Visao.cosseno(vec, r.vec);
+            (porProduto[r.produtoId] = porProduto[r.produtoId] || []).push(s);
+        });
+        return Object.entries(porProduto).map(([produtoId, sims]) => {
+            sims.sort((a, b) => b - a);
+            // Média das 2 melhores fotos reduz falsos positivos com 1 foto parecida
+            const score = sims.length > 1 ? sims[0] * 0.7 + sims[1] * 0.3 : sims[0];
+            return { produtoId: Number(produtoId), score, fotos: sims.length };
+        }).sort((a, b) => b.score - a.score).slice(0, topo);
+    },
+
+    /** Atalho: arquivo -> {canvas, thumb, vec, emb} */
+    async processarArquivo(file) {
+        const img = await Visao.arquivoParaImagem(file);
+        return Visao.processarFonte(img);
+    },
+    async processarFonte(fonte) {
+        const canvas = Visao.recorteQuadrado(fonte);
+        const vec = await Visao.assinatura(canvas);
+        return { canvas, thumb: Visao.miniatura(canvas), vec, emb: Visao.compactar(vec) };
+    }
+};
+
+/* ============================ AVISOS ============================ */
+const UI = {
+    toast(msg, tipo = "ok", ms = 3200) {
+        let box = document.getElementById("toastBox");
+        if (!box) {
+            box = document.createElement("div");
+            box.id = "toastBox";
+            box.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:5000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,460px)";
+            document.body.appendChild(box);
+        }
+        const cores = { ok: "#0E7C66", erro: "#C8412F", aviso: "#9A6512", info: "#17201C" };
+        const el = document.createElement("div");
+        el.textContent = msg;
+        el.style.cssText = `background:${cores[tipo] || cores.ok};color:#fff;padding:12px 18px;border-radius:8px;font:600 13px 'Segoe UI',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);text-align:center;width:100%;box-sizing:border-box;transition:opacity .3s`;
+        box.appendChild(el);
+        setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, ms);
+    },
+    erro(prefixo, e) {
+        console.error(prefixo, e);
+        UI.toast(`${prefixo}: ${e && e.message ? e.message : e}`, "erro", 5000);
+    },
+    opcoesPlataforma(select) {
+        select.innerHTML = PLATAFORMAS.map(p =>
+            `<option value="${p.id}">${p.nome}${p.taxa === null ? " (%)" : ` (${p.taxa}%)`}</option>`).join("");
+    },
+    taxaPlataforma(idPlat, inputOutro) {
+        const p = PLATAFORMAS.find(x => x.id === idPlat) || PLATAFORMAS[0];
+        return p.taxa === null ? Fmt.parse(inputOutro ? inputOutro.value : 0) : p.taxa;
+    },
+    nomePlataforma(idPlat, inputOutro) {
+        const p = PLATAFORMAS.find(x => x.id === idPlat) || PLATAFORMAS[0];
+        return p.taxa === null ? `OUTRO (${Fmt.num(Fmt.parse(inputOutro ? inputOutro.value : 0))}%)` : p.nome;
+    }
+};
+
+/* ============================ LOGIN ============================ */
+const Auth = {
+    async sessao() {
+        const { data } = await sb.auth.getSession();
+        return data ? data.session : null;
+    },
+    async entrar(senha) {
+        const { error } = await sb.auth.signInWithPassword({ email: CONFIG.EMAIL_LOGIN, password: senha });
+        if (error) throw error;
+    },
+    async sair() {
+        await sb.auth.signOut();
+        location.reload();
+    },
+    /** Executa iniciar() se já estiver logado; senão mostra a tela de senha */
+    async exigir(iniciar) {
+        sb.auth.onAuthStateChange(evento => { if (evento === "SIGNED_OUT") location.reload(); });
+        if (await Auth.sessao()) { iniciar(); return; }
+        Auth._tela(iniciar);
+    },
+    _tela(iniciar) {
+        const div = document.createElement("div");
+        div.id = "telaLogin";
+        div.style.cssText = "position:fixed;inset:0;z-index:4000;background:linear-gradient(160deg,#10957A,#08503F);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Segoe UI',-apple-system,sans-serif";
+        div.innerHTML = `
+            <form style="background:#fff;border-radius:16px;padding:30px 26px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center">
+                <img src="data:image/png;base64,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" alt="" style="width:72px;height:72px;border-radius:16px">
+                <h2 style="margin:14px 0 4px;font-size:20px;color:#1f2328">Calculadora 3D</h2>
+                <p style="margin:0 0 20px;color:#6b7280;font-size:13px">Digite a senha para entrar</p>
+                <input type="text" name="username" autocomplete="username" value="${CONFIG.EMAIL_LOGIN}" hidden>
+                <div style="position:relative">
+                    <input type="password" id="loginSenha" autocomplete="current-password" placeholder="Senha" required
+                        style="width:100%;box-sizing:border-box;padding:14px 48px 14px 14px;font-size:16px;border:1px solid #ccc;border-radius:10px;text-transform:none">
+                    <button type="button" id="loginVer" title="Mostrar senha" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;margin:0;padding:0;border:0;background:none;font-size:18px;cursor:pointer;color:#555">👁️</button>
+                </div>
+                <div id="loginErro" style="color:#dc3545;font-size:13px;min-height:20px;margin:10px 0 4px"></div>
+                <button type="submit" id="loginBtn" style="width:100%;padding:14px;margin:0;border:0;border-radius:10px;background:#0E7C66;color:#fff;font-size:16px;font-weight:700;cursor:pointer">ENTRAR</button>
+            </form>`;
+        document.body.appendChild(div);
+        const senha = div.querySelector("#loginSenha");
+        setTimeout(() => senha.focus(), 50);
+        div.querySelector("#loginVer").onclick = () => { senha.type = senha.type === "password" ? "text" : "password"; };
+        div.querySelector("form").onsubmit = async e => {
+            e.preventDefault();
+            const btn = div.querySelector("#loginBtn");
+            btn.disabled = true; btn.textContent = "ENTRANDO...";
+            div.querySelector("#loginErro").textContent = "";
+            try {
+                await Auth.entrar(senha.value);
+                div.remove();
+                iniciar();
+            } catch (err) {
+                const msg = /invalid/i.test(err.message || "") ? "Senha incorreta." : "Não foi possível entrar: " + (err.message || err);
+                div.querySelector("#loginErro").textContent = msg;
+                senha.select();
+            } finally { btn.disabled = false; btn.textContent = "ENTRAR"; }
+        };
+    }
+};
+
+/* ================= IMPORTAR FOTOS DO LINK DO PRODUTO ================= */
+/* A Edge Function "importar-fotos" lê a página do link (ex.: MakerWorld)
+   e baixa as imagens, porque o navegador sozinho é bloqueado (CORS). */
+const Importar = {
+    async _chamar(corpo) {
+        const s = await Auth.sessao();
+        if (!s) throw new Error("Faça login novamente.");
+        return fetch(`${CONFIG.SUPABASE_URL}/functions/v1/${CONFIG.FUNCAO_FOTOS}`, {
+            method: "POST",
+            headers: { apikey: CONFIG.SUPABASE_KEY, Authorization: `Bearer ${s.access_token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(corpo)
+        });
+    },
+    /** Dados do produto a partir do link (nome, fotos e perfis de impressão com peso/tempo) */
+    async produto(url) {
+        const r = await Importar._chamar({ produto: url });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.erro || `Erro ${r.status}`);
+        return d;
+    },
+    async listar(url) {
+        const r = await Importar._chamar({ url });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.erro || `Erro ${r.status}`);
+        return d.imagens || [];
+    },
+    /** Versão reduzida da imagem (MakerWorld/Bambu aceitam redimensionar pela URL) */
+    reduzida(url, largura) {
+        return /bblmw\.com/i.test(url) ? `${url}?x-oss-process=image/resize,w_${largura}` : url;
+    },
+    async baixar(url) {
+        let r = await Importar._chamar({ imagem: Importar.reduzida(url, 800) });
+        if (!r.ok && Importar.reduzida(url, 800) !== url) r = await Importar._chamar({ imagem: url });
+        if (!r.ok) {
+            const d = await r.json().catch(() => ({}));
+            throw new Error(d.erro || `Erro ${r.status}`);
+        }
+        const bruto = await r.blob();
+        return new Blob([bruto], { type: r.headers.get("x-content-type") || "image/jpeg" });
+    },
+
+    /**
+     * Mostra as fotos encontradas no link dentro de `container` para o usuário escolher.
+     * aoConfirmar(blobs) recebe as imagens escolhidas, já baixadas.
+     */
+    async seletor(container, url, aoConfirmar) {
+        if (!Fmt.linkSeguro(url)) { UI.toast("Este produto não tem um link (URL) válido cadastrado.", "aviso"); return; }
+        container.style.display = "block";
+        container.innerHTML = `<div style="padding:12px;color:#6b7280;font-size:13px">🔗 Procurando fotos no link do produto...</div>`;
+        let imagens;
+        try { imagens = await Importar.listar(url); }
+        catch (e) { container.innerHTML = `<div style="padding:12px;color:#dc3545;font-size:13px">Não consegui ler o link: ${Fmt.esc(e.message)}</div>`; return; }
+        if (!imagens.length) { container.innerHTML = `<div style="padding:12px;color:#6b7280;font-size:13px">Nenhuma foto encontrada nesse link.</div>`; return; }
+
+        const marcadas = new Set(imagens.slice(0, 5).map((_, i) => i)); // pré-seleciona as 5 primeiras (fotos oficiais)
+        const desenhar = () => {
+            container.innerHTML = `
+                <div style="font-size:12px;color:#555;margin:6px 0 8px;text-transform:none">
+                    <b>${imagens.length} foto(s) encontrada(s) no link.</b> Toque para marcar/desmarcar. Prefira fotos da peça sozinha, parecidas com a que você imprime.
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px">
+                    ${imagens.map((u, i) => `
+                        <div data-i="${i}" style="position:relative;cursor:pointer;border-radius:8px;overflow:hidden;aspect-ratio:1;outline:${marcadas.has(i) ? "3px solid var(--carretel,#198754)" : "1px solid #ddd"};outline-offset:-2px;background:#f1f3f5">
+                            <img src="${Fmt.esc(Importar.reduzida(u, 240))}" referrerpolicy="no-referrer" loading="lazy"
+                                onerror="this.onerror=null;this.src='${Fmt.esc(u)}'" style="width:100%;height:100%;object-fit:cover;display:block;opacity:${marcadas.has(i) ? 1 : .55}">
+                            ${marcadas.has(i) ? '<span style="position:absolute;top:4px;right:4px;background:var(--carretel,#198754);color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px;display:flex;align-items:center;justify-content:center">✓</span>' : ""}
+                        </div>`).join("")}
+                </div>
+                <button type="button" data-acao="importar" style="width:100%;margin-top:10px;padding:12px;border:0;border-radius:8px;background:var(--carretel,#198754);color:#fff;font-weight:700;font-size:14px;cursor:pointer">
+                    ➕ ADICIONAR ${marcadas.size} FOTO(S) SELECIONADA(S)</button>`;
+        };
+        desenhar();
+        container.onclick = async ev => {
+            const cel = ev.target.closest("[data-i]");
+            if (cel) {
+                const i = Number(cel.dataset.i);
+                marcadas.has(i) ? marcadas.delete(i) : marcadas.add(i);
+                desenhar();
+                return;
+            }
+            const btn = ev.target.closest('[data-acao="importar"]');
+            if (!btn || !marcadas.size) return;
+            btn.disabled = true;
+            const blobs = [];
+            let falhas = 0, n = 0;
+            for (const i of [...marcadas].sort((a, b) => a - b)) {
+                btn.textContent = `⏳ BAIXANDO ${++n}/${marcadas.size}...`;
+                try { blobs.push(await Importar.baixar(imagens[i])); } catch (e) { falhas++; console.warn(e); }
+            }
+            if (falhas) UI.toast(`${falhas} foto(s) não puderam ser baixadas.`, "aviso");
+            btn.textContent = "🧠 PROCESSANDO...";
+            try {
+                if (blobs.length) await aoConfirmar(blobs);
+                container.onclick = null;
+                container.innerHTML = "";
+                container.style.display = "none";
+            } catch (e) {
+                UI.erro("Erro ao adicionar fotos", e);
+                btn.disabled = false;
+                desenhar();
+            }
+        };
+    }
+};
+
+/* Exporta para testes em Node (ignorado no navegador) */
+if (typeof module !== "undefined") module.exports = { Fmt, Calc, Visao, PLATAFORMAS };
+
+</script>
+<script>
+/* =====================================================================
+   CALCULADORA 3D — LEITORES DE ARQUIVOS
+   - Bambu: lê arquivos do Bambu Studio (.gcode.3mf, .3mf, .gcode)
+   - Nota:  lê notas de compra por foto/print (OCR) e extrai os itens
+   ===================================================================== */
+
+/* ------------------------- LEITOR DE ZIP ------------------------- */
+/* Os arquivos .3mf são ZIP. Leitor mínimo usando o descompactador nativo
+   do navegador (sem bibliotecas externas). */
+const Zip = {
+    async abrir(arquivo) {
+        const buf = await arquivo.arrayBuffer();
+        const dv = new DataView(buf);
+        // Fim do diretório central (EOCD)
+        let eocd = -1;
+        for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--) {
+            if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+        }
+        if (eocd < 0) throw new Error("Arquivo não é um .3mf/.zip válido");
+        let total = dv.getUint16(eocd + 10, true);
+        let cd = dv.getUint32(eocd + 16, true);
+        // ZIP64
+        if ((cd === 0xFFFFFFFF || total === 0xFFFF) && eocd >= 20 && dv.getUint32(eocd - 20, true) === 0x07064b50) {
+            const z64 = Number(dv.getBigUint64(eocd - 12, true));
+            total = Number(dv.getBigUint64(z64 + 32, true));
+            cd = Number(dv.getBigUint64(z64 + 48, true));
+        }
+        const entradas = {};
+        const dec = new TextDecoder();
+        let p = cd;
+        for (let n = 0; n < total && dv.getUint32(p, true) === 0x02014b50; n++) {
+            const metodo = dv.getUint16(p + 10, true);
+            let comp = dv.getUint32(p + 20, true);
+            let tam = dv.getUint32(p + 24, true);
+            const lNome = dv.getUint16(p + 28, true), lExtra = dv.getUint16(p + 30, true), lCom = dv.getUint16(p + 32, true);
+            let local = dv.getUint32(p + 42, true);
+            const nome = dec.decode(new Uint8Array(buf, p + 46, lNome));
+            // Campo extra ZIP64 com tamanhos/deslocamento de 64 bits
+            let e = p + 46 + lNome;
+            const fimExtra = e + lExtra;
+            while (e + 4 <= fimExtra) {
+                const id = dv.getUint16(e, true), sz = dv.getUint16(e + 2, true);
+                if (id === 0x0001) {
+                    let q = e + 4;
+                    if (tam === 0xFFFFFFFF) { tam = Number(dv.getBigUint64(q, true)); q += 8; }
+                    if (comp === 0xFFFFFFFF) { comp = Number(dv.getBigUint64(q, true)); q += 8; }
+                    if (local === 0xFFFFFFFF) { local = Number(dv.getBigUint64(q, true)); }
+                }
+                e += 4 + sz;
+            }
+            entradas[nome] = { metodo, comp, tam, local };
+            p += 46 + lNome + lExtra + lCom;
+        }
+        return {
+            nomes: Object.keys(entradas),
+            tem: nome => !!entradas[nome],
+            async bytes(nome) {
+                const en = entradas[nome];
+                if (!en) return null;
+                const ini = en.local + 30 + dv.getUint16(en.local + 26, true) + dv.getUint16(en.local + 28, true);
+                const dados = new Uint8Array(buf, ini, en.comp);
+                if (en.metodo === 0) return dados;
+                if (en.metodo !== 8) throw new Error("Compressão não suportada em " + nome);
+                const s = new Blob([dados]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+                return new Uint8Array(await new Response(s).arrayBuffer());
+            },
+            async texto(nome) { const b = await this.bytes(nome); return b ? new TextDecoder().decode(b) : null; },
+            async dataUrl(nome, tipo = "image/png") {
+                const b = await this.bytes(nome);
+                if (!b) return null;
+                return new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(new Blob([b], { type: tipo })); });
+            }
+        };
+    }
+};
+
+/* ---------------------- BAMBU STUDIO ---------------------- */
+const Bambu = {
+    /** Converte "1d 2h 3m 4s" / "47m 3s" em segundos */
+    tempoTexto(t) {
+        let s = 0;
+        const re = /(\d+(?:\.\d+)?)\s*([dhms])/gi;
+        let m;
+        while ((m = re.exec(t || ""))) s += parseFloat(m[1]) * { d: 86400, h: 3600, m: 60, s: 1 }[m[2].toLowerCase()];
+        return Math.round(s);
+    },
+    segundosParaHHMMSS(seg) {
+        seg = Math.max(0, Math.round(seg || 0));
+        const h = Math.floor(seg / 3600), m = Math.floor((seg % 3600) / 60), s = seg % 60;
+        return [h, m, s].map(x => String(x).padStart(2, "0")).join(":");
+    },
+    nomeBase(arquivo) {
+        return arquivo.replace(/\.(gcode\.3mf|3mf|gcode|bgcode|stl|obj|step|stp)$/i, "").replace(/[_-]?plate[_-]?\d+$/i, "").replace(/[_-]+/g, " ").trim();
+    },
+
+    /** Lê o cabeçalho de um G-code do Bambu Studio */
+    lerCabecalhoGcode(txt) {
+        const pega = re => { const m = txt.match(re); return m ? m[1].trim() : null; };
+        const tempo = pega(/total estimated time:\s*([^;\n]+)/i) || pega(/model printing time:\s*([^;\n]+)/i) || pega(/estimated printing time[^=:]*[=:]\s*([^;\n]+)/i);
+        const pesoTotal = parseFloat(pega(/total filament weight \[g\]\s*:\s*([\d.]+)/i) || "0");
+        const compMm = parseFloat(pega(/total filament length \[mm\]\s*:\s*([\d.]+)/i) || "0");
+        const tipos = (pega(/;\s*filament_type\s*=\s*([^\n]+)/i) || "").split(";").map(s => s.trim()).filter(Boolean);
+        const cores = (pega(/;\s*filament_colou?r\s*=\s*([^\n]+)/i) || "").split(";").map(s => s.trim()).filter(Boolean);
+        const usadosG = (pega(/;\s*filament used \[g\]\s*=\s*([^\n]+)/i) || "").split(",").map(parseFloat).filter(n => !isNaN(n));
+        const usadosMm = (pega(/;\s*filament used \[mm\]\s*=\s*([^\n]+)/i) || "").split(",").map(parseFloat).filter(n => !isNaN(n));
+        const filamentos = (usadosG.length ? usadosG : tipos.length ? [pesoTotal] : []).map((g, i) => ({
+            tipo: tipos[i] || tipos[0] || "PLA", cor: cores[i] || "", g, m: (usadosMm[i] || (i === 0 ? compMm : 0)) / 1000
+        })).filter(f => f.g > 0 || f.m > 0);
+        return {
+            tempoSeg: Bambu.tempoTexto(tempo),
+            pesoG: pesoTotal || filamentos.reduce((s, f) => s + f.g, 0),
+            comprimentoM: compMm ? compMm / 1000 : filamentos.reduce((s, f) => s + f.m, 0),
+            filamentos
+        };
+    },
+
+    /** Lê um arquivo e devolve { nome, placas:[{indice, tempoSeg, pesoG, comprimentoM, filamentos, thumb}] } */
+    async ler(arquivo) {
+        const nome = Bambu.nomeBase(arquivo.name);
+        if (/\.b?gcode$/i.test(arquivo.name)) {
+            // Cabeçalho fica no início; lê só os primeiros 512 KB (arquivos de G-code são grandes)
+            const txt = await arquivo.slice(0, 512 * 1024).text();
+            const dados = Bambu.lerCabecalhoGcode(txt);
+            if (!dados.pesoG && !dados.tempoSeg) throw new Error("Não encontrei os dados de impressão neste G-code.");
+            return { nome, placas: [{ indice: 1, ...dados, thumb: null }] };
+        }
+
+        const zip = await Zip.abrir(arquivo);
+        const placas = [];
+        const info = await zip.texto("Metadata/slice_info.config");
+        if (info) {
+            const doc = new DOMParser().parseFromString(info, "application/xml");
+            for (const pl of doc.querySelectorAll("plate")) {
+                const meta = {};
+                pl.querySelectorAll(":scope > metadata").forEach(m => meta[m.getAttribute("key")] = m.getAttribute("value"));
+                const filamentos = [...pl.querySelectorAll("filament")].map(f => ({
+                    tipo: f.getAttribute("type") || "PLA",
+                    cor: f.getAttribute("color") || "",
+                    g: parseFloat(f.getAttribute("used_g")) || 0,
+                    m: parseFloat(f.getAttribute("used_m")) || 0
+                })).filter(f => f.g > 0 || f.m > 0);
+                const indice = parseInt(meta.index, 10) || placas.length + 1;
+                const objetos = [...pl.querySelectorAll("object")].map(o => o.getAttribute("name")).filter(Boolean);
+                placas.push({
+                    indice,
+                    tempoSeg: parseFloat(meta.prediction) || 0,
+                    pesoG: parseFloat(meta.weight) || filamentos.reduce((s, f) => s + f.g, 0),
+                    comprimentoM: filamentos.reduce((s, f) => s + f.m, 0),
+                    filamentos,
+                    objetos
+                });
+            }
+        }
+        // Sem slice_info (ou sem dados): tenta o cabeçalho do G-code de cada placa
+        for (const n of zip.nomes.filter(n => /^Metadata\/plate_\d+\.gcode$/i.test(n))) {
+            const indice = parseInt(n.match(/plate_(\d+)/)[1], 10);
+            const ja = placas.find(p => p.indice === indice);
+            if (ja && ja.pesoG && ja.tempoSeg) continue;
+            const g = Bambu.lerCabecalhoGcode((await zip.texto(n)).slice(0, 512 * 1024));
+            if (ja) Object.assign(ja, { tempoSeg: ja.tempoSeg || g.tempoSeg, pesoG: ja.pesoG || g.pesoG, comprimentoM: ja.comprimentoM || g.comprimentoM, filamentos: ja.filamentos.length ? ja.filamentos : g.filamentos });
+            else placas.push({ indice, ...g, objetos: [] });
+        }
+        const validas = placas.filter(p => p.pesoG > 0 || p.tempoSeg > 0).sort((a, b) => a.indice - b.indice);
+        if (!validas.length) {
+            throw new Error("Este projeto ainda não foi fatiado. No Bambu Studio, clique em \"Fatiar placa\" e depois salve o projeto ou use Arquivo › Exportar › \"Exportar arquivo fatiado da placa\" (.gcode.3mf).");
+        }
+        for (const p of validas) {
+            p.thumb = (await zip.dataUrl(`Metadata/plate_${p.indice}.png`)) || (await zip.dataUrl(`Metadata/top_${p.indice}.png`));
+        }
+        return { nome, placas: validas };
+    },
+
+    /** Tipo de filamento predominante (o de maior peso), normalizado para as opções do sistema */
+    tipoPrincipal(filamentos) {
+        if (!filamentos || !filamentos.length) return "PLA";
+        const f = [...filamentos].sort((a, b) => b.g - a.g)[0];
+        const t = String(f.tipo || "PLA").toUpperCase().trim();
+        const mapa = [[/^PLA[- ]?SILK|SILK/, "PLA SILK"], [/^PLA[- ]?MATTE|MATTE/, "PLA MATTE"], [/WOOD/, "PLA WOOD"], [/^PLA[- ]?CF/, "PLA CF"],
+            [/^PETG[- ]?CF/, "PETG CF"], [/^PETG|^PET/, "PETG"], [/^ABS\+/, "ABS+"], [/^ABS/, "ABS"], [/^ASA/, "ASA"], [/^TPU/, "TPU (FLEX)"],
+            [/^PA[- ]?CF|NYLON[- ]?CF|^PAHT-CF/, "NYLON CF"], [/^PA|NYLON/, "NYLON (PA)"], [/^PC/, "PC"], [/^HIPS/, "HIPS"], [/^PVA/, "PVA"], [/^PLA/, "PLA"]];
+        for (const [re, v] of mapa) if (re.test(t)) return v;
+        return "OUTROS";
+    }
+};
+
+/* ---------------------- NOTAS DE COMPRA (OCR) ---------------------- */
+const Nota = {
+    _tess: null,
+    async _carregarOCR() {
+        if (window.Tesseract) return;
+        if (!Nota._tess) Nota._tess = Visao._script("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+        await Nota._tess;
+    },
+
+    /** Melhora a foto para o OCR: aumenta, tons de cinza e contraste */
+    async preparar(arquivo) {
+        const img = await Visao.arquivoParaImagem(arquivo);
+        const escala = Math.min(2.5, Math.max(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.naturalWidth * escala);
+        c.height = Math.round(img.naturalHeight * escala);
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        const d = ctx.getImageData(0, 0, c.width, c.height);
+        const px = d.data;
+        for (let i = 0; i < px.length; i += 4) {
+            let y = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+            y = Math.max(0, Math.min(255, (y - 128) * 1.5 + 140));
+            px[i] = px[i + 1] = px[i + 2] = y;
+        }
+        ctx.putImageData(d, 0, 0);
+        return c;
+    },
+
+    async lerTexto(arquivo, progresso) {
+        await Nota._carregarOCR();
+        const canvas = await Nota.preparar(arquivo);
+        const r = await Tesseract.recognize(canvas, "por", {
+            logger: m => { if (progresso && m.status === "recognizing text") progresso(Math.round(m.progress * 100)); }
+        });
+        return r.data.text || "";
+    },
+
+    _num(s) { return parseFloat(String(s).replace(/\./g, "").replace(",", ".")); },
+
+    /** Quantas unidades vêm em cada item (pacote com 50, kit 100 un, x25...) */
+    tamanhoPacote(desc) {
+        const d = desc.toUpperCase();
+        const padroes = [
+            /(?:C\/|COM\s+|KIT\s+(?:COM\s+|C\/\s*)?|PCT\s+(?:COM\s+|C\/\s*)?|PACOTE\s+(?:COM\s+|C\/\s*)?|CAIXA\s+(?:COM\s+|C\/\s*)|FARDO\s+(?:COM\s+|C\/\s*)?)(\d{1,5})\b/,
+            /\b(\d{1,5})\s*(?:UN|UND|UNID|UNIDADES|PCS|PÇS|PECAS|PEÇAS|UNIDS)\b/,
+            /(?<![\d,.])X\s?(\d{1,5})\b(?!\s*(?:CM|MM|M)\b)/
+        ];
+        for (const re of padroes) {
+            const m = d.match(re);
+            if (m) { const n = parseInt(m[1], 10); if (n > 1 && n <= 10000) return n; }
+        }
+        return 1;
+    },
+
+    /** Interpreta o texto da nota e devolve itens {nome, qtd, total, pacote} */
+    interpretar(texto) {
+        const IGNORAR = /\b(SUB-?TOTAL|TOTAL|FRETE|DESCONTO|TROCO|TRIBUT|IMPOSTO|BASE\s+DE\s+C|ICMS|IPI|PIS|COFINS|VALOR\s+A\s+PAGAR|PAGAMENTO|PAGO|CART[AÃ]O|PIX|BOLETO|CNPJ|CPF|CHAVE\s+DE\s+ACESSO|PROTOCOLO|INSCRI[CÇ][AÃ]O|ENDERE[CÇ]O|CEP|DATA\s+DE|EMISS[AÃ]O|S[EÉ]RIE|PEDIDO|PARCEL|JUROS|ECONOMIA|CUPOM|SALDO)\b/i;
+        const NUM = /\d{1,3}(?:\.\d{3})+,\d{2,4}|\d+,\d{2,4}|\d+\.\d{2}(?!\d)/g;
+        const linhas = texto.split(/\r?\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(l => l.length > 2);
+        const itens = [];
+        let pendente = "";
+
+        const limparDesc = d => d
+            .replace(/R\$\s*/gi, "")
+            .replace(/^\s*(?:\d{1,3}\s+)?(?:[A-Z]{0,3}\d{3,}[A-Z0-9-]*\s+)/i, "")   // nº do item / código do produto
+            .replace(/\b\d{8}\b.*$/, "")                                              // corta a partir do NCM
+            .replace(/\s+\b(?:UN|UND|UNID|PC|PCT|CX|KG|RL|FD|PAR|M|MT|LT)\b\s*$/i, "")  // unidade no fim
+            .replace(/\b(?:QTD|QTDE|QUANT)\.?:?\s*$/i, "")
+            .replace(/[|_*•·]+/g, " ")
+            .replace(/[\s:;.,-]+$/, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        for (const linha of linhas) {
+            if (IGNORAR.test(linha)) { pendente = ""; continue; }
+            const nums = [...linha.matchAll(NUM)];
+            const letras = (linha.match(/[A-Za-zÀ-ú]/g) || []).length;
+            if (!nums.length) {
+                if (letras >= 4) pendente = (pendente ? pendente + " " : "") + linha;
+                if (pendente.length > 120) pendente = linha;
+                continue;
+            }
+            const valores = nums.map(m => Nota._num(m[0].includes(",") ? m[0] : m[0].replace(".", ",")));
+            const inicioNums = nums[Math.max(0, nums.length - 3)].index;
+            let desc = limparDesc(linha.slice(0, inicioNums));
+            let qtd = 1, total = null;
+
+            const n = valores.length;
+            if (n >= 3) {
+                const [a, b, c] = valores.slice(-3);
+                if (Math.abs(a * b - c) <= Math.max(0.05, c * 0.02)) { qtd = a; total = c; }
+                else if (Math.abs(b - c) < 0.01) { total = c; }
+            }
+            if (total === null && n >= 2) {
+                const [b, c] = valores.slice(-2);
+                if (Math.abs(b - c) < 0.01) total = c;
+                else {
+                    const q = linha.match(/(?:QTD|QTDE|QUANT|x)\s*:?\s*(\d{1,4})(?![\d,])/i);
+                    if (q && Math.abs(parseInt(q[1], 10) * b - c) <= Math.max(0.05, c * 0.02)) { qtd = parseInt(q[1], 10); total = c; }
+                    else if (Number.isInteger(b) && b > 0 && b < 1000 && Math.abs(c / b - Math.round((c / b) * 100) / 100) < 0.01) { qtd = b; total = c; }
+                    else total = c;
+                }
+            }
+            if (total === null && n === 1 && /R\$/i.test(linha) && (letras >= 4 || pendente)) total = valores[0];
+            if (total === null || total <= 0) continue;
+
+            // "Qtd: 2" ou "x2" na linha, quando não veio da conta
+            if (qtd === 1) {
+                const q = linha.match(/(?:QTD|QTDE|QUANTIDADE)\s*:?\s*(\d{1,4})(?![\d,])/i) || linha.match(/(?:^|\s)x\s?(\d{1,3})\s*$/i);
+                if (q) qtd = parseInt(q[1], 10);
+            }
+            if (desc.replace(/[^A-Za-zÀ-ú]/g, "").length < 3) desc = limparDesc(pendente);
+            else if (pendente && desc.length < 12) desc = limparDesc(pendente + " " + desc);
+            pendente = "";
+            if (desc.replace(/[^A-Za-zÀ-ú]/g, "").length < 3) continue;
+
+            const nome = desc.toUpperCase().slice(0, 80);
+            itens.push({ nome, qtd: qtd > 0 ? qtd : 1, total, pacote: Nota.tamanhoPacote(nome) });
+        }
+        return itens;
+    },
+
+    /** Custo de UMA embalagem: total ÷ (quantidade × unidades por pacote) */
+    custoUnitario(item) {
+        const un = Math.max(1, item.qtd) * Math.max(1, item.pacote);
+        return item.total / un;
+    }
+};
+
+if (typeof module !== "undefined") module.exports = { Bambu, Nota };
+
+</script>
 <style>
 :root {
     --mesa: #EEF2EF;          /* fundo: mesa PEI */
@@ -327,13 +1252,13 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
 
 <div class="app">
     <aside class="lateral">
-        <div class="marca"><img src="icons/icon-192.png" alt=""><div><strong>Calculadora 3D</strong><span>Precificação e vendas</span></div></div>
+        <div class="marca"><img src="data:image/png;base64,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" alt=""><div><strong>Calculadora 3D</strong><span>Precificação e vendas</span></div></div>
         <button class="nav-item ativo" data-pagina="calcular"><svg><use href="#i-calc"/></svg>Calcular</button>
         <button class="nav-item" data-pagina="catalogo"><svg><use href="#i-cat"/></svg>Catálogo<span class="contador" id="navQtdProdutos">0</span></button>
         <button class="nav-item" data-pagina="vendas"><svg><use href="#i-vendas"/></svg>Vendas</button>
         <button class="nav-item" data-pagina="embalagens"><svg><use href="#i-emb"/></svg>Embalagens</button>
         <div class="lateral-rodape">
-            <a class="nav-item" href="app.html" target="_blank"><svg><use href="#i-celular"/></svg>App de vendas</a>
+            <a class="nav-item" href="app-celular.html" target="_blank"><svg><use href="#i-celular"/></svg>App de vendas</a>
             <button class="nav-item" onclick="Auth.sair()"><svg><use href="#i-sair"/></svg>Sair</button>
             <div class="status" id="statusCloud"><i></i><span>Conectando…</span></div>
         </div>
@@ -343,7 +1268,7 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
         <div class="topo-movel">
             <strong>Calculadora 3D</strong>
             <div style="display:flex; gap:6px">
-                <a class="btn sec icone" href="app.html" title="App de vendas"><svg><use href="#i-celular"/></svg></a>
+                <a class="btn sec icone" href="app-celular.html" title="App de vendas"><svg><use href="#i-celular"/></svg></a>
                 <button class="btn sec icone" title="Sair" onclick="Auth.sair()"><svg><use href="#i-sair"/></svg></button>
             </div>
         </div>
@@ -1467,7 +2392,7 @@ async function iniciar() {
     } catch (e) { st.className = "status erro"; st.querySelector("span").textContent = "Sem conexão"; }
     await Promise.all([carregarEmbalagens(), carregarProdutos(), carregarVendas()]);
 }
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+
 </script>
 </body>
 </html>
