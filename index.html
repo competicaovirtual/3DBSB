@@ -149,7 +149,7 @@ const DB = {
     schemaNovo: false,
 
     async verificarSchema() {
-        const r1 = await sb.from(CONFIG.TABELA_PRODUTOS).select("tipo,componentes,parametros").limit(1);
+        const r1 = await sb.from(CONFIG.TABELA_PRODUTOS).select("tipo,componentes,parametros,imagem_url").limit(1);
         const r2 = await sb.from(CONFIG.TABELA_FOTOS).select("id").limit(1);
         DB.schemaNovo = !r1.error && !r2.error;
         return DB.schemaNovo;
@@ -166,7 +166,8 @@ const DB = {
             precoBase: Number(i.preco_base) || 0,
             tipo: i.tipo || (String(i.nome || "").startsWith("KIT") ? "KIT" : "PRODUTO"),
             componentes: i.componentes || null,
-            parametros: i.parametros || null
+            parametros: i.parametros || null,
+            imagemUrl: i.imagem_url || ""
         };
     },
 
@@ -185,13 +186,13 @@ const DB = {
     },
     async inserirProduto(reg) {
         const { data, error } = await sb.from(CONFIG.TABELA_PRODUTOS)
-            .insert([DB._limpar(reg, ["tipo", "componentes", "parametros"])]).select();
+            .insert([DB._limpar(reg, ["tipo", "componentes", "parametros", "imagem_url"])]).select();
         if (error) throw error;
         return DB._mapProduto(data[0]);
     },
     async atualizarProduto(id, campos) {
         const { data, error } = await sb.from(CONFIG.TABELA_PRODUTOS)
-            .update(DB._limpar(campos, ["tipo", "componentes", "parametros"])).eq("id", id).select();
+            .update(DB._limpar(campos, ["tipo", "componentes", "parametros", "imagem_url"])).eq("id", id).select();
         if (error) throw error;
         return data && data[0] ? DB._mapProduto(data[0]) : null;
     },
@@ -529,6 +530,17 @@ const Importar = {
         const d = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(d.erro || `Erro ${r.status}`);
         return d;
+    },
+    /** Imagem principal do produto a partir do link (perfil do link, senão a capa do modelo) */
+    async capa(url) {
+        const d = await Importar.produto(url);
+        return (d.perfis && d.perfis[0] && d.perfis[0].capa) || (d.imagens && d.imagens[0]) || "";
+    },
+    /** <img> da capa: tenta a imagem do link, cai para a foto de referência e depois para o ícone */
+    tagCapa(p, thumbReserva, largura = 480) {
+        if (!p.imagemUrl) return thumbReserva ? `<img src="${thumbReserva}" alt="">` : "";
+        const reserva = thumbReserva ? `this.onerror=null;this.src='${thumbReserva}'` : "this.remove()";
+        return `<img src="${Fmt.esc(Importar.reduzida(p.imagemUrl, largura))}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="${reserva}">`;
     },
     async listar(url) {
         const r = await Importar._chamar({ url });
@@ -1213,12 +1225,19 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
     .app { grid-template-columns: 1fr; }
     .lateral { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; flex-direction: row; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); z-index: 70; justify-content: space-around; }
     .marca, .lateral-rodape, .nav-item .contador { display: none; }
-    .nav-item { flex-direction: column; gap: 2px; font-size: 11px; padding: 6px 4px; text-align: center; justify-content: center; }
+    .nav-item { flex-direction: column; gap: 2px; font-size: 10.5px; line-height: 1.2; padding: 6px 4px; text-align: center; justify-content: center; }
     main { padding: 20px 14px 110px; }
     h1 { font-size: 24px; }
     .importar, .g2, .g3 { grid-template-columns: 1fr; }
     .g4, .kpis { grid-template-columns: 1fr 1fr; }
     .carrinho { bottom: 84px; }
+    .grade-produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .produto .corpo { padding: 10px 12px; gap: 6px; }
+    .produto .nome { font-size: 13px; }
+    .produto .valores { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .produto .valores .preco { font-size: 18px; }
+    .produto .valores .custo { text-align: left; }
+    .produto .acoes button { padding: 8px 4px; font-size: 12px; }
     .topo-movel { display: flex !important; }
     .nota-preview { grid-template-columns: 1fr; }
 }
@@ -1253,8 +1272,8 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
 <div class="app">
     <aside class="lateral">
         <div class="marca"><img src="data:image/png;base64,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" alt=""><div><strong>Calculadora 3D</strong><span>Precificação e vendas</span></div></div>
-        <button class="nav-item ativo" data-pagina="calcular"><svg><use href="#i-calc"/></svg>Calcular</button>
-        <button class="nav-item" data-pagina="catalogo"><svg><use href="#i-cat"/></svg>Catálogo<span class="contador" id="navQtdProdutos">0</span></button>
+        <button class="nav-item ativo" data-pagina="catalogo"><svg><use href="#i-cat"/></svg>Catálogo de produtos<span class="contador" id="navQtdProdutos">0</span></button>
+        <button class="nav-item" data-pagina="calcular"><svg><use href="#i-calc"/></svg>Cadastro de produtos</button>
         <button class="nav-item" data-pagina="vendas"><svg><use href="#i-vendas"/></svg>Vendas</button>
         <button class="nav-item" data-pagina="embalagens"><svg><use href="#i-emb"/></svg>Embalagens</button>
         <div class="lateral-rodape">
@@ -1273,10 +1292,10 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
             </div>
         </div>
         <!-- ======================= CALCULAR ======================= -->
-        <section class="pagina ativa" id="pag-calcular">
+        <section class="pagina" id="pag-calcular">
             <div class="cabecalho">
                 <div>
-                    <h1 id="tituloCalc">Novo produto</h1>
+                    <h1 id="tituloCalc">Cadastro de produtos</h1>
                     <p>Comece pelo arquivo do Bambu Studio ou pelo link do modelo. Os campos são preenchidos sozinhos e você só ajusta o que precisar.</p>
                 </div>
             </div>
@@ -1398,10 +1417,10 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
         </section>
 
         <!-- ======================= CATÁLOGO ======================= -->
-        <section class="pagina" id="pag-catalogo">
+        <section class="pagina ativa" id="pag-catalogo">
             <div class="cabecalho">
-                <div><h1>Catálogo</h1><p>Marque os produtos para vender. Com mais de um item, você escolhe vender separado ou como kit.</p></div>
-                <button class="btn sec" onclick="irPara('calcular')">+ Novo produto</button>
+                <div><h1>Catálogo de produtos</h1><p>Marque os produtos para vender. Com mais de um item, você escolhe vender separado ou como kit.</p></div>
+                <button class="btn sec" onclick="irPara('calcular')">+ Cadastrar produto</button>
             </div>
             <div class="barra-ferramentas">
                 <div class="busca"><div class="entrada"><span class="un"><svg width="16" height="16"><use href="#i-busca"/></svg></span><input type="search" id="pesquisaHistorico" placeholder="Buscar pelo nome"></div></div>
@@ -1535,6 +1554,7 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
 <div class="gaveta" id="gavetaProduto" role="dialog" aria-labelledby="tProduto">
     <div class="gaveta-topo"><h2 id="tProduto">Editar produto</h2><button class="fechar" onclick="fecharGavetas()" aria-label="Fechar">×</button></div>
     <div class="gaveta-corpo">
+        <div id="edCapa" style="border-radius:12px; overflow:hidden; background:#E6ECE8; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center"></div>
         <div class="campo"><label for="edNome">Nome</label><div class="entrada"><input type="text" id="edNome" class="maiuscula"></div></div>
         <div class="campo"><label for="edLink">Link</label><div class="entrada"><input type="url" id="edLink"></div></div>
         <div class="grade g2">
@@ -1731,6 +1751,10 @@ async function salvarProduto() {
         custo_producao_base: +ultimoCalculo.custoTotal.toFixed(4), preco_base: +ultimoCalculo.preco.toFixed(4),
         parametros: snapshotCampos()
     };
+    if (importacao && importacao.link && importacao.url === reg.link) {
+        const d = importacao.link, pf = (d.perfis || [])[importacao.perfil || 0];
+        reg.imagem_url = (pf && pf.capa) || (d.imagens && d.imagens[0]) || null;
+    }
     if (!editandoId) {
         const dup = produtos.find(p => p.nome === nome && p.tipo !== "KIT");
         if (dup && confirm(`Já existe "${nome}" no catálogo.\n\nOK = atualizar o existente\nCancelar = criar outro`)) editandoId = dup.id;
@@ -1751,6 +1775,7 @@ async function salvarProduto() {
         if (fotosNovoProduto.length) await gravarFotos(salvo.id, fotosNovoProduto);
         UI.toast(atualizando ? "Produto atualizado" : "Produto salvo no catálogo");
         cancelarEdicao(true); limparCamposProduto(); atualizarFiltros(); renderizarCatalogo();
+        preencherImagensDoLink();
     } catch (e) { UI.erro("Não foi possível salvar o produto", e); }
     finally { btn.disabled = false; btn.textContent = editandoId ? "Atualizar produto" : "Salvar no catálogo"; }
 }
@@ -1762,7 +1787,7 @@ function carregarImagem(src) {
 function cancelarEdicao(silencioso) {
     editandoId = null;
     $("bannerEdicao").classList.add("oculto");
-    $("tituloCalc").textContent = "Novo produto";
+    $("tituloCalc").textContent = "Cadastro de produtos";
     $("btnSalvarProduto").textContent = "Salvar no catálogo";
     if (silencioso !== true) limparCamposProduto();
 }
@@ -1831,6 +1856,7 @@ function aplicarPerfilLink(i) {
     const d = importacao.link, url = importacao.url;
     const perfis = d.perfis || [];
     const p = perfis[i];
+    importacao.perfil = i;
     $("linkProduto").value = url;
     if (d.nome && (!$("nomeProduto").value.trim() || $("nomeProduto").dataset.auto === "1")) { $("nomeProduto").value = d.nome.toUpperCase(); $("nomeProduto").dataset.auto = "1"; }
     if (p) {
@@ -1930,7 +1956,7 @@ function renderizarCatalogo() {
         const f = fotosResumo[p.id], kit = p.tipo === "KIT", sel = selecionados.has(p.id);
         return `<article class="produto ${sel ? "sel" : ""}">
             <div class="capa" onclick="alternarSelecao(${p.id})" title="${sel ? "Desmarcar" : "Marcar para vender"}">
-                ${f ? `<img src="${f.thumb}" alt="">` : icone("cat", 44)}
+                ${Importar.tagCapa(p, f ? f.thumb : "") || icone("cat", 44)}
                 <span class="marcar">${icone("ok")}</span>
                 ${f ? `<span class="fotos-qtd">${f.qtd} foto${f.qtd > 1 ? "s" : ""}</span>` : ""}
             </div>
@@ -1971,6 +1997,24 @@ async function excluirProduto(id) {
     } catch (e) { UI.erro("Erro ao excluir", e); }
 }
 
+/* Busca, em segundo plano, a imagem do link dos produtos que ainda não têm */
+let preenchendoImagens = false;
+async function preencherImagensDoLink() {
+    if (preenchendoImagens || !DB.schemaNovo) return;
+    preenchendoImagens = true;
+    try {
+        for (const p of produtos.filter(x => !x.imagemUrl && Fmt.linkSeguro(x.link))) {
+            try {
+                const url = await Importar.capa(p.link);
+                if (!url) continue;
+                await DB.atualizarProduto(p.id, { imagem_url: url });
+                p.imagemUrl = url;
+                renderizarCatalogo();
+            } catch (e) { console.warn("Imagem não encontrada para", p.nome, e); }
+        }
+    } finally { preenchendoImagens = false; }
+}
+
 /* ---------- Gaveta editar produto ---------- */
 async function abrirModalProduto(id) {
     const p = produtos.find(x => x.id === id);
@@ -1984,6 +2028,7 @@ async function abrirModalProduto(id) {
     comp.classList.toggle("oculto", !(p.tipo === "KIT" && p.componentes));
     if (p.tipo === "KIT" && p.componentes) comp.innerHTML = `<b>Composição do kit</b><br>${Fmt.esc(textoComponentes(p.componentes))}`;
     $("edSeletorLink").style.display = "none"; $("edSeletorLink").innerHTML = "";
+    $("edCapa").innerHTML = (Importar.tagCapa(p, fotosResumo[p.id] ? fotosResumo[p.id].thumb : "", 800) || icone("cat", 44)).replace("<img ", '<img style="width:100%;height:100%;object-fit:cover" ');
     abrirGaveta("gavetaProduto");
     await renderizarFotosModal();
 }
@@ -2027,11 +2072,14 @@ async function salvarEdicaoProduto() {
     const campos = { nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME", link: $("edLink").value.trim(),
         custo_producao_base: Fmt.parse($("edCusto").value), preco_base: Fmt.parse($("edPreco").value) };
     try {
-        const salvo = await DB.atualizarProduto(produtoModalId, campos);
         const id = produtoModalId;
+        const antes = produtos.find(p => p.id === id);
+        if (antes && campos.link !== antes.link) campos.imagem_url = null;
+        const salvo = await DB.atualizarProduto(id, campos);
         produtos = produtos.map(p => p.id === id ? (salvo || { ...p, ...campos }) : p);
         fecharGavetas(); atualizarFiltros(); renderizarCatalogo();
         UI.toast("Alterações salvas");
+        preencherImagensDoLink();
     } catch (e) { UI.erro("Erro ao salvar", e); }
 }
 function carregarNaCalculadora() {
@@ -2391,6 +2439,7 @@ async function iniciar() {
         st.querySelector("span").textContent = novo ? "Conectado" : "Banco desatualizado: fotos indisponíveis";
     } catch (e) { st.className = "status erro"; st.querySelector("span").textContent = "Sem conexão"; }
     await Promise.all([carregarEmbalagens(), carregarProdutos(), carregarVendas()]);
+    preencherImagensDoLink();
 }
 
 </script>
