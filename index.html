@@ -691,6 +691,7 @@ const Zip = {
         return {
             nomes: Object.keys(entradas),
             tem: nome => !!entradas[nome],
+            tamanho: nome => (entradas[nome] ? entradas[nome].tam : 0),
             async bytes(nome) {
                 const en = entradas[nome];
                 if (!en) return null;
@@ -798,13 +799,42 @@ const Bambu = {
             else placas.push({ indice, ...g, objetos: [] });
         }
         const validas = placas.filter(p => p.pesoG > 0 || p.tempoSeg > 0).sort((a, b) => a.indice - b.indice);
-        if (!validas.length) {
-            throw new Error("Este projeto ainda não foi fatiado. No Bambu Studio, clique em \"Fatiar placa\" e depois salve o projeto ou use Arquivo › Exportar › \"Exportar arquivo fatiado da placa\" (.gcode.3mf).");
-        }
+        if (!validas.length) return { nome, placas: [], parcial: await Bambu.lerNaoFatiado(zip, nome) };
         for (const p of validas) {
             p.thumb = (await zip.dataUrl(`Metadata/plate_${p.indice}.png`)) || (await zip.dataUrl(`Metadata/top_${p.indice}.png`));
         }
         return { nome, placas: validas };
+    },
+
+    /** Projeto sem fatiamento: não há peso/tempo, mas dá para ler nome, filamento, peças e imagem */
+    async lerNaoFatiado(zip, nome) {
+        const parcial = { titulo: nome, pecas: 1, tipo: "PLA", cor: "", thumb: null, escala: 1, impressora: "" };
+        try {
+            if (zip.tamanho("3D/3dmodel.model") < 3e6) {
+                const m = await zip.texto("3D/3dmodel.model");
+                const t = m.match(/<metadata name="Title">([^<]+)</);
+                if (t) parcial.titulo = t[1].trim();
+                const esc = m.match(/<item [^>]*transform="([\d.\-e]+)\s/);
+                if (esc) parcial.escala = parseFloat(esc[1]) || 1;
+            }
+        } catch (e) {}
+        try {
+            const ms = await zip.texto("Metadata/model_settings.config");
+            if (ms) {
+                const pl = ms.split("<plate>")[1] || "";
+                const n = (pl.match(/<model_instance>/g) || []).length;
+                if (n > 0) parcial.pecas = n;
+            }
+        } catch (e) {}
+        try {
+            const ps = JSON.parse(await zip.texto("Metadata/project_settings.config") || "{}");
+            const fil = [].concat(ps.filament_settings_id || [])[0] || [].concat(ps.filament_type || [])[0] || "PLA";
+            parcial.tipo = Bambu.tipoPrincipal([{ tipo: String(fil).replace(/^Bambu\s+|\s*@.*$/gi, ""), g: 1 }]);
+            parcial.cor = [].concat(ps.filament_colour || [])[0] || "";
+            parcial.impressora = ps.printer_model || "";
+        } catch (e) {}
+        parcial.thumb = (await zip.dataUrl("Metadata/plate_1.png")) || (await zip.dataUrl("Metadata/top_1.png"));
+        return parcial;
     },
 
     /** Tipo de filamento predominante (o de maior peso), normalizado para as opções do sistema */
@@ -1568,9 +1598,10 @@ td .sub { display: block; font-size: 12px; color: var(--tinta-3); }
         <div id="edCapa" style="border-radius:12px; overflow:hidden; background:#E6ECE8; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center"></div>
         <div class="campo"><label for="edNome">Nome</label><div class="entrada"><input type="text" id="edNome" class="maiuscula"></div></div>
         <div class="campo"><label for="edLink">Link</label><div class="entrada"><input type="url" id="edLink"></div></div>
+        <div class="campo"><label for="edFilamento">Tipo de filamento</label><div class="entrada"><select id="edFilamento"></select></div></div>
         <div class="grade g2">
             <div class="campo"><label for="edCusto">Custo de produção</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="edCusto" class="num moeda"></div></div>
-            <div class="campo"><label for="edPreco">Preço base (sem taxas)</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="edPreco" class="num moeda"></div></div>
+            <div class="campo"><label for="edPreco">Preço Venda (sem taxas)</label><div class="entrada"><span class="un">R$</span><input type="text" inputmode="numeric" id="edPreco" class="num moeda"></div></div>
         </div>
         <div id="edComponentes" class="oculto" style="background:var(--kit-claro); border-radius:10px; padding:12px 14px; color:var(--kit); font-size:13px"></div>
         <div class="cartao" style="padding:16px">
@@ -1821,7 +1852,8 @@ async function importarBambu(arquivo) {
     $("resultadoImportacao").innerHTML = `<div class="lido"><div>Lendo <b>${Fmt.esc(arquivo.name)}</b>…</div></div>`;
     try {
         importacao = await Bambu.ler(arquivo);
-        aplicarPlaca(0);
+        if (importacao.placas.length) aplicarPlaca(0);
+        else aplicarNaoFatiado(importacao.parcial);
     } catch (e) {
         $("resultadoImportacao").innerHTML = `<div class="lido" style="background:var(--alerta-claro); border-color:#F2C4BC"><div><b>Não consegui ler este arquivo.</b><br><span style="font-size:13px">${Fmt.esc(e.message)}</span></div></div>`;
         importacao = null;
@@ -1862,6 +1894,25 @@ function aplicarPlaca(i) {
         </div>${placas ? `<div style="margin:-6px 0 16px">${r.placas.length} placas no arquivo. Escolha qual é este produto:${placas}</div>` : ""}`;
 }
 $("nomeProduto").addEventListener("input", () => { $("nomeProduto").dataset.auto = "0"; });
+
+/* Projeto .3mf sem fatiamento: preenche o que dá e explica como obter peso e tempo */
+function aplicarNaoFatiado(p) {
+    if (!$("nomeProduto").value.trim() || $("nomeProduto").dataset.auto === "1") { $("nomeProduto").value = p.titulo.toUpperCase(); $("nomeProduto").dataset.auto = "1"; }
+    $("tipoFilamento").value = p.tipo;
+    $("pecasPorImpressao").value = p.pecas;
+    thumbsPendentes = thumbsPendentes.filter(t => t.origem !== "bambu");
+    if (p.thumb) thumbsPendentes.unshift({ src: p.thumb, origem: "bambu" });
+    renderizarPreviewFotosNovo(); calcular();
+    $("resultadoImportacao").innerHTML = `
+        <div class="lido" style="background:var(--ambar-claro); border-color:#F1D6A6">
+            ${p.thumb ? `<img src="${p.thumb}" alt="Placa">` : ""}
+            <div style="flex:1">
+                <b>Este projeto ainda não foi fatiado, então não tem peso nem tempo.</b>
+                <div style="font-size:13px; color:var(--tinta-2); margin-top:2px">Preenchi o que o arquivo informa: <b>${Fmt.esc(p.titulo)}</b>, ${chipFil(p.tipo)} ${p.pecas} peça${p.pecas > 1 ? "s" : ""} na placa${p.escala !== 1 ? `, escala ${Fmt.num(p.escala * 100, 0)}%` : ""}${p.impressora ? `, ${Fmt.esc(p.impressora)}` : ""}.</div>
+                <div style="font-size:13px; margin-top:6px">Para completar: no Bambu Studio clique em <b>Fatiar placa</b>, depois <b>Arquivo › Salvar projeto</b> (Ctrl+S) e envie o arquivo de novo. Ou cole o link do MakerWorld ao lado.</div>
+            </div>
+        </div>`;
+}
 
 /** Pergunta de quantas peças saem da impressão, com botões rápidos */
 function blocoPecas(aviso) {
@@ -2004,11 +2055,11 @@ function renderizarCatalogo() {
                 ${f ? `<span class="fotos-qtd">${f.qtd} foto${f.qtd > 1 ? "s" : ""}</span>` : ""}
             </div>
             <div class="corpo">
-                <div style="display:flex; gap:6px; flex-wrap:wrap">${kit ? '<span class="chip kit">Kit</span>' : ""}${chipFil(p.tipoFilamento)}</div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap">${kit ? '<span class="chip kit">Kit</span>' : ""}<button type="button" title="Alterar filamento" onclick="editarFilamento(${p.id})" style="border:0; padding:0; background:none; cursor:pointer">${chipFil(p.tipoFilamento).replace("</span>", ' <svg width="12" height="12" style="opacity:.6"><use href="#i-editar"/></svg></span>')}</button></div>
                 <div class="nome">${nomeComLink(p.nome, p.link)}</div>
                 ${kit && p.componentes ? `<div class="comp">${Fmt.esc(textoComponentes(p.componentes))}</div>` : ""}
                 <div class="valores">
-                    <div><small>Preço base</small><span class="preco num">${Fmt.brl(p.precoBase)}</span></div>
+                    <div><small>Preço Venda</small><span class="preco num">${Fmt.brl(p.precoBase)}</span></div>
                     <div class="custo">custo ${Fmt.brl(p.custoProducaoBase)}<br><span class="pos">+${Fmt.brl(p.precoBase - p.custoProducaoBase)}</span></div>
                 </div>
             </div>
@@ -2065,6 +2116,10 @@ async function abrirModalProduto(id) {
     produtoModalId = id;
     $("tProduto").textContent = p.tipo === "KIT" ? "Editar kit" : "Editar produto";
     $("edNome").value = p.nome; $("edLink").value = p.link;
+    const opcoes = [...$("tipoFilamento").options].map(o => [o.value, o.text]);
+    if (!opcoes.some(([v]) => v === p.tipoFilamento)) opcoes.unshift([p.tipoFilamento, p.tipoFilamento]);
+    $("edFilamento").innerHTML = opcoes.map(([v, t]) => `<option value="${Fmt.esc(v)}">${Fmt.esc(t)}</option>`).join("");
+    $("edFilamento").value = p.tipoFilamento;
     $("edCusto").value = Fmt.num(p.custoProducaoBase); $("edPreco").value = Fmt.num(p.precoBase);
     $("btnRecalcular").classList.toggle("oculto", !p.parametros);
     const comp = $("edComponentes");
@@ -2074,6 +2129,10 @@ async function abrirModalProduto(id) {
     $("edCapa").innerHTML = (Importar.tagCapa(p, fotosResumo[p.id] ? fotosResumo[p.id].thumb : "", 800) || icone("cat", 44)).replace("<img ", '<img style="width:100%;height:100%;object-fit:cover" ');
     abrirGaveta("gavetaProduto");
     await renderizarFotosModal();
+}
+async function editarFilamento(id) {
+    await abrirModalProduto(id);
+    $("edFilamento").focus();
 }
 async function renderizarFotosModal() {
     const box = $("edFotos");
@@ -2112,7 +2171,7 @@ async function removerFoto(fotoId) {
     catch (e) { UI.erro("Erro ao remover foto", e); }
 }
 async function salvarEdicaoProduto() {
-    const campos = { nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME", link: $("edLink").value.trim(),
+    const campos = { nome: $("edNome").value.trim().toUpperCase() || "PRODUTO SEM NOME", link: $("edLink").value.trim(), tipo_filamento: $("edFilamento").value,
         custo_producao_base: Fmt.parse($("edCusto").value), preco_base: Fmt.parse($("edPreco").value) };
     try {
         const id = produtoModalId;
@@ -2303,7 +2362,7 @@ function atualizarInfoKit() {
 function renderizarItensVenda() {
     $("listaProdutosVenda").innerHTML = venda.itens.map((i, k) => `
         <div class="item-venda">
-            <div><b>${i.tipo === "KIT" ? '<span class="chip kit">Kit</span> ' : ""}${Fmt.esc(i.nome)}</b><span class="sub" style="display:block; font-size:12px; color:var(--tinta-3)">custo ${Fmt.brl(i.custoProducaoBase)} · base ${Fmt.brl(i.precoBase)}</span></div>
+            <div><b>${i.tipo === "KIT" ? '<span class="chip kit">Kit</span> ' : ""}${Fmt.esc(i.nome)}</b><span class="sub" style="display:block; font-size:12px; color:var(--tinta-3)">custo ${Fmt.brl(i.custoProducaoBase)} · venda ${Fmt.brl(i.precoBase)}</span></div>
             <div class="passo"><button onclick="alterarQtdItem(${k}, ${i.qtd - 1})">−</button><input value="${i.qtd}" inputmode="numeric" onchange="alterarQtdItem(${k}, this.value)"><button onclick="alterarQtdItem(${k}, ${i.qtd + 1})">+</button></div>
             <b class="num" style="min-width:76px; text-align:right">${Fmt.brl(i.precoBase * i.qtd)}</b>
             <button class="btn fantasma icone" title="Tirar da venda" onclick="removerItemVenda(${k})">${icone("lixo")}</button>
